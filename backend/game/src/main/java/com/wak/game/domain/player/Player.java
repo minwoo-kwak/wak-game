@@ -53,9 +53,8 @@ public class Player extends BaseEntity {
     private Boolean isQueen;
 
     @Builder
-    public Player(Long id, User user, Round round, Player murderPlayer, Integer stamina, String aliveTime,
+    public Player(User user, Round round, Player murderPlayer, Integer stamina, String aliveTime,
                   Integer killCount, Integer rank, Boolean isPlayer, Integer team, Boolean isQueen) {
-        this.id = id;
         this.user = user;
         this.round = round;
         this.murderPlayer = murderPlayer;

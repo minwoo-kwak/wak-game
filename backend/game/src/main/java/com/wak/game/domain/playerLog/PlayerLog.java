@@ -23,12 +23,11 @@ public class PlayerLog extends BaseEntity {
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    @Column(name = "log", nullable = false, length = 255)
+    @Column(name = "log", nullable = false)
     private String log;
 
     @Builder
-    public PlayerLog(Long id, Player player, String log) {
-        this.id = id;
+    public PlayerLog(Player player, String log) {
         this.player = player;
         this.log = log;
     }

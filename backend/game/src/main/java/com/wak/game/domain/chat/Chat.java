@@ -22,12 +22,11 @@ public class Chat extends BaseEntity {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @Column(name = "chat_message_content", nullable = false, length = 255) // 컬럼 이름 수정 및 속성 추가
+    @Column(name = "chat_message_content", nullable = false)
     private String chatMessageContent;
 
     @Builder
-    public Chat(Long id, Room room, String chatMessageContent) {
-        this.id = id;
+    public Chat(Room room, String chatMessageContent) {
         this.room = room;
         this.chatMessageContent = chatMessageContent;
     }

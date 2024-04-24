@@ -32,8 +32,7 @@ public class Round extends BaseEntity {
     private Boolean showNickname;
 
     @Builder
-    public Round(Long id, int roundNumber, Room room, String aggro, Boolean showNickname) {
-        this.id = id;
+    public Round(int roundNumber, Room room, String aggro, Boolean showNickname) {
         this.roundNumber = roundNumber;
         this.room = room;
         this.aggro = aggro;
