@@ -1,4 +1,4 @@
-package com.wak.game.util;
+package com.wak.game.global.util;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

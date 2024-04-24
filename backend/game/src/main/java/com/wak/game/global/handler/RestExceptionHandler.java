@@ -1,6 +1,6 @@
 package com.wak.game.global.handler;
 
-import com.wak.game.util.ApiError;
+import com.wak.game.global.util.ApiError;
 import com.wak.game.global.exception.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;

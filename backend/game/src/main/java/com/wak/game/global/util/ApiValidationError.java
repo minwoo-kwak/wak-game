@@ -1,4 +1,4 @@
-package com.wak.game.util;
+package com.wak.game.global.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
