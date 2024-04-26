@@ -1,6 +1,5 @@
 package com.wak.game.domain.color;
 
-import com.wak.game.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 @Service
