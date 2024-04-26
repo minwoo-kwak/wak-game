@@ -2,6 +2,9 @@ package com.wak.game.domain.color;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Optional;
+
 import static com.wak.game.domain.color.QColor.color;
 
 
@@ -12,7 +15,6 @@ public class ColorRepositoryCustomImpl implements ColorRepositoryCustom {
 
     @Override
     public Color findByHexColor(String hexColor) {
-
         return query.select(color)
                 .from(color)
                 .where(color.hexColor.eq(hexColor))
