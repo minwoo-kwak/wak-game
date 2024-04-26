@@ -1,6 +1,6 @@
 package com.wak.game.domain;
 
-import com.wak.game.global.error.ErrorCode;
+import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
@@ -13,7 +13,7 @@ public class TestService {
     public ResponseEntity<ApiResult<?>> throwException() {
 
         if (true) {
-            throw new BusinessException(ErrorCode.TEST);
+            throw new BusinessException(ErrorInfo.TEST);
         }
 
         return ResponseEntity.ok(ApiUtils.success(null));

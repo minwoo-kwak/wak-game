@@ -205,9 +205,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<Object> handleConflict(BusinessException ex) {
-        HttpStatus httpStatus = ex.getErrorCode().getHttpStatus();
+        HttpStatus httpStatus = ex.getErrorInfoCode().getHttpStatus();
         ApiError apiError = new ApiError(httpStatus);
-        apiError.setMessage(ex.getErrorCode().getMessage());
+        apiError.setMessage(ex.getErrorInfoCode().getMessage());
         return buildErrorResponseEntity(apiError);
     }
 

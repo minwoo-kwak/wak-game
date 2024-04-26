@@ -4,12 +4,12 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public enum ErrorCode {
+public enum ErrorInfo {
 
     TEST(HttpStatus.INTERNAL_SERVER_ERROR, "TEST ERROR")
     ;
 
-    ErrorCode(HttpStatus httpStatus, String message) {
+    ErrorInfo(HttpStatus httpStatus, String message) {
         this.httpStatus = httpStatus;
         this.message = message;
     }
