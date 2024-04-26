@@ -1,4 +1,4 @@
-package com.wak.game;
+package com.wak.game.domain;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package com.wak.game.global.exception;
+package com.wak.game.global.error.exception;
 
 import org.apache.commons.lang3.StringUtils;
 
