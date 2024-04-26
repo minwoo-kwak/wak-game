@@ -141,3 +141,6 @@ gradle-app.setting
 
 ### application ###
 application-*.yml
+
+### QueryDSL ###
+**/querydsl/
