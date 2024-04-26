@@ -144,3 +144,4 @@ application-*.yml
 
 ### QueryDSL ###
 **/querydsl/
+**/generated/
