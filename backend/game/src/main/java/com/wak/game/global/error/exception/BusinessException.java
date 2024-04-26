@@ -1,16 +1,16 @@
 package com.wak.game.global.error.exception;
 
-import com.wak.game.global.error.Error;
+import com.wak.game.global.error.ErrorCode;
 import lombok.Getter;
 
 @Getter
 public class BusinessException extends RuntimeException {
 
-    private final Error error;
+    private final ErrorCode errorCode;
 
-    public BusinessException(Error error) {
-        super(error.getMessage());
-        this.error = error;
+    public BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
 }

@@ -3,7 +3,6 @@ package com.wak.game.global.handler;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.ApiError;
 import com.wak.game.global.error.exception.EntityNotFoundException;
-import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -206,14 +205,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<Object> handleConflict(BusinessException ex) {
-        HttpStatus httpStatus = ex.getError().getHttpStatus();
+        HttpStatus httpStatus = ex.getErrorCode().getHttpStatus();
         ApiError apiError = new ApiError(httpStatus);
-        apiError.setMessage(ex.getError().getMessage());
+        apiError.setMessage(ex.getErrorCode().getMessage());
         return buildErrorResponseEntity(apiError);
     }
 
     /**
-     * 나머지 예외 발생
+     * handle whole other Exception
      */
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<Object> handleException(Exception ex) {
