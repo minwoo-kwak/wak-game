@@ -7,6 +7,6 @@ import java.awt.*;
 import java.util.Optional;
 
 @Repository
-public interface ColorRepository extends JpaRepository<Color, String>, ColorRepositoryCustom {
+public interface ColorRepository extends JpaRepository<Color, Long>, ColorRepositoryCustom {
 
 }

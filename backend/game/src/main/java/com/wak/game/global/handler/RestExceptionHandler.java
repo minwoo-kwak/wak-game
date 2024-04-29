@@ -1,8 +1,8 @@
 package com.wak.game.global.handler;
 
+import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.ApiError;
-import com.wak.game.global.exception.EntityNotFoundException;
-import com.wak.game.global.util.ApiResult;
+import com.wak.game.global.error.exception.EntityNotFoundException;
 import com.wak.game.global.util.ApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -194,6 +194,30 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError(BAD_REQUEST);
         apiError.setMessage(String.format("The parameter '%s' of value '%s' could not be converted to type '%s'", ex.getName(), ex.getValue(), ex.getRequiredType().getSimpleName()));
         apiError.setDebugMessage(ex.getMessage());
+        return buildErrorResponseEntity(apiError);
+    }
+
+    /**
+     * Handle Business Exception
+     *
+     * @param ex the Exception
+     * @return the ApiError object with Wrapper
+     */
+    @ExceptionHandler(BusinessException.class)
+    protected ResponseEntity<Object> handleConflict(BusinessException ex) {
+        HttpStatus httpStatus = ex.getErrorInfoCode().getHttpStatus();
+        ApiError apiError = new ApiError(httpStatus);
+        apiError.setMessage(ex.getErrorInfoCode().getMessage());
+        return buildErrorResponseEntity(apiError);
+    }
+
+    /**
+     * handle whole other Exception
+     */
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<Object> handleException(Exception ex) {
+        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        apiError.setMessage(ex.getMessage());
         return buildErrorResponseEntity(apiError);
     }
 
