@@ -27,7 +27,7 @@ public class User extends BaseEntity {
     @Column(name = "nickname")
     private String nickname;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", nullable = false)
     private Color color;
 

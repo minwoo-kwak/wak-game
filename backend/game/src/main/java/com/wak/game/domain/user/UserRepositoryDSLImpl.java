@@ -1,8 +1,9 @@
 package com.wak.game.domain.user;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.wak.game.domain.color.Color;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Optional;
 
 import static com.wak.game.domain.user.QUser.user;
 
@@ -11,11 +12,12 @@ public class UserRepositoryDSLImpl implements UserRepositoryDSL{
 
     private final JPAQueryFactory query;
     @Override
-    public User findByUserInfo(String nickname, Color color) {
-        return query.select(user)
+    public Optional<User> findByNickname(String nickname) {
+        return Optional.ofNullable(query.select(user)
                 .from(user)
                 .where(user.nickname.eq(nickname))
-                .fetchOne();
+                .where(user.isDeleted.eq(false))
+                .fetchOne());
     }
 
     @Override
