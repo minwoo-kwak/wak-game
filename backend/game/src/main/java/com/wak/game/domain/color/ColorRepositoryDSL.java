@@ -1,8 +1,6 @@
 package com.wak.game.domain.color;
 
-import java.util.Optional;
-
-public interface ColorRepositoryCustom {
+public interface ColorRepositoryDSL {
 
     Color findByHexColor(String hexColor);
 }

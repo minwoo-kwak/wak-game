@@ -1,7 +1,6 @@
 package com.wak.game.application.facade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wak.game.domain.color.Color;
 import com.wak.game.domain.color.ColorService;
 import com.wak.game.domain.color.ColorWrapper;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +8,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 

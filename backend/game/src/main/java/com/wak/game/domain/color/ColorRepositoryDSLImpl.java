@@ -3,13 +3,11 @@ package com.wak.game.domain.color;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Optional;
-
 import static com.wak.game.domain.color.QColor.color;
 
 
 @RequiredArgsConstructor
-public class ColorRepositoryCustomImpl implements ColorRepositoryCustom {
+public class ColorRepositoryDSLImpl implements ColorRepositoryDSL {
 
     private final JPAQueryFactory query;
 

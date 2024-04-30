@@ -1,3 +1,4 @@
+
 spring:
   profiles:
     include: private
@@ -15,3 +16,5 @@ spring:
 origin:
   frontend:
     http://localhost:3000 # todo set frontend origin
+server:
+  port: 8081
