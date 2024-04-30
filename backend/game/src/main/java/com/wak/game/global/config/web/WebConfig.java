@@ -2,7 +2,6 @@ package com.wak.game.global.config.web;
 
 import com.wak.game.global.token.AuthUserArgumentResolver;
 import com.wak.game.global.token.JWTInterceptor;
-import com.wak.game.global.token.JWTUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/users");
+                .excludePathPatterns("/api/users", "/api/test/**");
     }
 
     @Override
