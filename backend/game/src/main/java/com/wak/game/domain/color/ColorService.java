@@ -1,5 +1,7 @@
 package com.wak.game.domain.color;
 
+import com.wak.game.global.error.ErrorInfo;
+import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 @Service
@@ -9,11 +11,11 @@ public class ColorService {
     private final ColorRepository colorRepository;
 
     public Color findById(long id){
-        return colorRepository.findById(id).orElseThrow(); // ErrorCode
+        return colorRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorInfo.COLOR_NOT_EXIST));
     }
 
     public Color save(String hexColor) {
-        if (!validCheckDuplicate(hexColor)) // ErrorCode
+        if (!validCheckDuplicate(hexColor))
             return null;
 
         return colorRepository.save(Color.builder()
