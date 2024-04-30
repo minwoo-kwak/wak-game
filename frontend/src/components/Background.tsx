@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { FlexLayout, ImgBackground, DarkBackground } from '../styles/layout';
 
-import main1 from '../assets/img-main1.png';
+import mainImg1 from '../assets/img-main1.png';
 
 const BackgroundLayout = styled(FlexLayout)`
   width: 100%;
@@ -22,7 +22,7 @@ export default function Background({
   children,
 }: BackgroundProps) {
   return (
-    <ImgBackground $img={main1}>
+    <ImgBackground $img={mainImg1}>
       <DarkBackground $opaque={opaque}>
         <BackgroundLayout $isCol={isCol} gap={gap}>
           {children}

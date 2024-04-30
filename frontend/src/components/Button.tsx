@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { SmallText } from '../styles/fonts';
+import { SmallText, textStyles } from '../styles/fonts';
 
 const StyledButton = styled.button`
   width: fit-content;
@@ -13,17 +13,19 @@ const StyledButton = styled.button`
     border-style: inset;
     background-color: #b0b0b0;
   }
+  ${textStyles}
 `;
 
 type ButtonProps = {
+  isBigger?: boolean;
   label: string;
   onClick?: () => void;
 };
 
-export default function Button({ label, ...props }: ButtonProps) {
+export default function Button({ isBigger, label, ...props }: ButtonProps) {
   return (
-    <StyledButton {...props}>
-      <SmallText color='black'>{label}</SmallText>
+    <StyledButton color='black' {...props}>
+      {isBigger ? <SmallText color='black'>{label}</SmallText> : label}
     </StyledButton>
   );
 }

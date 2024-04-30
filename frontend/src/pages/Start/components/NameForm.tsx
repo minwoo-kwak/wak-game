@@ -19,7 +19,7 @@ export default function NicknameForm() {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState('');
 
-  const onChangeInput = (e: { target: { value: string } }) => {
+  const handleChange = (e: { target: { value: string } }) => {
     setNickname(e.target.value);
   };
 
@@ -32,8 +32,8 @@ export default function NicknameForm() {
     <FlexLayout $isCol gap='1rem'>
       <BlinkSmallText>{`시작하려면 닉네임을 입력하세요`}</BlinkSmallText>
       <FlexLayout gap='1rem'>
-        <Input name='nickname' width='36rem' onChange={onChangeInput} />
-        <Button label={`GO!`} onClick={handleClick} />
+        <Input isRound name='nickname' width='36rem' onChange={handleChange} />
+        <Button isBigger label={`GO!`} onClick={handleClick} />
       </FlexLayout>
     </FlexLayout>
   );

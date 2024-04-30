@@ -1,33 +1,29 @@
-import styled from 'styled-components';
-import { GridLayout } from '../../styles/layout';
+import { useState } from 'react';
+import { FlexLayout } from '../../styles/layout';
 
 import Background from '../../components/Background';
-import LobbyText from './components/LobbyText';
+import ChatBox from '../../components/ChatBox';
+import LobbyHeader from './components/LobbyHeader';
 import RoomList from './components/RoomList';
-import WhiteBox from '../../components/WhiteBox';
-
-const LeftGrid = styled.div`
-  grid-column: span 2 / span 2;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-const RightGrid = styled.div`
-  grid-column: span 1 / span 1;
-`;
+import NewRoomDialog from './components/NewRoomDialog';
 
 export default function LobbyPage() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Background>
-      <GridLayout>
-        <LeftGrid>
-          <LobbyText />
-          <RoomList />
-        </LeftGrid>
-        <RightGrid>
-          <WhiteBox height='60rem' />
-        </RightGrid>
-      </GridLayout>
-    </Background>
+    <>
+      <Background>
+        <FlexLayout gap='4rem'>
+          <FlexLayout $isCol gap='3.2rem'>
+            <LobbyHeader openDialog={() => setIsOpen(true)} />
+            <RoomList />
+          </FlexLayout>
+          <div>
+            <ChatBox text={`전체 채팅`} />
+          </div>
+        </FlexLayout>
+      </Background>
+      {isOpen && <NewRoomDialog closeDialog={() => setIsOpen(false)} />}
+    </>
   );
 }
