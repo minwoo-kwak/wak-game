@@ -21,7 +21,7 @@ public class RoomController {
 
     @PostMapping("/")
     public ResponseEntity<ApiResult<RoomCreateResponse>> createRoom(@AuthUser Long id, @RequestBody RoomCreateRequest request) {
-        RoomCreateResponse response = roomFacade.roomCreate(id, request);
+        RoomCreateResponse response = roomFacade.createRoom(id, request);
         return ResponseEntity.ok(ApiUtils.success(response));
     }
 
