@@ -30,6 +30,7 @@ public enum ErrorInfo {
     /* PLAYER LOG*/
     /* ROOM */
     ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM IS NOT FOUND"),
+    ROOM_MODE_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM MODE IS NOT FOUND"),
 
     /* ROOM LOG*/
     /* ROUND */

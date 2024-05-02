@@ -17,6 +17,7 @@ public class RoomService {
     }
 
     public Room findByUser(User user){
+        return roomRepository.findByUser(user).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
     }
 
 
