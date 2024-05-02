@@ -17,6 +17,7 @@ public class RoomRepositoryDSLImpl implements RoomRepositoryDSL{
         return Optional.ofNullable(query.select(room)
                 .from(room)
                 .where(room.user.eq(user))
+                .where(room.isDeleted.eq(false))
                 .fetchOne());
     }
 }

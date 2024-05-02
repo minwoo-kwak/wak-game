@@ -3,6 +3,7 @@ package com.wak.game.application.facade;
 import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomCreateResponse;
+import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
@@ -22,7 +23,8 @@ public class RoomFacade {
 
     public RoomCreateResponse createRoom(Long id, RoomCreateRequest request) {
         User user = userService.findById(id);
-        return RoomCreateResponse.of(1L);
+        Room room = roomService.save(user, request.room_name(), request.room_password(), request.limit_players(), request.mode());
+        return RoomCreateResponse.of(room.getId());
     }
 
     public void enterRoom(Long id, RoomEnterRequest request, Long roomId) {

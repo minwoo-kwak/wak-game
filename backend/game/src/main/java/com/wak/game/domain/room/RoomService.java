@@ -1,5 +1,6 @@
 package com.wak.game.domain.room;
 
+import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
@@ -18,6 +19,18 @@ public class RoomService {
 
     public Room findByUser(User user){
         return roomRepository.findByUser(user).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
+    }
+
+    public Room save(User user, String roomName, String roomPassword, short limitPlayer, RoomType mode){
+       if (roomRepository.findByUser(user).orElse(null) != null)
+           throw new BusinessException(ErrorInfo.ROOM_ALREADY_EXIST);
+        return roomRepository.save(Room.builder()
+                .user(user)
+                .roomName(roomName)
+                .roomPassword(roomPassword)
+                .limitPlayers(limitPlayer)
+                .mode(mode)
+                .build());
     }
 
 
