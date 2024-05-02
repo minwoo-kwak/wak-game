@@ -16,11 +16,11 @@ public class SwaggerConfig {
 	@Bean
 	public OpenAPI openAPI() {
 		Server localServer = new Server();
-		localServer.setUrl("http://localhost:8080");
+		localServer.setUrl("http://localhost:8081");
 		localServer.description("local");
 
 		Server releaseServer = new Server();
-		releaseServer.setUrl("https://k10a708.p.ssafy.io");
+		releaseServer.setUrl("https://wakgame.com");
 		releaseServer.description("release");
 
 		return new OpenAPI()

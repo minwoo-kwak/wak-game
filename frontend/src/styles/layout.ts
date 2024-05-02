@@ -6,7 +6,7 @@ const FixedLayout = css`
   left: 0;
   bottom: 0;
   right: 0;
-  padding: 4rem;
+  padding: 2rem;
 `;
 
 export const ImgBackground = styled.div<{ $img: string }>`
@@ -19,6 +19,17 @@ export const ImgBackground = styled.div<{ $img: string }>`
 export const DarkBackground = styled.div<{ $opaque?: number }>`
   ${FixedLayout}
   background: ${(props) => `rgba(0, 0, 0, ${props.$opaque || 0.6})`};
+`;
+
+export const FlexLayout = styled.div<{
+  $isCol?: boolean;
+  gap?: string;
+}>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: ${(props) => (props.$isCol ? 'column' : 'row')};
+  gap: ${(props) => props.gap || '2rem'};
 `;
 
 export const GridLayout = styled.div<{
@@ -36,15 +47,4 @@ export const GridLayout = styled.div<{
         `}
 
   gap: ${(props) => props.gap || '2rem'};
-`;
-
-export const FlexLayout = styled.div<{
-  $isCol?: boolean;
-  gap?: string;
-}>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: ${(props) => props.gap || '2rem'};
-  flex-direction: ${(props) => (props.$isCol ? 'column' : 'row')};
 `;
