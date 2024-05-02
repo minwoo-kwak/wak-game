@@ -12,6 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wak.game.application.controller.dto.UserInRoomRequest;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Transactional
 @RequiredArgsConstructor
@@ -33,5 +39,27 @@ public class RoomFacade {
 
     public void deleteRoom(Long id, Long roomId) {
         User user = userService.findById(id);
+    }
+
+    public List<UserInRoomRequest> enter(User user, Long roomId) {
+        roomService.addUserToRoom(user, roomId);
+        Map<String, String> roomUsers = roomService.getUsersInRoom(roomId);
+
+        List<UserInRoomRequest> usersInRoom = new ArrayList<>();
+        roomUsers.forEach((key, value) -> {
+            String[] userInfo = value.split("#");
+            if (userInfo.length >= 4) {
+                UserInRoomRequest userRequest = UserInRoomRequest.builder()
+                        .roomId(roomId)
+                        .userid(Long.parseLong(userInfo[0]))
+                        .hexColor(userInfo[1])
+                        .nickname(userInfo[2])
+                        .team(Integer.parseInt(userInfo[3]))
+                        .build();
+                usersInRoom.add(userRequest);
+            }
+        });
+
+        return usersInRoom;
     }
 }

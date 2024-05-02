@@ -8,9 +8,18 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.wak.game.application.controller.dto.UserInRoomRequest;
+import com.wak.game.domain.color.Color;
+import com.wak.game.domain.user.User;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -35,6 +44,21 @@ public class RoomController {
     public ResponseEntity<ApiResult<Void>> deleteRoom(@AuthUser Long id, @PathVariable Long room_id) {
         roomFacade.deleteRoom(id, room_id);
         return ResponseEntity.ok(ApiUtils.success(null));
+    }
+
+    @MessageMapping("/rooms/{roomId}")
+    public List<UserInRoomRequest> enterRoom(@DestinationVariable Long roomId, @Header("Authorization") String token) {
+        //토큰 검증
+        //User user = userFacade.findById(토큰);
+        User user = User.builder()
+                .color(new Color("testColor"))
+                .nickname("testNickname")
+                .build();
+
+        List<UserInRoomRequest> usersInRoom = roomFacade.enter(user, roomId);
+
+
+        return usersInRoom;
     }
 
 }
