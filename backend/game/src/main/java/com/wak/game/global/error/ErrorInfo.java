@@ -35,7 +35,6 @@ public enum ErrorInfo {
 
     /* ROOM LOG*/
     /* ROUND */
-    TEST(HttpStatus.INTERNAL_SERVER_ERROR, "TEST ERROR"),
     API_ERROR_ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "Room is not exist"),
     ;
 
