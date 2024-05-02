@@ -27,13 +27,13 @@ public class RoomController {
 
     @PostMapping("/{roomId}")
     public ResponseEntity<ApiResult<Void>> enterRoom(@AuthUser Long id, @RequestBody RoomEnterRequest request ,@PathVariable Long room_id) {
-
+        roomFacade.enterRoom(id, request, room_id);
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 
     @PutMapping("/roomId")
     public ResponseEntity<ApiResult<Void>> deleteRoom(@AuthUser Long id, @PathVariable Long room_id) {
-
+        roomFacade.deleteRoom(id, room_id);
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 
