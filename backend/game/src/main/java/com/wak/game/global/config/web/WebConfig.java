@@ -32,7 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/users", "/api/test/**", "/swagger-ui/**");
+                .excludePathPatterns("/api/users", "/api/test/**");
     }
 
     @Override
