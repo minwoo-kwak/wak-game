@@ -20,7 +20,7 @@ public class SwaggerConfig {
 		localServer.description("local");
 
 		Server releaseServer = new Server();
-		releaseServer.setUrl("https://wakgame.com");
+		releaseServer.setUrl("https://wakgame.com/swagger-ui/");
 		releaseServer.description("release");
 
 		return new OpenAPI()

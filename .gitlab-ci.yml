@@ -1,0 +1,22 @@
+stages:
+  - build
+
+variables:
+  DOCKER_IMAGE_NAME: minwoo540/wak:backend-chat-latest
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+  script:
+    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
+  only:
+    refs:
+      - develop
+    changes:
+      - backend/chat/**/*
+
