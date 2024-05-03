@@ -1,11 +1,12 @@
 import styled, { css } from 'styled-components';
+import { FlexLayout } from '../styles/layout';
 
 const BoxBlock = styled.div`
   display: flex;
   align-items: center;
 `;
 
-const StyledBox = styled.div<{ $width: string }>`
+const StyledBox = styled(FlexLayout)<{ $width: string }>`
   width: ${(props) => props.$width};
   height: 11.2rem;
   border-style: solid;
@@ -15,9 +16,6 @@ const StyledBox = styled.div<{ $width: string }>`
   border-top-width: 0.4rem;
   border-bottom-width: 0.4rem;
   background-color: transparent;
-  &:hover {
-    background-color: rgba(255, 255, 355, 0.2);
-  }
   text-align: center;
 `;
 
@@ -41,7 +39,9 @@ export default function WhiteRoundBox({ width, children }: WhiteRoundBoxProps) {
   return (
     <BoxBlock>
       <BorderX />
-      <StyledBox $width={width}>{children}</StyledBox>
+      <StyledBox $isCol $width={width}>
+        {children}
+      </StyledBox>
       <BorderX $right />
     </BoxBlock>
   );

@@ -29,7 +29,7 @@ export const FlexLayout = styled.div<{
   justify-content: center;
   align-items: center;
   flex-direction: ${(props) => (props.$isCol ? 'column' : 'row')};
-  gap: ${(props) => props.gap || '2rem'};
+  gap: ${(props) => props.gap || '0rem'};
 `;
 
 export const GridLayout = styled.div<{
