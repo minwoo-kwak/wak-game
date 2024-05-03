@@ -22,7 +22,7 @@ const StyledBox = styled.div<{ $width: string }>`
 `;
 
 const BorderX = styled.img.attrs({
-  src: require('../assets/img-border-white-h120.png'),
+  src: require('../assets/borderImg/img-border-white-h120.png'),
   alt: '',
 })<{ $right?: boolean }>`
   ${(props) =>

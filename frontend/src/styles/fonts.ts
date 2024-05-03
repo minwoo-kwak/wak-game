@@ -13,10 +13,10 @@ export const SmallText = styled.div<{ color?: string }>`
 
 export const RegularText = styled.div<{ color?: string }>`
   ${textStyles};
-  font-size: 3.6rem;
+  font-size: 3.2rem;
 `;
 
 export const LargeText = styled.div<{ color?: string }>`
   ${textStyles};
-  font-size: 4.4rem;
+  font-size: 4.8rem;
 `;
