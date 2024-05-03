@@ -3,12 +3,14 @@ package com.wak.game.application.facade;
 import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomCreateResponse;
+import com.wak.game.application.vo.roomVO;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +27,14 @@ import java.util.Map;
 public class RoomFacade {
     private final RoomService roomService;
     private final UserService userService;
+    private final SimpMessageSendingOperations simpMessageSendingOperations;
 
 
     public RoomCreateResponse createRoom(Long id, RoomCreateRequest request) {
         User user = userService.findById(id);
         Room room = roomService.save(user, request.room_name(), request.room_password(), request.limit_players(), request.mode());
-        roomService.addUserToRoom(user, room.getId(), "001", true);
+//        roomService.addUserToRoom(user, room.getId(), "001", true);
+        roomService.saveObject(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         return RoomCreateResponse.of(room.getId());
     }
 
@@ -38,7 +42,12 @@ public class RoomFacade {
         User user = userService.findById(id);
         Room room = roomService.findById(roomId);
         roomService.checkPassword(room, request.room_password());
-        roomService.addUserToRoom(user, room.getId(), "001", false);
+//        roomService.addUserToRoom(user, room.getId(), "001", false);
+        roomService.saveObject(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
+    }
+
+    public void sendRoomList() {
+
     }
 
     public void deleteRoom(Long id, Long roomId) {
@@ -68,3 +77,10 @@ public class RoomFacade {
         return usersInRoom;
     }
 }
+/*
+    @MessageMapping("/room/{channelId}")
+    public void message(Message message, @DestinationVariable("channelId") String channelId){
+        simpMessageSendingOperations.convertAndSend("/topic/channel/" + channelId, message);
+    }
+
+ */
