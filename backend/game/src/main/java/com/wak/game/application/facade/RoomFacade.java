@@ -30,15 +30,20 @@ public class RoomFacade {
     public RoomCreateResponse createRoom(Long id, RoomCreateRequest request) {
         User user = userService.findById(id);
         Room room = roomService.save(user, request.room_name(), request.room_password(), request.limit_players(), request.mode());
+        roomService.addUserToRoom(user, room.getId(), "001", true);
         return RoomCreateResponse.of(room.getId());
     }
 
     public void enterRoom(Long id, RoomEnterRequest request, Long roomId) {
         User user = userService.findById(id);
+        Room room = roomService.findById(roomId);
+        roomService.checkPassword(room, request.room_password());
+        roomService.addUserToRoom(user, room.getId(), "001", false);
     }
 
     public void deleteRoom(Long id, Long roomId) {
         User user = userService.findById(id);
+        Room room = roomService.findById(id);
     }
 
     public List<UserInRoomRequest> enter(User user, Long roomId) {

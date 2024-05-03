@@ -26,6 +26,11 @@ public class RoomService {
         return roomRepository.findByUser(user).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
     }
 
+    public boolean checkPassword(Room room, String password) {
+        if (room.getRoomPassword().equals(password)) return true;
+        else throw new BusinessException(ErrorInfo.ROOM_PASSWORD_IS_WRONG);
+    }
+
     public Room save(User user, String roomName, String roomPassword, short limitPlayer, RoomType mode){
        if (roomRepository.findByUser(user).orElse(null) != null)
            throw new BusinessException(ErrorInfo.ROOM_ALREADY_EXIST);
@@ -42,10 +47,20 @@ public class RoomService {
         HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
         String roomKey = "room:" + roomId;
         hashOps.put(roomKey, "userId", user.getId());
-        hashOps.put(roomKey, "hexColor", "testcolor");
-        hashOps.put(roomKey, "nickname", "testNickname");
+        hashOps.put(roomKey, "hexColor", user.getColor());
+        hashOps.put(roomKey, "nickname", user.getNickname());
         hashOps.put(roomKey, "team", "001");
         hashOps.put(roomKey, "isChief", false);
+    }
+
+    public void addUserToRoom(User user, Long roomId, String team, boolean isChief) {
+        HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
+        String roomKey = "room:" + String.valueOf(roomId);
+        hashOps.put(roomKey, "userId", user.getId().toString());
+        hashOps.put(roomKey, "hexColor", user.getColor().getHexColor());
+        hashOps.put(roomKey, "nickname", user.getNickname());
+        hashOps.put(roomKey, "team", team);
+        hashOps.put(roomKey, "isChief", Boolean.toString(isChief));
     }
 
     public Map<String, String> getUsersInRoom(Long roomId) {
