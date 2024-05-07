@@ -7,11 +7,15 @@ const Layout = styled(FlexLayout)`
   place-self: end;
 `;
 
-export default function ButtonGroup() {
+type ButtonGroupProps = {
+  isHost: boolean;
+};
+
+export default function ButtonGroup({ isHost }: ButtonGroupProps) {
   return (
-    <Layout>
+    <Layout gap='2rem'>
       <RoundButton color='purple' label={`게임 방법`} />
-      {/* <RoundButton color='blue' label={`게임 시작`} /> */}
+      {isHost && <RoundButton color='blue' label={`게임 시작`} />}
       <RoundButton color='red' label={`나가기`} />
     </Layout>
   );
