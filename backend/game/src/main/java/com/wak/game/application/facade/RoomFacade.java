@@ -34,7 +34,7 @@ public class RoomFacade {
     public RoomCreateResponse createRoom(Long id, RoomCreateRequest request) {
         User user = userService.findById(id);
         Room room = roomService.save(user, request.room_name(), request.room_password(), request.limit_players(), request.mode());
-        redisUtil.saveData(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
+        redisUtil.saveData("roomInfo" + String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         return RoomCreateResponse.of(room.getId());
     }
 
@@ -42,7 +42,7 @@ public class RoomFacade {
         User user = userService.findById(id);
         Room room = roomService.findById(roomId);
         roomService.checkPassword(room, request.room_password());
-        redisUtil.saveData(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
+        redisUtil.saveData("roomInfo" + String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
     }
 
     public void sendRoomList() {
