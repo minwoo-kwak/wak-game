@@ -1,21 +1,15 @@
 package com.wak.game.domain.room;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wak.game.application.vo.roomVO;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
-import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

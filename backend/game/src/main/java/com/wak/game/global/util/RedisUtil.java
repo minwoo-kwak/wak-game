@@ -1,6 +1,5 @@
 package com.wak.game.global.util;
 
-import com.wak.game.application.vo.roomVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,9 +18,6 @@ public class RedisUtil {
     //C U
     public void saveData(String key, String hashkey, Object data) {
         redisTemplate.opsForHash().put(key, hashkey, data);
-
-        Map<String, roomVO> result = getData(key, roomVO.class);
-        log.info("2. all entirys: {}" , result);
     }
 
     //R

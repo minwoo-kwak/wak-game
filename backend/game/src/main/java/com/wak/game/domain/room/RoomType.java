@@ -24,4 +24,9 @@ public enum RoomType {
 
         throw new BusinessException(ErrorInfo.ROOM_MODE_NOT_EXIST);
     }
+
+    @Override
+    public String toString() {
+        return mode;
+    }
 }
