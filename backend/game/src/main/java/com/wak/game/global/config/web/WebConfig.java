@@ -1,10 +1,12 @@
 package com.wak.game.global.config.web;
 
+import com.wak.game.domain.room.RoomTypeRequestConverter;
 import com.wak.game.global.token.AuthUserArgumentResolver;
 import com.wak.game.global.token.JWTInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -22,6 +24,12 @@ public class WebConfig implements WebMvcConfigurer {
     private String frontendOrigin;
     private final AuthUserArgumentResolver authUserArgumentResolver;
     private final JWTInterceptor jwtInterceptor;
+
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new RoomTypeRequestConverter());
+    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {

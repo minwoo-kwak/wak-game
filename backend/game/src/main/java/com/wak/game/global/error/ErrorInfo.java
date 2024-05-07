@@ -8,6 +8,10 @@ public enum ErrorInfo {
 
     TEST(HttpStatus.INTERNAL_SERVER_ERROR, "TEST ERROR"),
 
+    /* Sample */
+    SAMPLE_NOT_EXIST(HttpStatus.BAD_REQUEST, "SAMPLE IS NOT FOUND") ,
+    SAMPLE_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "SAMPLE IS ALREADY FOUND"),
+
     /* COLOR */
     COLOR_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "COLOR IS NOT FOUND"),
 
@@ -29,9 +33,13 @@ public enum ErrorInfo {
     /* PLAYER */
     /* PLAYER LOG*/
     /* ROOM */
+    ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM IS NOT FOUND"),
+    ROOM_MODE_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM MODE IS NOT FOUND"),
+    ROOM_ALREADY_EXIST(HttpStatus.NOT_FOUND, "ROOM IS ALREADY EXIST"),
+    ROOM_PASSWORD_IS_WRONG(HttpStatus.NOT_FOUND, "ROOM PASSWORD IS WRONG"),
+
     /* ROOM LOG*/
     /* ROUND */
-    TEST(HttpStatus.INTERNAL_SERVER_ERROR, "TEST ERROR"),
     API_ERROR_ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "Room is not exist"),
     ;
 

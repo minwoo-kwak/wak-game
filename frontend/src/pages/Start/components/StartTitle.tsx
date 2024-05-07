@@ -12,7 +12,7 @@ const TitleImg = styled.img.attrs({
 
 export default function GameTitle() {
   return (
-    <FlexLayout $isCol>
+    <FlexLayout $isCol gap='2rem'>
       <TitleImg />
       <RegularText>{`Win Alive with Clicks`}</RegularText>
     </FlexLayout>

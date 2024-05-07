@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/game-log")
+@RequestMapping("/api/game-log")
 @RequiredArgsConstructor
 public class GameLogController {
 }

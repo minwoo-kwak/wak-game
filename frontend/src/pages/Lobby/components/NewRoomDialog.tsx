@@ -15,8 +15,8 @@ const ContentBlock = styled(FlexLayout)`
   align-items: start;
 `;
 
-const ButtonBlock = styled(RoundButton)`
-  margin-top: 3.2rem;
+const ButtonBlock = styled.div`
+  margin-top: 4.8rem;
 `;
 
 type NewRoomDialogProps = {
@@ -60,7 +60,9 @@ export default function NewRoomDialog({ closeDialog }: NewRoomDialogProps) {
           {inputRow('비밀번호', false, 'password')}
         </FlexLayout>
       </ContentBlock>
-      <ButtonBlock label={`방 만들기`} />
+      <ButtonBlock>
+        <RoundButton label={`방 만들기`} />
+      </ButtonBlock>
     </Dialog>
   );
 }
