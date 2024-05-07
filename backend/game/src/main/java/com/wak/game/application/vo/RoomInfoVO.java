@@ -20,4 +20,7 @@ public class RoomInfoVO {
     public int updateCurrentPlayers() {
         return ++current_players;
     }
+    public int decreaseCurrentPlayers() {
+        return --current_players;
+    }
 }

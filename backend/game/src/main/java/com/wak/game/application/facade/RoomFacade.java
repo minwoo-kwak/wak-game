@@ -3,6 +3,7 @@ package com.wak.game.application.facade;
 import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomCreateResponse;
+import com.wak.game.application.response.socket.RoomInfoResponse;
 import com.wak.game.application.response.socket.RoomListResponse;
 import com.wak.game.application.vo.RoomInfoVO;
 import com.wak.game.application.vo.RoomVO;
@@ -50,6 +51,7 @@ public class RoomFacade {
         else isPrivate = true;
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), new RoomInfoVO(room.getId(), room.getRoomName(), room.getCurrentPlayers(), room.getLimitPlayers(), room.getMode().toString(), false, isPrivate));
         sendRoomList();
+        sendRoomInfo(room);
         return RoomCreateResponse.of(room.getId());
     }
 
@@ -83,15 +85,51 @@ public class RoomFacade {
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
         sendRoomList();
+        sendRoomInfo(room);
     }
 
+
+    /**
+     * GameRoom Exit Method
+     *
+     * @param id
+     * @param roomId
+     */
     public void exitRoom(Long id, Long roomId) {
         User user = userService.findById(id);
-        Room room = roomService.findById(id);
+        Room room = roomService.findById(roomId);
+
+        Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
+        if (!roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_NOT_EXIST);
+
+        RoomVO userRoom = roomVO.get(user.getId().toString());
+        if (userRoom.isChief()) {
+            deleteRoom(room);
+        } else {
+            Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
+            RoomInfoVO roomInfoVO = result.get(roomId.toString());
+            if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST_IN_REDIS);
+
+            int curPlayer = roomInfoVO.decreaseCurrentPlayers();
+            if (curPlayer <= 0)
+                throw new BusinessException(ErrorInfo.ROOM_PLAYER_IS_EMPTY);
+
+            redisUtil.deleteField("room" + room.getId(), String.valueOf(user.getId()));
+            redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
+            sendRoomInfo(room);
+        }
     }
 
+    /**
+     * GameRoom Delete Method
+     *
+     * @param room
+     */
     public void deleteRoom(Room room){
-
+        redisUtil.deleteKey("room" + room.getId());
+        redisUtil.deleteField("roomInfo", String.valueOf(room.getId()));
+        roomService.deleteRoom(room);
+        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), "ROOM IS EXPIRED");
     }
 
     /**
@@ -116,6 +154,16 @@ public class RoomFacade {
             else endIndex = i * 6;
             simpMessageSendingOperations.convertAndSend("/topic/lobby/" + i, new RoomListResponse(size, valueList.subList((i - 1) * 6, endIndex)));
         }
+    }
+
+    public void sendRoomInfo(Room room) {
+        Map<String, RoomInfoVO> roominfo = redisUtil.getData("roomInfo", RoomInfoVO.class);
+        RoomInfoVO roomInfoVO = roominfo.get(room.getId().toString());
+
+        Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
+        List<RoomVO> users = new ArrayList<>(userinfo.values());
+
+        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), room.getRoomName(), roomInfoVO.getCurrent_players(), room.getLimitPlayers(), room.getMode().toString(), room.getUser().getId(), users));
     }
 
     public int getSize(int size) {

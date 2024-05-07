@@ -34,6 +34,10 @@ public class RoomService {
         else throw new BusinessException(ErrorInfo.ROOM_PASSWORD_IS_WRONG);
     }
 
+    public void deleteRoom(Room room) {
+        roomRepository.deleteRoom(room.getId());
+    }
+
     public Room save(User user, String roomName, String roomPassword, short limitPlayer, RoomType mode){
        if (roomRepository.findByUser(user).orElse(null) != null)
            throw new BusinessException(ErrorInfo.ROOM_ALREADY_EXIST);
@@ -44,21 +48,5 @@ public class RoomService {
                 .limitPlayers(limitPlayer)
                 .mode(mode)
                 .build());
-    }
-
-    public void addUserToRoom(User user, Long roomId) {
-        HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
-        String roomKey = "room:" + roomId;
-        hashOps.put(roomKey, "userId", user.getId());
-        hashOps.put(roomKey, "hexColor", user.getColor());
-        hashOps.put(roomKey, "nickname", user.getNickname());
-        hashOps.put(roomKey, "team", "001");
-        hashOps.put(roomKey, "isChief", false);
-    }
-
-    public Map<String, String> getUsersInRoom(Long roomId) {
-        String roomKey = "room:" + roomId;
-        HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
-        return hashOps.entries(roomKey);
     }
 }
