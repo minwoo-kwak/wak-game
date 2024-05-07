@@ -40,21 +40,6 @@ public class RoomService {
         else throw new BusinessException(ErrorInfo.ROOM_PASSWORD_IS_WRONG);
     }
 
-    //C U
-    public void saveObject(String key, String hashkey, Object data) {
-        redisTemplate.opsForHash().put(key, hashkey, data);
-    }
-
-    //R
-    public <T> Map<String, T> getData(String key, Class<T> classType) {
-        Map<Object, Object> rawMap = redisTemplate.opsForHash().entries(key);
-        Map<String, T> typedMap = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : rawMap.entrySet()) {
-            typedMap.put((String) entry.getKey(), classType.cast(entry.getValue()));
-        }
-        return typedMap;
-    }
-
     public Room save(User user, String roomName, String roomPassword, short limitPlayer, RoomType mode){
        if (roomRepository.findByUser(user).orElse(null) != null)
            throw new BusinessException(ErrorInfo.ROOM_ALREADY_EXIST);
