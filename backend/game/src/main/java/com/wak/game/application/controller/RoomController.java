@@ -66,6 +66,15 @@ public class RoomController {
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 
+    @Operation(
+            summary = "Room 게임룸 입장",
+            description = "Room 게임룸에 입장하는 API 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "입장 성공")
+            },
+            security = { @SecurityRequirement(name = "Access-Token") }
+    )
+    @ApiErrorExamples({ErrorInfo.ROOM_USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST_IN_REDIS, ErrorInfo.ROOM_PLAYER_IS_EMPTY})
     @PutMapping("/{roomId}")
     public ResponseEntity<ApiResult<Void>> exitRoom(@AuthUser Long id, @PathVariable("roomId") Long roomId) {
         roomFacade.exitRoom(id, roomId);
