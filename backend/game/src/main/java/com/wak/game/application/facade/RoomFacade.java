@@ -58,6 +58,7 @@ public class RoomFacade {
      *
      * Error
      * 1. 입장 수 제한
+     * 2. 유저 중복 체크
      *
      * @param id
      * @param request
@@ -68,18 +69,29 @@ public class RoomFacade {
         Room room = roomService.findById(roomId);
 
         roomService.checkPassword(room, request.room_password());
+        Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
+        if (roomVO.containsKey(user.getId())) throw new BusinessException(ErrorInfo.ROOM_USER_ALREADY_EXIST);
+
         Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
-
         RoomInfoVO roomInfoVO = result.get(roomId.toString());
-        if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST);
-        int curPlayer = roomInfoVO.updateCurrentPlayers();
+        if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST_IN_REDIS);
 
+        int curPlayer = roomInfoVO.updateCurrentPlayers();
         if (curPlayer > roomInfoVO.getLimit_players())
             throw new BusinessException(ErrorInfo.ROOM_PLAYER_IS_FULL);
 
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
         sendRoomList();
+    }
+
+    public void exitRoom(Long id, Long roomId) {
+        User user = userService.findById(id);
+        Room room = roomService.findById(id);
+    }
+
+    public void deleteRoom(Room room){
+
     }
 
     /**
@@ -96,7 +108,6 @@ public class RoomFacade {
         });
 
         int size = getSize(valueList.size());
-        log.info("size {}", valueList.size());
 
         for (int i = 1; i <= size; i++) {
             int endIndex = 0;
@@ -114,30 +125,4 @@ public class RoomFacade {
             return (size / 6) + 1;
     }
 
-    public void deleteRoom(Long id, Long roomId) {
-        User user = userService.findById(id);
-        Room room = roomService.findById(id);
-    }
-
-    public List<UserInRoomRequest> enter(User user, Long roomId) {
-        roomService.addUserToRoom(user, roomId);
-        Map<String, String> roomUsers = roomService.getUsersInRoom(roomId);
-
-        List<UserInRoomRequest> usersInRoom = new ArrayList<>();
-        roomUsers.forEach((key, value) -> {
-            String[] userInfo = value.split("#");
-            if (userInfo.length >= 4) {
-                UserInRoomRequest userRequest = UserInRoomRequest.builder()
-                        .roomId(roomId)
-                        .userid(Long.parseLong(userInfo[0]))
-                        .hexColor(userInfo[1])
-                        .nickname(userInfo[2])
-                        .team(Integer.parseInt(userInfo[3]))
-                        .build();
-                usersInRoom.add(userRequest);
-            }
-        });
-
-        return usersInRoom;
-    }
 }
