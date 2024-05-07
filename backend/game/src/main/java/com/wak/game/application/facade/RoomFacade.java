@@ -96,13 +96,14 @@ public class RoomFacade {
         });
 
         int size = getSize(valueList.size());
+        log.info("size {}", valueList.size());
 
         for (int i = 1; i <= size; i++) {
             int endIndex = 0;
-            if (i * 6 >= size)
-                endIndex = size;
+            if (i * 6 >= valueList.size())
+                endIndex = valueList.size();
             else endIndex = i * 6;
-            simpMessageSendingOperations.convertAndSend("/topic/lobby" + i, new RoomListResponse(size, valueList.subList((i - 1) * 6, endIndex)));
+            simpMessageSendingOperations.convertAndSend("/topic/lobby/" + i, new RoomListResponse(size, valueList.subList((i - 1) * 6, endIndex)));
         }
     }
 
