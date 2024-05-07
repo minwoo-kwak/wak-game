@@ -33,8 +33,14 @@ public enum ErrorInfo {
     /* PLAYER */
     /* PLAYER LOG*/
     /* ROOM */
+    ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM IS NOT FOUND"),
+    ROOM_MODE_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM MODE IS NOT FOUND"),
+    ROOM_ALREADY_EXIST(HttpStatus.NOT_FOUND, "ROOM IS ALREADY EXIST"),
+    ROOM_PASSWORD_IS_WRONG(HttpStatus.NOT_FOUND, "ROOM PASSWORD IS WRONG"),
+
     /* ROOM LOG*/
     /* ROUND */
+    API_ERROR_ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "Room is not exist"),
     ;
 
     ErrorInfo(HttpStatus httpStatus, String message) {
