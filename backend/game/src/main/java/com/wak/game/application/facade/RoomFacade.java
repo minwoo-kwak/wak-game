@@ -72,7 +72,7 @@ public class RoomFacade {
 
         roomService.checkPassword(room, request.room_password());
         Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
-        if (roomVO.containsKey(user.getId())) throw new BusinessException(ErrorInfo.ROOM_USER_ALREADY_EXIST);
+        if (roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_ALREADY_EXIST);
 
         Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
         RoomInfoVO roomInfoVO = result.get(roomId.toString());
