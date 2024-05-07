@@ -8,6 +8,7 @@ import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
+import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -28,13 +29,12 @@ public class RoomFacade {
     private final RoomService roomService;
     private final UserService userService;
     private final SimpMessageSendingOperations simpMessageSendingOperations;
-
+    private final RedisUtil redisUtil;
 
     public RoomCreateResponse createRoom(Long id, RoomCreateRequest request) {
         User user = userService.findById(id);
         Room room = roomService.save(user, request.room_name(), request.room_password(), request.limit_players(), request.mode());
-//        roomService.addUserToRoom(user, room.getId(), "001", true);
-        roomService.saveObject(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
+        redisUtil.saveData(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         return RoomCreateResponse.of(room.getId());
     }
 
@@ -42,8 +42,7 @@ public class RoomFacade {
         User user = userService.findById(id);
         Room room = roomService.findById(roomId);
         roomService.checkPassword(room, request.room_password());
-//        roomService.addUserToRoom(user, room.getId(), "001", false);
-        roomService.saveObject(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
+        redisUtil.saveData(String.valueOf(room.getId()), String.valueOf(user.getId()), new roomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
     }
 
     public void sendRoomList() {
