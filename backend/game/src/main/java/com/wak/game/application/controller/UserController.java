@@ -47,7 +47,7 @@ public class UserController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserInfoResponse.class)))	 // Successful Response
             },
-            security = { @SecurityRequirement(name = "Access-Token") } // Token을 요구하는 API에 필수 기입
+            security = { @SecurityRequirement(name = "Access-Token") }
     )
     @ApiErrorExamples({ErrorInfo.COLOR_NOT_EXIST, ErrorInfo.USER_NOT_EXIST})
     @GetMapping("/info")
