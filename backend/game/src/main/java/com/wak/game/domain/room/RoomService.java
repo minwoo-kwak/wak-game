@@ -1,21 +1,15 @@
 package com.wak.game.domain.room;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wak.game.application.vo.roomVO;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
-import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,6 +35,10 @@ public class RoomService {
         else throw new BusinessException(ErrorInfo.ROOM_PASSWORD_IS_WRONG);
     }
 
+    public void deleteRoom(Room room) {
+        roomRepository.deleteRoom(room.getId());
+    }
+
     //C U
     public void saveObject(String key, String hashkey, Object data) {
         redisTemplate.opsForHash().put(key, hashkey, data);
@@ -48,7 +46,7 @@ public class RoomService {
 
     public boolean isHost(User user, Room room) {
 
-        Map<String, roomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
+        Map<String, RoomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
 
         if(usersInRoom.get(String.valueOf(user.getId())).isChief())
             return true;
@@ -65,7 +63,6 @@ public class RoomService {
         }
         return typedMap;
     }
-
     public Room save(User user, String roomName, String roomPassword, short limitPlayer, RoomType mode){
        if (roomRepository.findByUser(user).orElse(null) != null)
            throw new BusinessException(ErrorInfo.ROOM_ALREADY_EXIST);
@@ -76,22 +73,6 @@ public class RoomService {
                 .limitPlayers(limitPlayer)
                 .mode(mode)
                 .build());
-    }
-
-    public void addUserToRoom(User user, Long roomId) {
-        HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
-        String roomKey = "room:" + roomId;
-        hashOps.put(roomKey, "userId", user.getId());
-        hashOps.put(roomKey, "hexColor", user.getColor());
-        hashOps.put(roomKey, "nickname", user.getNickname());
-        hashOps.put(roomKey, "team", "001");
-        hashOps.put(roomKey, "isChief", false);
-    }
-
-    public Map<String, String> getUsersInRoom(Long roomId) {
-        String roomKey = "room:" + roomId;
-        HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
-        return hashOps.entries(roomKey);
     }
 
     public void isInGame(Room room) {

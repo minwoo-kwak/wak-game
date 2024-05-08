@@ -16,6 +16,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
+
     private ObjectMapper objectMapper = new ObjectMapper();
     //C U
     public void saveData(String key, String hashkey, Object data) {
@@ -33,7 +34,6 @@ public class RedisUtil {
         }
     }
 
-    //R
     public <T> Map<String, T> getData(String key, Class<T> classType) {
         Map<Object, Object> map = redisTemplate.opsForHash().entries(key);
         Map<String, T> result = new HashMap<>();
@@ -55,18 +55,14 @@ public class RedisUtil {
     }
 
 
-    //D - 전체
-    // 단일 키 삭제
     public void deleteKey(String key) {
         redisTemplate.delete(key);
     }
 
-    // 여러 키 삭제
     public void deleteKey(Collection<String> keys) {
         redisTemplate.delete(keys);
     }
 
-    //D - map 요소 하나
     public void deleteField(String key, String field) {
         redisTemplate.opsForHash().delete(key, field);
     }
