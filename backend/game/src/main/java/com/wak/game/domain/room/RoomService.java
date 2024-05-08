@@ -23,11 +23,12 @@ import java.util.stream.Collectors;
 public class RoomService {
 
     private final RoomRepository roomRepository;
+    private final RedisUtil redisUtil;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
     public Room findById(Long roomId) {
-        return roomRepository.findById(roomId).orElseThrow(() -> new BusinessException(ErrorInfo.API_ERROR_ROOM_NOT_EXIST));
+        return roomRepository.findById(roomId).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
     }
 
     public Room findByUser(User user){
@@ -45,6 +46,16 @@ public class RoomService {
         redisTemplate.opsForHash().put(key, hashkey, data);
     }
 
+    public boolean isHost(User user, Room room) {
+
+        Map<String, roomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
+
+        if(usersInRoom.get(String.valueOf(user.getId())).isChief())
+            return true;
+
+        throw new BusinessException(ErrorInfo.ROOM_NOT_HOST);
+
+    }
     //R
     public <T> Map<String, T> getData(String key, Class<T> classType) {
         Map<Object, Object> rawMap = redisTemplate.opsForHash().entries(key);
@@ -81,5 +92,10 @@ public class RoomService {
         String roomKey = "room:" + roomId;
         HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
         return hashOps.entries(roomKey);
+    }
+
+    public void isInGame(Room room) {
+        if(room.isStart())
+            throw new BusinessException(ErrorInfo.ROOM_ALREADY_STARTED);
     }
 }

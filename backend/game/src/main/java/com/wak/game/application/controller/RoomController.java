@@ -10,7 +10,7 @@ import com.wak.game.global.util.ApiUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.wak.game.application.controller.dto.UserInRoomRequest;
+import com.wak.game.application.request.UserInRoomRequest;
 import com.wak.game.domain.color.Color;
 import com.wak.game.domain.user.User;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
