@@ -78,6 +78,7 @@ public class RoomFacade {
         Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
         RoomInfoVO roomInfoVO = result.get(roomId.toString());
         if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST_IN_REDIS);
+        if (roomInfoVO.isStart()) throw new BusinessException(ErrorInfo.ROOM_IS_START);
 
         int curPlayer = roomInfoVO.updateCurrentPlayers();
         if (curPlayer > roomInfoVO.getLimit_players())
@@ -119,6 +120,7 @@ public class RoomFacade {
 
             redisUtil.deleteField("room" + room.getId(), String.valueOf(user.getId()));
             redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
+            sendRoomList();
             sendRoomInfoSocket(room);
         }
     }
@@ -142,10 +144,13 @@ public class RoomFacade {
         Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
         if (!roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_NOT_EXIST);
 
+        Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
+        RoomInfoVO roomInfoVO = result.get(roomId.toString());
+
         RoomVO userRoom = roomVO.get(user.getId().toString());
 
         sendRoomInfoSocket(room);
-        return RoomBasicInfoResponse.of(userId, userRoom.isChief(), roomId, room.getRoomName(), room.getMode().toString(), room.getLimitPlayers());
+        return RoomBasicInfoResponse.of(userId, userRoom.isChief(), roomId, room.getRoomName(), room.getMode().toString(), room.getLimitPlayers(),roomInfoVO.isLock());
     }
 
     /**
@@ -182,7 +187,7 @@ public class RoomFacade {
         Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
         List<RoomVO> users = new ArrayList<>(userinfo.values());
 
-        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfoVO.getCurrent_players(), room.getUser().getId(), users));
+        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfoVO.getCurrent_players(), room.getUser().getId(), roomInfoVO.isStart(), users));
     }
 
     public int getSize(int size) {
