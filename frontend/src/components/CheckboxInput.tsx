@@ -7,7 +7,7 @@ const InputBlock = styled.div`
   align-items: center;
 `;
 
-const StyledCheckbox = styled.div`
+const StyledCheckbox = styled.div<{ disabled?: boolean }>`
   width: 3.4rem;
   height: 3.4rem;
   border-style: solid;
@@ -15,9 +15,9 @@ const StyledCheckbox = styled.div`
   border-right-width: 0rem;
   border-top-width: 0.4rem;
   border-bottom-width: 0.4rem;
-  background-color: white;
+  background-color: ${(props) => (props.disabled ? '#bababa' : 'white')};
   &:hover {
-    background-color: #00000020;
+    background-color: #bababa;
   }
   text-align: center;
   line-height: 3.2rem;
@@ -34,13 +34,31 @@ const BorderX = styled.img.attrs({
     `};
 `;
 
-export default function CheckboxInput() {
-  const [isChecked, setIsChecked] = useState(false);
+type CheckboxInputProps = {
+  disabled?: boolean;
+  checked?: boolean;
+  onClick?: () => void;
+};
+
+export default function CheckboxInput({
+  disabled,
+  checked,
+  onClick,
+}: CheckboxInputProps) {
+  const [isChecked, setIsChecked] = useState(checked ? true : false);
 
   return (
     <InputBlock>
       <BorderX />
-      <StyledCheckbox onClick={() => setIsChecked(!isChecked)}>
+      <StyledCheckbox
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled && !checked) {
+            onClick && onClick();
+            setIsChecked(!isChecked);
+          }
+        }}
+      >
         {isChecked && <LargeText color='#725bff'>X</LargeText>}
       </StyledCheckbox>
       <BorderX $right />

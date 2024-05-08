@@ -25,6 +25,9 @@ const StyledInput = styled.input<{ $isRound?: boolean }>`
   &:focus {
     outline-width: 0rem;
   }
+  &:disabled {
+    background-color: #bababa;
+  }
   ${textStyles}
   text-align: ${(props) => (props.$isRound ? 'center' : 'start')};
 `;
@@ -43,10 +46,17 @@ type InputProps = {
   name: string;
   width?: string;
   isRound?: boolean;
+  disabled?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export default function Input({ name, width, isRound, onChange }: InputProps) {
+export default function Input({
+  name,
+  width,
+  isRound,
+  disabled,
+  onChange,
+}: InputProps) {
   const [inputValue, SetInputValue] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +78,7 @@ export default function Input({ name, width, isRound, onChange }: InputProps) {
         value={inputValue}
         width={width || '20rem'}
         color='black'
+        disabled={disabled}
         onChange={handleChange}
       />
       <BorderX src={img} $right />

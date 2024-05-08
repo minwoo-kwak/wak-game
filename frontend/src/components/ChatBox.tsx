@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useUserStore from '../store/store';
 
 import styled from 'styled-components';
 import { FlexLayout } from '../styles/layout';
@@ -9,7 +10,7 @@ import GrayTitleBox from './GrayTitleBox';
 import Input from './Input';
 import Button from './Button';
 
-const ChatText = styled.div<{ height: string }>`
+const ChatBlock = styled.div<{ height: string }>`
   width: 32rem;
   height: ${(props) => props.height};
   ${textStyles}
@@ -17,6 +18,15 @@ const ChatText = styled.div<{ height: string }>`
   flex-direction: column;
   gap: 1rem;
   overflow-y: auto;
+`;
+
+const ChatLine = styled.div`
+  display: flex;
+  gap: 0.4rem;
+`;
+
+const ChatText = styled.div`
+  ${textStyles}
 `;
 
 type ChatBoxProps = {
@@ -27,24 +37,29 @@ type ChatBoxProps = {
 export default function ChatBox({ isShort, text }: ChatBoxProps) {
   const [userChatting, setUserChatting] = useState<string[][]>([]);
   const [chatting, setChatting] = useState('');
+  const { userData } = useUserStore();
 
   const handleChange = (e: { target: { value: string } }) => {
     setChatting(e.target.value);
   };
 
   const handleClick = () => {
-    console.log(chatting);
-    setUserChatting([...userChatting, ['김싸피', chatting]]);
+    setUserChatting([...userChatting, [userData.nickname, chatting]]);
   };
 
   return (
     <WhiteBox mode={isShort ? 'MEDIUM' : 'TALL'} width='32rem'>
       <GrayTitleBox text={text} />
-      <ChatText height={isShort ? '15.2rem' : '45.2rem'}>
+      <ChatBlock height={isShort ? '15.2rem' : '45.2rem'}>
         {userChatting.map((value, index) => {
-          return <div key={index}>{`${value[0]} : ${value[1]}`}</div>;
+          return (
+            <ChatLine key={index}>
+              <ChatText color={userData.color}>{`${value[0]}`}</ChatText>
+              <ChatText>{`: ${value[1]}`}</ChatText>
+            </ChatLine>
+          );
         })}
-      </ChatText>
+      </ChatBlock>
       <FlexLayout gap='1rem'>
         <Input name='chatting' onChange={handleChange} />
         <Button label={`전송`} onClick={handleClick} />
