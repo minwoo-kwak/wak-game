@@ -4,9 +4,9 @@ import com.wak.game.application.vo.RoomInfoVO;
 
 import java.util.List;
 
-public record RoomListResponse (int total_page, List<RoomInfoVO> rooms){
-    public RoomListResponse(int total_page, List<RoomInfoVO> rooms) {
-        this.total_page = total_page;
+public record RoomListResponse (int totalPage, List<RoomInfoVO> rooms){
+    public RoomListResponse(int totalPage, List<RoomInfoVO> rooms) {
+        this.totalPage = totalPage;
         this.rooms = rooms;
     }
 }

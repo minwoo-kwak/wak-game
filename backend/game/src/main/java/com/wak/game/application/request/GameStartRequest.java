@@ -1,4 +1,4 @@
-package com.wak.game.application.controller.dto;
+package com.wak.game.application.request;
 
 import lombok.*;
 

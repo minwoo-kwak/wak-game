@@ -1,10 +1,10 @@
 package com.wak.game.application.response;
 
-public record RoomCreateResponse (Long room_id){
+public record RoomCreateResponse (Long roomId){
 
-    public static RoomCreateResponse of (Long room_id) {
-        return new RoomCreateResponse(room_id);
+    public static RoomCreateResponse of (Long roomId) {
+        return new RoomCreateResponse(roomId);
     }
 
-    public RoomCreateResponse(Long room_id) {this.room_id = room_id;}
+    public RoomCreateResponse(Long roomId) {this.roomId = roomId;}
 }
