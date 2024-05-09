@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.wak.chat.application.chat.dto.ChatRequest;
 import com.wak.chat.application.chat.dto.ChatResponse;
 import com.wak.chat.domain.chat.service.ChatService;
-import com.wak.chat.external.user.client.UserFeignClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +18,6 @@ public class ChatController {
 
 	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final ChatService chatService;
-	private final UserFeignClient userFeignClient;
 
 	@MessageMapping("/lobby-chat")
 	public void chatInLobby(ChatRequest chatRequest, @Header("Authorization") String token) {
