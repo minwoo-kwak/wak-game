@@ -23,6 +23,9 @@ class MongoConfig {
     @Value("${spring.data.mongodb.port}")
     String port;
 
+    @Value("${spring.data.mongodb.database}")
+    String database;
+
     @Bean
     MongoClient mongoClient() {
         String uri = String.format("mongodb://%s:%s@%s:%s", username, password, host, port);
@@ -31,6 +34,6 @@ class MongoConfig {
 
     @Bean
     MongoOperations mongoTemplate(MongoClient mongoClient) {
-        return new MongoTemplate(mongoClient, "test");
+        return new MongoTemplate(mongoClient, database);
     }
 }
