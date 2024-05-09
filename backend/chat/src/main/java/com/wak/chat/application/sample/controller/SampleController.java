@@ -1,10 +1,10 @@
-package com.wak.chat.application.controller;
+package com.wak.chat.application.sample.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.wak.chat.domain.sample.SampleResponse;
+import com.wak.chat.application.sample.dto.SampleResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
