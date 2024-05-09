@@ -12,7 +12,6 @@ import java.util.Objects;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
 public class MongodbTest {
 
     @Autowired
