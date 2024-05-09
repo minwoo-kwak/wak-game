@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Slf4j
@@ -16,6 +17,10 @@ public class JWTInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (CorsUtils.isPreFlightRequest(request)) {
+            return true;
+        }
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

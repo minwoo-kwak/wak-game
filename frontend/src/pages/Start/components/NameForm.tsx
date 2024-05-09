@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login } from '../../../api/user';
+import useUserStore from '../../../store/store';
 
 import styled, { keyframes } from 'styled-components';
 import { SmallText } from '../../../styles/fonts';
@@ -15,26 +17,73 @@ const BlinkSmallText = styled(SmallText)`
   `} 1s steps(2, jump-none) infinite;
 `;
 
+const FormBlock = styled(FlexLayout)`
+  position: relative;
+`;
+
+const ExclamationImg = styled.img.attrs({
+  src: require('../../../assets/img-exclamation-mark.png'),
+  alt: '사용할 수 없는 닉네임',
+})`
+  width: 5.2rem;
+  height: fit-content;
+  position: absolute;
+`;
+
 export default function NicknameForm() {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState('');
+  const [message, setMessage] = useState<
+    'NO_INPUT' | 'INVALID_LENGTH' | 'DUPLICATED'
+  >('NO_INPUT');
+  const { setUserData } = useUserStore();
 
   const handleChange = (e: { target: { value: string } }) => {
     setNickname(e.target.value);
   };
 
-  const handleClick = () => {
-    console.log(nickname);
-    navigate('/lobby');
+  const handleClick = async () => {
+    if (nickname.length === 0) {
+      setMessage('NO_INPUT');
+    } else if (6 < nickname.length) {
+      setMessage('INVALID_LENGTH');
+    } else {
+      try {
+        const fetchedData = await login(nickname);
+        setUserData({
+          nickname: nickname,
+          color: fetchedData.data.color,
+          token: fetchedData.data.token,
+        });
+        navigate('/lobby');
+      } catch (error: any) {
+        const { message } = error.response.data.error.apierror;
+        if (message === 'USER IS ALREADY FOUND') {
+          setMessage('DUPLICATED');
+        } else {
+          console.error('로그인 에러', error);
+          navigate('/error');
+        }
+      }
+    }
   };
 
   return (
     <FlexLayout $isCol gap='1rem'>
-      <BlinkSmallText>{`시작하려면 닉네임을 입력하세요`}</BlinkSmallText>
-      <FlexLayout gap='1rem'>
+      {message === 'NO_INPUT' ? (
+        <BlinkSmallText>{`시작하려면 닉네임을 입력하세요`}</BlinkSmallText>
+      ) : (
+        <SmallText>
+          {message === 'INVALID_LENGTH'
+            ? `닉네임은 6자 이하로 입력해 주세요`
+            : `이미 사용 중인 닉네임이에요 ,_.)o`}
+        </SmallText>
+      )}
+      <FormBlock gap='1rem'>
+        {message !== 'NO_INPUT' && <ExclamationImg />}
         <Input isRound name='nickname' width='36rem' onChange={handleChange} />
         <Button isBigger label={`GO!`} onClick={handleClick} />
-      </FlexLayout>
+      </FormBlock>
     </FlexLayout>
   );
 }

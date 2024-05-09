@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface RoomRepositoryDSL {
     Optional<Room> findByUser(User user);
-
+    void deleteRoom(Long roomId);
 }

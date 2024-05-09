@@ -40,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/users", "/api/test/**", "/api/swagger-ui/**", "/swagger-ui/**" , "/api/api-docs/**", "/api-docs/**");
+                .excludePathPatterns("/api/users", "/api/test/**", "/api/swagger-ui/**", "/swagger-ui/**" , "/api/api-docs/**", "/api-docs/**", "/api/socket/**", "/api/socket");
     }
 
     @Override
@@ -55,6 +55,7 @@ public class WebConfig implements WebMvcConfigurer {
                         HttpMethod.DELETE.name(),
                         HttpMethod.OPTIONS.name()
                 )
+                .allowCredentials(true)
                 .maxAge(3600);
     }
 
