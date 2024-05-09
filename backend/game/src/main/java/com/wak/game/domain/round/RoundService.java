@@ -2,8 +2,8 @@ package com.wak.game.domain.round;
 
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.gameVO;
-import com.wak.game.application.vo.roomVO;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
@@ -44,15 +44,15 @@ public class RoundService {
      * @return
      */
     public List<Long> initializeGameStatuses(Room room, Round round) {
-        Map<String, roomVO> map = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
+        Map<String, RoomVO> map = redisUtil.getData(String.valueOf(room.getId()), RoomVO.class);
         List<Long> playersId = new ArrayList<>();
 
-        for (Map.Entry<String, roomVO> entry : map.entrySet()) {
-            roomVO roomUser = entry.getValue();
-            gameVO gameUser = new gameVO(roomUser.userId(), roomUser.hexColor(), roomUser.nickname(), roomUser.team(), roomUser.isChief(), 1);
+        for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
+            RoomVO roomUser = entry.getValue();
+            gameVO gameUser = new gameVO(roomUser.user_id(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isChief(), 1);
 
             String key = "roundId:"+round.getId()+":users";
-            redisUtil.saveData(key, "userId:" + roomUser.userId(), gameUser);
+            redisUtil.saveData(key, "userId:" + roomUser.user_id(), gameUser);
 
             playersId.add(gameUser.userId());
         }

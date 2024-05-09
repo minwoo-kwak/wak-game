@@ -1,14 +1,17 @@
 package com.wak.game.domain.room;
 
+import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
+import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -46,7 +49,7 @@ public class RoomService {
 
     public boolean isHost(User user, Room room) {
 
-        Map<String, RoomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
+        Map<String, RoomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), RoomVO.class);
 
         if(usersInRoom.get(String.valueOf(user.getId())).isChief())
             return true;
