@@ -1,11 +1,15 @@
 package com.wak.game.domain.round;
 
-import com.wak.game.application.controller.dto.AlivePlayerResponse;
-import com.wak.game.application.controller.dto.GameStartRequest;
+import com.wak.game.application.request.GameStartRequest;
+import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.vo.gameVO;
+import com.wak.game.application.vo.roomVO;
 import com.wak.game.domain.room.Room;
+import com.wak.game.domain.user.User;
+import com.wak.game.global.error.ErrorInfo;
+import com.wak.game.global.error.exception.BusinessException;
+import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,8 +17,12 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class RoundService {
-    private final RedisTemplate<String, Object> redisTemplate;
     private final RoundRepository roundRepository;
+    private final RedisUtil redisUtil;
+
+    public Round findById(Long roundId) {
+        return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
+    }
 
     public Round startRound(Room room, GameStartRequest gameStartRequest) {
 
@@ -28,31 +36,64 @@ public class RoundService {
         return roundRepository.save(round);
     }
 
-    public List<AlivePlayerResponse> initializeGameStatuses(Round currentRound, Long roomId) {
-        List<AlivePlayerResponse> statuses = new ArrayList<>();
-        Set<String> userKeys = redisTemplate.keys("room:" + roomId + ":user:*");
-        for (String userKey : userKeys) {
-            Map<Object, Object> userData = redisTemplate.opsForHash().entries(userKey);
-            AlivePlayerResponse status = new AlivePlayerResponse(
-                    currentRound.getId(),
-                    Long.parseLong(userData.get("userId").toString()),
-                    1,//일단  개인전
-                    userData.get("team").toString(),
-                    userData.get("hexColor").toString()
-            );
-            statuses.add(status);
+    /**
+     * 대기방(레디스) 유저 -> 게임중(레디스) 유저로 덮어씌우기
+     *
+     * @param room
+     * @param round
+     * @return
+     */
+    public List<Long> initializeGameStatuses(Room room, Round round) {
+        Map<String, roomVO> map = redisUtil.getData(String.valueOf(room.getId()), roomVO.class);
+        List<Long> playersId = new ArrayList<>();
+
+        for (Map.Entry<String, roomVO> entry : map.entrySet()) {
+            roomVO roomUser = entry.getValue();
+            gameVO gameUser = new gameVO(roomUser.userId(), roomUser.hexColor(), roomUser.nickname(), roomUser.team(), roomUser.isChief(), 1);
+
+            String key = "roundId:"+round.getId()+":users";
+            redisUtil.saveData(key, "userId:" + roomUser.userId(), gameUser);
+
+            playersId.add(gameUser.userId());
         }
-        return statuses;
+
+        return playersId;
     }
 
-    public void updateGameStatus(Long roundId, List<AlivePlayerResponse> players) {
-        players.forEach(player -> {
-            String key = "gameStatus:" + roundId + ":user:" + player.getUserId();
-            Map<String, String> map = new HashMap<>();
-            map.put("stamina", String.valueOf(player.getStamina()));
-            map.put("team", player.getTeam());
-            map.put("hexColor", player.getHexColor());
-            redisTemplate.opsForHash().putAll(key, map);
-        });
+    public SummaryCountResponse getSummaryCount(Round round) {
+        String key = "roundId:" + round.getId()+":users";
+        Map<String, gameVO> result = redisUtil.getData(key, gameVO.class);
+
+        int aliveCount = 0;
+        for (Map.Entry<String, gameVO> entry : result.entrySet()) {
+            gameVO player = entry.getValue();
+            if (player.stamina() > 0)
+                aliveCount++;
+
+        }
+        return SummaryCountResponse.builder()
+                .aliveCount(aliveCount)
+                .totalCount(result.size())
+                .build();
     }
+
+    public boolean isAlive(Round round, User user) {
+        String key = "roundId:" + round.getId()+":users";
+        Map<String, gameVO> result = redisUtil.getData(key, gameVO.class);
+        for (Map.Entry<String, gameVO> entry : result.entrySet()) {
+            gameVO player = entry.getValue();
+            if (player.userId() == user.getId()){
+                if(player.stamina()>0)
+                    return true;
+                return false;
+            }
+        }
+        throw new BusinessException(ErrorInfo.USER_NOT_EXIST);
+    }
+
+
+   /* public boolean isAlive(Round round, User user) {
+
+        return false;
+    }*/
 }

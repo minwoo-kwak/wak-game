@@ -3,6 +3,7 @@ package com.wak.game.application.facade;
 import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomBasicInfoResponse;
+import com.wak.game.application.request.UserInRoomRequest;
 import com.wak.game.application.response.RoomCreateResponse;
 import com.wak.game.application.response.socket.RoomInfoResponse;
 import com.wak.game.application.response.socket.RoomListResponse;
@@ -21,7 +22,6 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.wak.game.application.controller.dto.UserInRoomRequest;
 
 import java.util.*;
 

@@ -44,10 +44,13 @@ public enum ErrorInfo {
     ROOM_USER_NOT_EXIST(HttpStatus.NOT_FOUND, "USER IS NOT EXIST IN ROOM"),
     ROOM_IS_START(HttpStatus.NOT_FOUND, "ROOM IS START"),
 
+    ROOM_ALREADY_STARTED(HttpStatus.CONFLICT,"ROOM IS ALREADY IN GAME"),
+    ROOM_NOT_HOST(HttpStatus.FORBIDDEN, "DO NOT HAVE PERMISSION TO START THE GAME"),
     /* ROOM LOG*/
     /* ROUND */
-    API_ERROR_ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "Room is not exist"),
-    ;
+    ROUND_NOT_EXIST(HttpStatus.NOT_FOUND, "ROUND IS NOT FOUND")
+
+    /**/;
 
     ErrorInfo(HttpStatus httpStatus, String message) {
         this.httpStatus = httpStatus;
