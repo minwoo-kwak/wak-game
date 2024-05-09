@@ -49,10 +49,10 @@ public class RoundService {
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
-            gameVO gameUser = new gameVO(roomUser.user_id(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isChief(), 1);
+            gameVO gameUser = new gameVO(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
 
             String key = "roundId:"+round.getId()+":users";
-            redisUtil.saveData(key, "userId:" + roomUser.user_id(), gameUser);
+            redisUtil.saveData(key, "userId:" + roomUser.userId(), gameUser);
 
             playersId.add(gameUser.userId());
         }

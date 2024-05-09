@@ -8,20 +8,20 @@ import lombok.*;
 @NoArgsConstructor
 public class UserInRoomRequest {
     private long roomId;
-    private long userid;
-    private String hexColor;
+    private long userId;
+    private String color;
     private String nickname;
     private int team;
-    private boolean isChief;
+    private boolean isHost;
 
     @Builder
-    public UserInRoomRequest(long roomId, long userid, String hexColor, String nickname, int team, boolean isChief) {
+    public UserInRoomRequest(long roomId, long userId, String color, String nickname, int team, boolean isHost) {
         this.roomId = roomId;
-        this.userid = userid;
-        this.hexColor = hexColor;
+        this.userId = userId;
+        this.color = color;
         this.nickname = nickname;
         this.team = team;
-        this.isChief = isChief;
+        this.isHost = isHost;
     }
 
 }

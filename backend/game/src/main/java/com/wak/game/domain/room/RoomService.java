@@ -7,7 +7,6 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +50,7 @@ public class RoomService {
 
         Map<String, RoomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), RoomVO.class);
 
-        if(usersInRoom.get(String.valueOf(user.getId())).isChief())
+        if(usersInRoom.get(String.valueOf(user.getId())).isHost())
             return true;
 
         throw new BusinessException(ErrorInfo.ROOM_NOT_HOST);

@@ -1,26 +1,57 @@
 package com.wak.game.application.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class RoomInfoVO {
 
-    private long room_id;
-    private String room_name;
-    private int current_players;
-    private int limit_players;
+    private long roomId;
+    private String roomName;
+    private int currentPlayers;
+    private int limitPlayers;
     private String mode;
-    private boolean start;
-    private boolean lock;
+    @JsonProperty("isStart")
+    private boolean isStart;
+    @JsonProperty("isPublic")
+    private boolean isPublic;
 
     public int updateCurrentPlayers() {
-        return ++current_players;
+        return ++currentPlayers;
     }
     public int decreaseCurrentPlayers() {
-        return --current_players;
+        return --currentPlayers;
+    }
+
+    public long getRoomId() {
+        return roomId;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public int getCurrentPlayers() {
+        return currentPlayers;
+    }
+
+    public int getLimitPlayers() {
+        return limitPlayers;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    @JsonProperty("isStart")
+    public boolean getIsStart() {
+        return isStart;
+    }
+    @JsonProperty("isPublic")
+    public boolean getIsPublic() {
+        return isPublic;
     }
 }

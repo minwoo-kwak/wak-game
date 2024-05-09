@@ -29,7 +29,7 @@ public class PlayerService {
                             .roundId(round.getId())
                             .userId(player.userId())
                             .nickname(player.nickname())
-                            .hexColor(player.hexColor())
+                            .color(player.color())
                             .stamina(player.stamina())
                             .team(player.team())
                             .build()

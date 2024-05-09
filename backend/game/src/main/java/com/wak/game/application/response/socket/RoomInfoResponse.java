@@ -4,12 +4,12 @@ import com.wak.game.application.vo.RoomVO;
 
 import java.util.List;
 
-public record RoomInfoResponse (Long room_id, int current_players, Long user_id, boolean start, List<RoomVO> users){
-    public RoomInfoResponse(Long room_id, int current_players, Long user_id, boolean start, List<RoomVO> users) {
-        this.room_id = room_id;
-        this.current_players = current_players;
-        this.user_id = user_id;
-        this.start = start;
+public record RoomInfoResponse (Long roomId, int currentPlayers, Long hostId, boolean isStart, List<RoomVO> users){
+    public RoomInfoResponse(Long roomId, int currentPlayers, Long hostId, boolean isStart, List<RoomVO> users) {
+        this.roomId = roomId;
+        this.currentPlayers = currentPlayers;
+        this.hostId = hostId;
+        this.isStart = isStart;
         this.users = users;
     }
 }

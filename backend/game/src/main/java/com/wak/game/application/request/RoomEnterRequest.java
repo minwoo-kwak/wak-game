@@ -1,7 +1,7 @@
 package com.wak.game.application.request;
 
-public record RoomEnterRequest (String room_password){
-    public RoomEnterRequest(String room_password) {
-        this.room_password = room_password;
+public record RoomEnterRequest (String roomPassword){
+    public RoomEnterRequest(String roomPassword) {
+        this.roomPassword = roomPassword;
     }
 }
