@@ -15,6 +15,7 @@ import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
+import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -31,8 +32,8 @@ import java.util.*;
 public class RoomFacade {
     private final RoomService roomService;
     private final UserService userService;
-    private final SimpMessageSendingOperations simpMessageSendingOperations;
     private final RedisUtil redisUtil;
+    private final SocketUtil socketUtil;
 
     /**
      * GameRoom Create Method
@@ -52,8 +53,8 @@ public class RoomFacade {
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", true));
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), new RoomInfoVO(room.getId(), room.getRoomName(), room.getCurrentPlayers(), room.getLimitPlayers(), room.getMode().toString(), false, isPublic));
 
-        sendRoomList();
-        sendRoomInfoSocket(room);
+        socketUtil.sendRoomList();
+        socketUtil.sendRoomInfoSocket(room);
         return RoomCreateResponse.of(room.getId());
     }
 
@@ -76,7 +77,7 @@ public class RoomFacade {
         Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
         if (roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_ALREADY_EXIST);
 
-        RoomInfoVO roomInfoVO = getLobbyRoomInfo(roomId);
+        RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
         if (roomInfoVO.getIsStart()) throw new BusinessException(ErrorInfo.ROOM_IS_START);
 
         int curPlayer = roomInfoVO.updateCurrentPlayers();
@@ -86,8 +87,8 @@ public class RoomFacade {
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
 
-        sendRoomList();
-        sendRoomInfoSocket(room);
+        socketUtil.sendRoomList();
+        socketUtil.sendRoomInfoSocket(room);
     }
 
 
@@ -101,12 +102,12 @@ public class RoomFacade {
         User user = userService.findById(id);
         Room room = roomService.findById(roomId);
 
-        RoomVO userRoom = getRoomUserInfo(roomId, user);
+        RoomVO userRoom = redisUtil.getRoomUserInfo(roomId, user);
 
         if (userRoom.isHost()) {
             deleteRoom(room);
         } else {
-            RoomInfoVO roomInfoVO = getLobbyRoomInfo(roomId);
+            RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
 
             int curPlayer = roomInfoVO.decreaseCurrentPlayers();
             if (curPlayer <= 0)
@@ -114,8 +115,8 @@ public class RoomFacade {
 
             redisUtil.deleteField("room" + room.getId(), String.valueOf(user.getId()));
             redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
-            sendRoomList();
-            sendRoomInfoSocket(room);
+            socketUtil.sendRoomList();
+            socketUtil.sendRoomInfoSocket(room);
         }
     }
 
@@ -128,84 +129,21 @@ public class RoomFacade {
         redisUtil.deleteKey("room" + room.getId());
         redisUtil.deleteField("roomInfo", String.valueOf(room.getId()));
         roomService.deleteRoom(room);
-        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), "ROOM IS EXPIRED");
+        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROOM IS EXPIRED");
+//        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), "ROOM IS EXPIRED");
     }
 
     public RoomBasicInfoResponse sendRoomInfo(Long userId, Long roomId) {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
-        RoomVO userRoom = getRoomUserInfo(roomId, user);
-        RoomInfoVO roomInfoVO = getLobbyRoomInfo(roomId);
+        RoomVO userRoom = redisUtil.getRoomUserInfo(roomId, user);
+        RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
 
-        sendRoomInfoSocket(room);
+        socketUtil.sendRoomInfoSocket(room);
         return RoomBasicInfoResponse.of(userId, userRoom.isHost(), roomId, room.getRoomName(), room.getMode().toString(), room.getLimitPlayers(),roomInfoVO.getIsPublic());
     }
 
-    /**
-     * 생성되어 있는 게임방의 리스트를 page별로 Socket 전송
-     *
-     */
-    public void sendRoomList() {
-        Map<String, RoomInfoVO> map = redisUtil.getData("roomInfo", RoomInfoVO.class);
-        List<RoomInfoVO> valueList = new ArrayList<>(map.values());
-        Collections.sort(valueList, (o1, o2) -> {
-           if (o1.getIsStart() == o2.getIsStart())
-               return -Long.compare(o1.getRoomId(), o2.getRoomId());
-           else return Boolean.compare(o1.getIsStart(), o2.getIsStart());
-        });
 
-        int size = getSize(valueList.size());
-
-        for (int i = 1; i <= size; i++) {
-            int endIndex = 0;
-            if (i * 6 >= valueList.size())
-                endIndex = valueList.size();
-            else endIndex = i * 6;
-            simpMessageSendingOperations.convertAndSend("/topic/lobby/" + i, new RoomListResponse(size, valueList.subList((i - 1) * 6, endIndex)));
-        }
-
-        if (size == 0)
-            simpMessageSendingOperations.convertAndSend("/topic/lobby/" + 1, new RoomListResponse(size, null));
-    }
-
-    public RoomInfoVO getLobbyRoomInfo(Long roomId) {
-        Map<String, RoomInfoVO> result = redisUtil.getData("roomInfo", RoomInfoVO.class);
-        RoomInfoVO roomInfoVO = result.get(roomId.toString());
-        if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST_IN_REDIS);
-
-        return roomInfoVO;
-    }
-
-    public RoomVO getRoomUserInfo(Long roomId, User user) {
-        Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
-        if (!roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_NOT_EXIST);
-        return roomVO.get(user.getId().toString());
-    }
-
-    public void gameStart(Room room) {
-
-    }
-
-    public void gameFinish(Room room) {
-
-    }
-
-    public void sendRoomInfoSocket(Room room) {
-        Map<String, RoomInfoVO> roominfo = redisUtil.getData("roomInfo", RoomInfoVO.class);
-        RoomInfoVO roomInfoVO = roominfo.get(room.getId().toString());
-
-        Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
-        List<RoomVO> users = new ArrayList<>(userinfo.values());
-
-        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfoVO.getCurrentPlayers(), room.getUser().getId(), roomInfoVO.getIsStart(), users));
-    }
-
-    public int getSize(int size) {
-        if (size % 6 == 0)
-            return size / 6;
-        else
-            return (size / 6) + 1;
-    }
 
 }

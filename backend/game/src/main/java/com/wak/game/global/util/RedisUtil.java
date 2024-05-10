@@ -3,6 +3,11 @@ package com.wak.game.global.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wak.game.application.vo.RoomInfoVO;
+import com.wak.game.application.vo.RoomVO;
+import com.wak.game.domain.user.User;
+import com.wak.game.global.error.ErrorInfo;
+import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -65,4 +70,19 @@ public class RedisUtil {
     public void deleteField(String key, String field) {
         redisTemplate.opsForHash().delete(key, field);
     }
+
+    public RoomInfoVO getLobbyRoomInfo(Long roomId) {
+        Map<String, RoomInfoVO> result = getData("roomInfo", RoomInfoVO.class);
+        RoomInfoVO roomInfoVO = result.get(roomId.toString());
+        if (roomInfoVO == null) throw new BusinessException(ErrorInfo.ROOM_NOT_EXIST_IN_REDIS);
+
+        return roomInfoVO;
+    }
+
+    public RoomVO getRoomUserInfo(Long roomId, User user) {
+        Map<String, RoomVO> roomVO = getData("room" + roomId, RoomVO.class);
+        if (!roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_NOT_EXIST);
+        return roomVO.get(user.getId().toString());
+    }
+
 }

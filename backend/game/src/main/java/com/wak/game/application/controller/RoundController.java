@@ -12,6 +12,7 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
+import com.wak.game.global.util.SocketUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
