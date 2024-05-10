@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { isOverlap } from '../../../util/isOverlap';
+import { isOverlap } from '../../../utils/isOverlap';
 
 import styled from 'styled-components';
 

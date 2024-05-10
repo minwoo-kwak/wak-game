@@ -12,9 +12,12 @@ const DialogLayout = styled(motion.div)`
   align-items: center;
 `;
 
-const DialogBlock = styled(FlexLayout)<{ width?: string }>`
+const DialogBlock = styled(FlexLayout)<{
+  mode: 'TALL' | 'SHORT';
+  width?: string;
+}>`
   width: ${(props) => props.width || '78rem'};
-  height: 53.2rem;
+  height: ${(props) => (props.mode === 'TALL' ? '53.2rem' : '15.2rem')};
   border-style: solid;
   border-left-width: 0rem;
   border-right-width: 0rem;
@@ -24,7 +27,6 @@ const DialogBlock = styled(FlexLayout)<{ width?: string }>`
 `;
 
 const BorderX = styled.img.attrs({
-  src: require('../assets/borderImg/img-border-black-h540.png'),
   alt: '모달',
 })<{ $right?: boolean }>`
   ${(props) =>
@@ -35,6 +37,7 @@ const BorderX = styled.img.attrs({
 `;
 
 type DialogProps = {
+  mode: 'TALL' | 'SHORT';
   width?: string;
   isOpen: boolean;
   children?: React.ReactNode;
@@ -42,6 +45,7 @@ type DialogProps = {
 };
 
 export default function Dialog({
+  mode,
   width,
   isOpen,
   children,
@@ -52,6 +56,10 @@ export default function Dialog({
     show: { y: 0, opacity: 1 },
     hidden: { y: '100%', opacity: 0 },
   };
+  const img =
+    mode === 'TALL'
+      ? require('../assets/borderImg/img-border-black-h540.png')
+      : require('../assets/borderImg/img-border-black-h160.png');
 
   return (
     <DarkBackground>
@@ -72,11 +80,11 @@ export default function Dialog({
           }
         }}
       >
-        <BorderX />
-        <DialogBlock $isCol width={width}>
+        <BorderX src={img} />
+        <DialogBlock $isCol mode={mode} width={width}>
           {children}
         </DialogBlock>
-        <BorderX $right />
+        <BorderX src={img} $right />
       </DialogLayout>
     </DarkBackground>
   );

@@ -1,6 +1,7 @@
+import { PlayerTypes } from '../../../types/RoomTypes';
+
 import styled from 'styled-components';
 import { GridLayout } from '../../../styles/layout';
-
 import WhiteBox from '../../../components/WhiteBox';
 import PlayerNickname from '../../../components/PlayerNickname';
 
@@ -11,15 +12,19 @@ const ListBlock = styled(GridLayout)`
 
 type PlayerListProps = {
   isHost: boolean;
+  players: PlayerTypes[];
 };
 
-export default function PlayerList({ isHost }: PlayerListProps) {
-  const players = Array.from({ length: 30 });
+export default function PlayerList({ isHost, players }: PlayerListProps) {
   const playersData = (
     <ListBlock $col={3} gap='3.2rem'>
       {players.map((value, index) => {
         return (
-          <PlayerNickname key={index} nickname={`김싸피`} color={`white`} />
+          <PlayerNickname
+            key={index}
+            nickname={value.nickname}
+            color={value.color}
+          />
         );
       })}
     </ListBlock>

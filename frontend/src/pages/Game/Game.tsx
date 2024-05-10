@@ -11,7 +11,7 @@ import GamePlay from './GamePlay/GamePlay';
 import GameResult from './GameResult/GameResult';
 
 export default function GamePage() {
-  const [state, setState] = useState<'WAIT' | 'PLAY' | 'RESULT'>('RESULT');
+  const [state, setState] = useState<'WAIT' | 'PLAY' | 'RESULT'>('WAIT');
 
   return (
     <Background>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../../api/user';
-import useUserStore from '../../../store/store';
+import { login } from '../../../services/user';
+import useUserStore from '../../../store/userStore';
 
 import styled, { keyframes } from 'styled-components';
 import { SmallText } from '../../../styles/fonts';
@@ -28,6 +28,8 @@ const ExclamationImg = styled.img.attrs({
   width: 5.2rem;
   height: fit-content;
   position: absolute;
+  top: 0.4rem;
+  left: -6rem;
 `;
 
 export default function NicknameForm() {
@@ -55,14 +57,14 @@ export default function NicknameForm() {
           color: fetchedData.data.color,
           token: fetchedData.data.token,
         });
-        navigate('/lobby');
+        navigate(`/lobby`);
       } catch (error: any) {
         const { message } = error.response.data.error.apierror;
         if (message === 'USER IS ALREADY FOUND') {
           setMessage('DUPLICATED');
         } else {
           console.error('로그인 에러', error);
-          navigate('/error');
+          navigate(`/error`);
         }
       }
     }

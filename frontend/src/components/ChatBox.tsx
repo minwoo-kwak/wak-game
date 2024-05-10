@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import useUserStore from '../store/store';
+import useUserStore from '../store/userStore';
 
 import styled from 'styled-components';
 import { FlexLayout } from '../styles/layout';

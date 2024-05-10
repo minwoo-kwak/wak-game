@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createRoom } from '../../../api/room';
+import { createRoom } from '../../../services/room';
 
 import styled from 'styled-components';
 import { FlexLayout } from '../../../styles/layout';
 import { RegularText, SmallText, textStyles } from '../../../styles/fonts';
-
 import Dialog from '../../../components/Dialog';
 import Input from '../../../components/Input';
 import CheckboxInput from '../../../components/CheckboxInput';
@@ -65,47 +64,44 @@ export default function NewRoomDialog({ closeDialog }: NewRoomDialogProps) {
   };
 
   const handleClick = async () => {
-    setWarn((prevWarn) => {
-      const updatedWarn = { ...prevWarn };
+    const updatedWarn = { ...warn };
 
-      if (info.title.length < 2 || 12 < info.title.length) {
-        updatedWarn.warnTitle = true;
-      } else {
-        updatedWarn.warnTitle = false;
-      }
-      if (info.players < 2 || 100 < info.players) {
-        updatedWarn.warnPlayers = true;
-      } else {
-        updatedWarn.warnPlayers = false;
-      }
-      if (info.isSecret && info.password.length !== 4) {
-        updatedWarn.warnPassword = true;
-      } else {
-        updatedWarn.warnPassword = false;
-      }
+    if (info.title.length < 2 || 12 < info.title.length) {
+      updatedWarn.warnTitle = true;
+    } else {
+      updatedWarn.warnTitle = false;
+    }
+    if (info.players < 2 || 100 < info.players) {
+      updatedWarn.warnPlayers = true;
+    } else {
+      updatedWarn.warnPlayers = false;
+    }
+    if (info.isSecret && info.password.length !== 4) {
+      updatedWarn.warnPassword = true;
+    } else {
+      updatedWarn.warnPassword = false;
+    }
 
-      return updatedWarn;
-    });
+    setWarn(updatedWarn);
 
     if (
-      warn.warnTitle === false &&
-      warn.warnPlayers === false &&
-      warn.warnPassword === false
+      updatedWarn.warnTitle === false &&
+      updatedWarn.warnPlayers === false &&
+      updatedWarn.warnPassword === false
     ) {
       try {
         const { title, players, password, mode } = info;
         const fetchedData = await createRoom(title, players, password, mode);
-        console.log(fetchedData);
-        // 성공
+        navigate(`/room/${fetchedData.data.roomId}`);
       } catch (error: any) {
         console.error('방 만들기 에러', error);
-        navigate('/error');
+        navigate(`/error`);
       }
     }
   };
 
   return (
-    <Dialog isOpen onClose={closeDialog}>
+    <Dialog mode='TALL' isOpen onClose={closeDialog}>
       <DialogTitle color='black'>{`₊‧.°.⋆ 새로운 방 •˚₊‧⋆.`}</DialogTitle>
       <ContentBlock $isCol gap='4.8rem'>
         <InputBlock gap='1rem'>
