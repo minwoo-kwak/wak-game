@@ -4,9 +4,7 @@ import com.wak.game.application.request.RoomCreateRequest;
 import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomBasicInfoResponse;
 import com.wak.game.application.response.RoomCreateResponse;
-import com.wak.game.application.response.socket.RoomInfoResponse;
-import com.wak.game.application.response.socket.RoomListResponse;
-import com.wak.game.application.vo.RoomInfoVO;
+import com.wak.game.domain.room.dto.RoomInfo;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
@@ -18,7 +16,6 @@ import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +48,7 @@ public class RoomFacade {
         else isPublic = false;
 
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", true));
-        redisUtil.saveData("roomInfo", String.valueOf(room.getId()), new RoomInfoVO(room.getId(), room.getRoomName(), room.getCurrentPlayers(), room.getLimitPlayers(), room.getMode().toString(), false, isPublic));
+        redisUtil.saveData("roomInfo", String.valueOf(room.getId()), new RoomInfo(room.getId(), room.getRoomName(), room.getCurrentPlayers(), room.getLimitPlayers(), room.getMode().toString(), false, isPublic));
 
         socketUtil.sendRoomList();
         socketUtil.sendRoomInfoSocket(room);
@@ -77,15 +74,15 @@ public class RoomFacade {
         Map<String, RoomVO> roomVO = redisUtil.getData("room" + roomId, RoomVO.class);
         if (roomVO.containsKey(user.getId().toString())) throw new BusinessException(ErrorInfo.ROOM_USER_ALREADY_EXIST);
 
-        RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
-        if (roomInfoVO.getIsStart()) throw new BusinessException(ErrorInfo.ROOM_IS_START);
+        RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(roomId);
+        if (roomInfo.getIsStart()) throw new BusinessException(ErrorInfo.ROOM_IS_START);
 
-        int curPlayer = roomInfoVO.updateCurrentPlayers();
-        if (curPlayer > roomInfoVO.getLimitPlayers())
+        int curPlayer = roomInfo.updateCurrentPlayers();
+        if (curPlayer > roomInfo.getLimitPlayers())
             throw new BusinessException(ErrorInfo.ROOM_PLAYER_IS_FULL);
 
         redisUtil.saveData("room" + room.getId(), String.valueOf(user.getId()), new RoomVO(user.getId(), user.getColor().getHexColor(), user.getNickname(), "001", false));
-        redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
+        redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
         socketUtil.sendRoomList();
         socketUtil.sendRoomInfoSocket(room);
@@ -107,14 +104,14 @@ public class RoomFacade {
         if (userRoom.isHost()) {
             deleteRoom(room);
         } else {
-            RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
+            RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(roomId);
 
-            int curPlayer = roomInfoVO.decreaseCurrentPlayers();
+            int curPlayer = roomInfo.decreaseCurrentPlayers();
             if (curPlayer <= 0)
                 throw new BusinessException(ErrorInfo.ROOM_PLAYER_IS_EMPTY);
 
             redisUtil.deleteField("room" + room.getId(), String.valueOf(user.getId()));
-            redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
+            redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
             socketUtil.sendRoomList();
             socketUtil.sendRoomInfoSocket(room);
         }
@@ -138,10 +135,10 @@ public class RoomFacade {
         Room room = roomService.findById(roomId);
 
         RoomVO userRoom = redisUtil.getRoomUserInfo(roomId, user);
-        RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(roomId);
+        RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(roomId);
 
         socketUtil.sendRoomInfoSocket(room);
-        return RoomBasicInfoResponse.of(userId, userRoom.isHost(), roomId, room.getRoomName(), room.getMode().toString(), room.getLimitPlayers(),roomInfoVO.getIsPublic());
+        return RoomBasicInfoResponse.of(userId, userRoom.isHost(), roomId, room.getRoomName(), room.getMode().toString(), room.getLimitPlayers(), roomInfo.getIsPublic());
     }
 
 

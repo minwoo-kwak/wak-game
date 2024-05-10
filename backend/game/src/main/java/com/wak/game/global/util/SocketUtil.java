@@ -2,7 +2,7 @@ package com.wak.game.global.util;
 
 import com.wak.game.application.response.socket.RoomInfoResponse;
 import com.wak.game.application.response.socket.RoomListResponse;
-import com.wak.game.application.vo.RoomInfoVO;
+import com.wak.game.domain.room.dto.RoomInfo;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.room.Room;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +31,8 @@ public class SocketUtil {
     }
 
     public void sendRoomList() {
-        Map<String, RoomInfoVO> map = redisUtil.getData("roomInfo", RoomInfoVO.class);
-        List<RoomInfoVO> valueList = new ArrayList<>(map.values());
+        Map<String, RoomInfo> map = redisUtil.getData("roomInfo", RoomInfo.class);
+        List<RoomInfo> valueList = new ArrayList<>(map.values());
         Collections.sort(valueList, (o1, o2) -> {
             if (o1.getIsStart() == o2.getIsStart())
                 return -Long.compare(o1.getRoomId(), o2.getRoomId());
@@ -54,13 +54,13 @@ public class SocketUtil {
     }
 
     public void sendRoomInfoSocket(Room room) {
-        Map<String, RoomInfoVO> roominfo = redisUtil.getData("roomInfo", RoomInfoVO.class);
-        RoomInfoVO roomInfoVO = roominfo.get(room.getId().toString());
+        Map<String, RoomInfo> roominfo = redisUtil.getData("roomInfo", RoomInfo.class);
+        RoomInfo roomInfo = roominfo.get(room.getId().toString());
 
         Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
         List<RoomVO> users = new ArrayList<>(userinfo.values());
 
-        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfoVO.getCurrentPlayers(), room.getUser().getId(), roomInfoVO.getIsStart(), users));
+        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfo.getCurrentPlayers(), room.getUser().getId(), roomInfo.getIsStart(), users));
     }
 
     public int getSize(int size) {
