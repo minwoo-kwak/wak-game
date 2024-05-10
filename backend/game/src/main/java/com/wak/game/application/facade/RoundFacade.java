@@ -4,6 +4,7 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.vo.RoomInfoVO;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
@@ -11,6 +12,7 @@ import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.util.RedisUtil;
+import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class RoundFacade {
     private final RoomService roomService;
     private final UserService userService;
     private final RedisUtil redisUtil;
+    private final SocketUtil socketUtil;
 
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
         User user = userService.findById(userId);
@@ -57,6 +60,20 @@ public class RoundFacade {
                 .aliveCount(summary.getAliveCount())
                 .isAlive(isAlive)
                 .build();
+
+    }
+
+
+    public void gameStart(Room room) {
+        RoomInfoVO roomInfoVO = redisUtil.getLobbyRoomInfo(room.getId());
+
+        roomInfoVO.gameStart();
+        redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfoVO);
+        roomService.gameStart(room);
+        socketUtil.sendRoomList();
+    }
+
+    public void gameEnd(Room room) {
 
     }
 }
