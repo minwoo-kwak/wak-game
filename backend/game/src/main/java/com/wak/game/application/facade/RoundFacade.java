@@ -17,12 +17,10 @@ import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,10 +62,8 @@ public class RoundFacade {
         Round round = roundService.startRound(room, gameStartRequest);
         List<Long> players = roundService.initializeGameStatuses(room,round);
 
-        //스레드 생성 및 실행
         roundService.startThread(round.getId());
 
-        //FE에서 웹소켓 구독하기 위해 현재 게임에 참여한 userId 리스트로 담아서 반환(List<Long>)
         return players;
     }
 

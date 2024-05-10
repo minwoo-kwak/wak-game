@@ -11,14 +11,12 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
-import com.wak.game.global.util.SocketUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,9 +72,6 @@ public class RoundController {
     @MessageMapping("/{roomId}/kill-log")
     public void getKillLog(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId) {
 
-        /**
-         * 성공로그 에서 가해자가 살아있고 피해자가 살아있으면 킬로그
-         */
         //messagingTemplate.convertAndSend("/topic/games/" + roomId + "kill-log", aliveUsers);
     }
 

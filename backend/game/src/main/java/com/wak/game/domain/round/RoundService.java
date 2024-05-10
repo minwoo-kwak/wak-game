@@ -4,7 +4,8 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.player.thread.ClickEventProcessor;
+import com.wak.game.domain.rank.dto.RankInfo;
+import com.wak.game.domain.round.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
@@ -55,12 +56,21 @@ public class RoundService {
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
             PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
-            String key = "roundId:" + round.getId() + ":users";
+            RankInfo rankInfo = RankInfo.builder()
+                    .killCnt(0)
+                    .nickName(roomUser.nickname())
+                    .userId(roomUser.userId())
+                    .build();
+            String userkey = "roundId:" + round.getId() + ":users";
+            String rankKey = "roundId:" + round.getId() + ":ranks";
 
-            redisUtil.saveData(key, "userId:" + roomUser.userId(), gameUser);
+            redisUtil.saveData(userkey, "userId:" + roomUser.userId(), gameUser);
+            redisUtil.saveData(rankKey, "userId:" + roomUser.userId(), rankInfo);
 
             playersId.add(gameUser.getUserId());
         }
+
+        // todo: roundId:___:ranks키로 HashMap<userId, RankInfo(킬수, 닉네임, userId)> 넣어놓기
 
         return playersId;
     }
@@ -108,9 +118,7 @@ public class RoundService {
      * @param id
      */
     public void startThread(Long id) {
-        /**
-         * 생성자 다시 생각해보기
-         */
+        //todo 생성자 다시 생각해보기
         ClickEventProcessor clickProcessor = applicationContext.getBean(ClickEventProcessor.class, id);
         Thread thread = new Thread(clickProcessor);
 
@@ -127,6 +135,7 @@ public class RoundService {
      */
     public void endThread(Long id) {
         Thread thread = gameThreads.remove(id);
+
         if (thread != null) {
             thread.interrupt();
             try {

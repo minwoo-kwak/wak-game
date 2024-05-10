@@ -10,6 +10,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -22,19 +23,13 @@ import java.util.stream.Collectors;
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     public void saveData(String key, String hashkey, Object data) {
         redisTemplate.opsForHash().put(key, hashkey, data);
     }
 
-    public void saveList(String key, String hashKey, List<Object> list) {
-        try {
-            String listAsString = objectMapper.writeValueAsString(list);
-            saveData(key, hashKey, listAsString);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error serializing list to JSON", e);
-        }
+    public void saveToList(String key, String value) {
+        ListOperations<String, Object> listOps = redisTemplate.opsForList();
+        listOps.rightPush(key, value);
     }
 
     public <T> Map<String, T> getData(String key, Class<T> classType) {
