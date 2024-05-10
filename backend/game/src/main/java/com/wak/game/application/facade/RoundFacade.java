@@ -63,25 +63,22 @@ public class RoundFacade {
     }
 
 
-    public void endRound(Long roomId, Long userId) {
+    public void endRound(Long roomId, Long userId, Long roundId) {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
+        Round round = roundService.findById(roundId);
 
         roomService.isNotInGame(room);
+        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
     }
 
-    public void roundEnd() {
-
-    }
-
-    public void gameRoomEnd(Room room) {
+    public void endGame(Room room) {
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
 
         roomInfo.gameEnd();
+        roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
-        roomService.gameStart(room);
         socketUtil.sendRoomList();
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
 
 
