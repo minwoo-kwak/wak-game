@@ -55,7 +55,7 @@ deploy:
     - echo "ARGOCD_APP_NAME:$ARGOCD_APP_NAME"
     - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
   script:
-    - echo "y" | argocd login "${ARGOCD_SERVER}" --grpc-web --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
+    - echo "y" | argocd login "https://argocd-server.argocd.svc.cluster.local" --grpc-web --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
     - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
     - cat response.txt
     # if response.txt have content, exit with error, empty response means success
