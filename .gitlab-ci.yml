@@ -1,22 +1,66 @@
 stages:
+  - prepare
   - build
+  - deploy
 
 variables:
   DOCKER_IMAGE_NAME: minwoo540/wak:backend-chat-latest
 
-build:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.14.0-debug
-    entrypoint: [""]
+prepare:
+  stage: prepare
+  image: docker:19.03.12
   before_script:
-    - mkdir -p /kaniko/.docker
+    - apk add --no-cache curl bash  # curl과 bash를 설치
   script:
-    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
+    - mkdir -p /kaniko/.docker
+    - mkdir -p $CI_PROJECT_DIR/backend/chat/src/main/resources/private
+    - mkdir -p $CI_PROJECT_DIR/backend/chat/src/test/resources/private
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - ls -la .secure_files
+    - cp .secure_files/application-private.yml $CI_PROJECT_DIR/backend/chat/src/main/resources/private/application-private.yml
+    - cp .secure_files/application-private-test.yml $CI_PROJECT_DIR/backend/chat/src/test/resources/private/application-private.yml
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/backend/chat/src/main/resources/private/
+      - $CI_PROJECT_DIR/backend/chat/src/test/resources/private/
   only:
     refs:
       - develop
     changes:
       - backend/chat/**/*
 
+build:
+  stage: build
+  image: gcr.io/kaniko-project/executor:v1.14.0-debug
+  script:
+    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
+  dependencies:
+    - prepare
+  only:
+    refs:
+      - develop
+    changes:
+      - backend/chat/**/*
+
+deploy:
+  image: argoproj/argocd
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+    ARGOCD_APP_NAME: "backend-chat"
+  before_script:
+    - echo "ARGOCD_SERVER:$ARGOCD_SERVER"
+    - echo "ARGOCD_APP_NAME:$ARGOCD_APP_NAME"
+    - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
+  script:
+    - argocd login k10a708.p.ssafy.io:443 --grpc-web --grpc-web-root-path /argocd --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
+    - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
+    - cat response.txt
+    # if response.txt have content, exit with error, empty response means success
+    - if [ -s response.txt ]; then exit 1; fi
+  only:
+    refs:
+      - develop
+    changes:
+      - backend/chat/**/*
