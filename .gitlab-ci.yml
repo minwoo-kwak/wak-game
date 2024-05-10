@@ -48,7 +48,7 @@ deploy:
   stage: deploy
   variables:
     GIT_STRATEGY: none
-    ARGOCD_SERVER: "argocd-server.argocd.svc.cluster.local"
+    ARGOCD_SERVER: "https://argocd-server.argocd.svc.cluster.local"
     ARGOCD_APP_NAME: "backend-chat"
   before_script:
     - echo "ARGOCD_SERVER:$ARGOCD_SERVER"
