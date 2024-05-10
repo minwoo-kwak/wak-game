@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -44,18 +45,10 @@ public class RedisUtil {
         }
         return result;
     }
-    public List<Object> getList(String key, String hashKey) {
-        String listAsString = (String) redisTemplate.opsForHash().get(key, hashKey);
-        if (listAsString != null) {
-            try {
-                return objectMapper.readValue(listAsString, new TypeReference<List<Object>>() {});
-            } catch (Exception e) {
-                throw new RuntimeException("Error deserializing JSON to list", e);
-            }
-        }
-        return new ArrayList<>();
+    public <T> List<T> getListData(String key, Class<T> classType) {
+        List<Object> rawList = redisTemplate.opsForList().range(key, 0, -1);
+        return rawList.stream().map(classType::cast).collect(Collectors.toList());
     }
-
 
     public void deleteKey(String key) {
         redisTemplate.delete(key);
