@@ -1,13 +1,12 @@
-package com.wak.game.application.vo;
+package com.wak.game.domain.room.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoomInfoVO {
+public class RoomInfo {
 
     private long roomId;
     private String roomName;
@@ -25,7 +24,12 @@ public class RoomInfoVO {
     public int decreaseCurrentPlayers() {
         return --currentPlayers;
     }
-
+    public void gameStart() {
+        this.isStart = true;
+    }
+    public void gameEnd() {
+        this.isStart = false;
+    }
     public long getRoomId() {
         return roomId;
     }

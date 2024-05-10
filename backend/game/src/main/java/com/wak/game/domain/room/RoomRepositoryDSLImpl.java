@@ -29,4 +29,18 @@ public class RoomRepositoryDSLImpl implements RoomRepositoryDSL{
                 .set(room.deletedAt, LocalDateTime.now())
                 .where(room.id.eq(roomId)).execute();
     }
+
+    @Override
+    public void startGame(Long roomId) {
+        query.update(room)
+                .set(room.isStart, true)
+                .where(room.id.eq(roomId)).execute();
+    }
+
+    @Override
+    public void endGame(Long roomId) {
+        query.update(room)
+                .set(room.isStart, false)
+                .where(room.id.eq(roomId)).execute();
+    }
 }

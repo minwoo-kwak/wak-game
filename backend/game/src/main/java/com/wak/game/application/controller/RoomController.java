@@ -11,6 +11,7 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
+import com.wak.game.global.util.SocketUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,6 +37,7 @@ import java.util.List;
 public class RoomController {
 
     private final RoomFacade roomFacade;
+    private final SocketUtil socketUtil;
 
     @Operation(
             summary = "Room 게임룸 생성",
@@ -107,7 +109,7 @@ public class RoomController {
     )
     @GetMapping("/topic/lobby")
     public ResponseEntity<ApiResult<Void>> publishLobbyInfo() {
-        roomFacade.sendRoomList();
+        socketUtil.sendRoomList();
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 
