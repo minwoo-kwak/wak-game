@@ -1,4 +1,4 @@
-package com.wak.chat.domain.sample;
+package com.wak.chat.application.sample.dto;
 
 import lombok.Builder;
 import lombok.Getter;

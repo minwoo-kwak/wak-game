@@ -1,11 +1,11 @@
-package com.wak.chat.domain.chat;
+package com.wak.chat.application.chat.dto;
 
 import lombok.Getter;
 
 @Getter
 public class ChatRequest {
 
-	private String sender;
+	private String color;
 	private String message;
 
 }
