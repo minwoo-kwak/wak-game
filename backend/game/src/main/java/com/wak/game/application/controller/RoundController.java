@@ -6,7 +6,6 @@ import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.PlayerInfoResponse;
-import com.wak.game.domain.player.thread.ClickEventProcessor;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
@@ -68,7 +67,6 @@ public class RoundController {
 
     @MessageMapping("/topic/games/{roundId}/dashboard")
     public void getDashBoard(@AuthUser Long userId, @DestinationVariable Long roundId) {
-        //user마다 생존여부 다르게 해서 웹소켓으로 전송
         DashBoardResponse result = roundFacade.getDashBoard(roundId, userId);
         messagingTemplate.convertAndSend("/topic/games/" + roundId + "dashboard", result);
     }

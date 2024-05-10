@@ -108,6 +108,9 @@ public class RoundService {
      * @param id
      */
     public void startThread(Long id) {
+        /**
+         * 생성자 다시 생각해보기
+         */
         ClickEventProcessor clickProcessor = applicationContext.getBean(ClickEventProcessor.class, id);
         Thread thread = new Thread(clickProcessor);
 

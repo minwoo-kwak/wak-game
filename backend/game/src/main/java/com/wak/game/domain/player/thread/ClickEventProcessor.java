@@ -26,7 +26,7 @@ public class ClickEventProcessor implements Runnable {
         this.roundId = roundId;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
-        this.roundService=roundService;
+        this.roundService = roundService;
     }
 
     @Override
@@ -50,25 +50,21 @@ public class ClickEventProcessor implements Runnable {
     }
 
     private void handleClickedUser(clickVO click) {
-       if(!click.roundId().equals(this.roundId))
-           throw new BusinessException(ErrorInfo.THREAD_ROUNDID_DIFFERENT);
-        String key = "roundId:"+click.roundId()+":users";
 
-        //클릭한 사람
+        if (!click.roundId().equals(this.roundId))
+            throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
+
+        String key = "roundId:" + click.roundId() + ":users";
         Long userId = click.userId();
-        //클릭 당한 사람
         Long victimId = click.victimId();
 
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
-        //클릭한사람 살아있는지
-        if(data.get(userId).getStamina()>0 && data.get(victimId).getStamina()>0){
 
-            //피해자 체력 1감소
-            PlayerInfo victim = data.get(victimId);
+        if (data.get(Long.toString(userId)).getStamina() > 0 && data.get(Long.toString(victimId)).getStamina() > 0) {
+
+            PlayerInfo victim = data.get(Long.toString(victimId));
 
             victim.updateStamina(-1);
-
-            //다시 레디스에 넣기
             redisUtil.saveData(key, Long.toString(victimId), victim);
         }
 

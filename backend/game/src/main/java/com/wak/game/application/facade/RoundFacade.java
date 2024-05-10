@@ -5,7 +5,6 @@ import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.domain.room.dto.RoomInfo;
-import com.wak.game.domain.player.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
@@ -43,12 +42,15 @@ public class RoundFacade {
         if (gameStartRequest.getRoundNumber() != 1){
             throw new BusinessException(ErrorInfo.ROUND_NOT_ONE);
         }
+
         roomService.isHost(user, room);
         roomService.isInGame(room);
 
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
+
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+
         roomService.gameStart(room);
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
