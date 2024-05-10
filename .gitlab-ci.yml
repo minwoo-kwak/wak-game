@@ -48,14 +48,14 @@ deploy:
   stage: deploy
   variables:
     GIT_STRATEGY: none
-    ARGOCD_SERVER: "k10a708.p.ssafy.io/argocd/"
+    ARGOCD_SERVER: "k10a708.p.ssafy.io/argocd"
     ARGOCD_APP_NAME: "backend-chat"
   before_script:
     - echo "ARGOCD_SERVER:$ARGOCD_SERVER"
     - echo "ARGOCD_APP_NAME:$ARGOCD_APP_NAME"
     - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
   script:
-    - argocd login "${ARGOCD_SERVER}" --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
+    - argocd login "${ARGOCD_SERVER}" --grpc-web --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
     - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
     - cat response.txt
     # if response.txt have content, exit with error, empty response means success
