@@ -25,7 +25,12 @@ public class RoomInfoVO {
     public int decreaseCurrentPlayers() {
         return --currentPlayers;
     }
-
+    public void gameStart() {
+        this.isStart = true;
+    }
+    public void gameFinish() {
+        this.isStart = false;
+    }
     public long getRoomId() {
         return roomId;
     }
