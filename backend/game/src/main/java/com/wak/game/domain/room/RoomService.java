@@ -47,16 +47,13 @@ public class RoomService {
     }
 
     public boolean isHost(User user, Room room) {
-
-        Map<String, RoomVO> usersInRoom = redisUtil.getData(String.valueOf(room.getId()), RoomVO.class);
-
-        if(usersInRoom.get(String.valueOf(user.getId())).isHost())
+        RoomVO userRoom = redisUtil.getRoomUserInfo(room.getId(), user);
+        if(userRoom.isHost())
             return true;
 
         throw new BusinessException(ErrorInfo.ROOM_NOT_HOST);
-
     }
-    //R
+
     public <T> Map<String, T> getData(String key, Class<T> classType) {
         Map<Object, Object> rawMap = redisTemplate.opsForHash().entries(key);
         Map<String, T> typedMap = new HashMap<>();
