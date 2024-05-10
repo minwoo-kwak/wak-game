@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface RoomRepositoryDSL {
     Optional<Room> findByUser(User user);
     void deleteRoom(Long roomId);
+    void startGame(Long roomId);
+    void endGame(Long roomId);
 }
