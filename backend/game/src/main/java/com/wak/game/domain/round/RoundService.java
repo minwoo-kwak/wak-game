@@ -49,7 +49,7 @@ public class RoundService {
      * @return
      */
     public List<Long> initializeGameStatuses(Room room, Round round) {
-        Map<String, RoomVO> map = redisUtil.getData(String.valueOf(room.getId()), RoomVO.class);
+        Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
         List<Long> playersId = new ArrayList<>();
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {

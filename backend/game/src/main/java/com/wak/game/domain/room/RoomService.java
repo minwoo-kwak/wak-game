@@ -81,4 +81,18 @@ public class RoomService {
         if(room.isStart())
             throw new BusinessException(ErrorInfo.ROOM_ALREADY_STARTED);
     }
+
+    public void isNotInGame(Room room) {
+        if(!room.isStart())
+            throw new BusinessException(ErrorInfo.ROOM_ALREADY_ENDED);
+    }
+
+
+    public void gameStart(Room room) {
+        roomRepository.startGame(room.getId());
+    }
+
+    public void gameEnd(Room room) {
+        roomRepository.endGame(room.getId());
+    }
 }

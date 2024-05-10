@@ -12,6 +12,7 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
+import com.wak.game.global.util.SocketUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -46,7 +47,7 @@ public class RoundController {
             security = {@SecurityRequirement(name = "Access-Token")}
     )
     @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED})
-    @PostMapping("api/game/start/{room-id}")
+    @PostMapping("/api/game/start/{room-id}")
     public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId, @AuthUser Long userId) {
         GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
 
