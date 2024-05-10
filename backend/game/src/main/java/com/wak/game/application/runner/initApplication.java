@@ -12,10 +12,8 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class JasminApplication implements ApplicationRunner {
+public class initApplication implements ApplicationRunner {
     private final InitFacade initFacade;
-
-    @Override
     public void run(ApplicationArguments args)throws IOException{
         initFacade.run();
     }

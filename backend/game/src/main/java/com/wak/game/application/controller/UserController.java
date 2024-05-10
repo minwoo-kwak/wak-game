@@ -31,7 +31,7 @@ public class UserController {
             summary = "User 생성",
             description = "User 닉네임을 처음 생성하는 API 입니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserLogInResponse.class)))	 // Successful Response
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserLogInResponse.class)))     // Successful Response
             }
     )
     @ApiErrorExamples({ErrorInfo.COLOR_NOT_EXIST, ErrorInfo.USER_ALREADY_EXIST})
@@ -45,13 +45,13 @@ public class UserController {
             summary = "User info 조회",
             description = "User의 info 를 조회하는 API 입니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserInfoResponse.class)))	 // Successful Response
+                    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserInfoResponse.class)))     // Successful Response
             },
-            security = { @SecurityRequirement(name = "Access-Token") }
+            security = {@SecurityRequirement(name = "Access-Token")}
     )
     @ApiErrorExamples({ErrorInfo.COLOR_NOT_EXIST, ErrorInfo.USER_NOT_EXIST})
     @GetMapping("/info")
-    public ResponseEntity<ApiResult<UserInfoResponse>> getUserInfo(@AuthUser Long id){
+    public ResponseEntity<ApiResult<UserInfoResponse>> getUserInfo(@AuthUser Long id) {
         UserInfoResponse response = userFacade.userInfo(id);
         return ResponseEntity.ok(ApiUtils.success(response));
     }

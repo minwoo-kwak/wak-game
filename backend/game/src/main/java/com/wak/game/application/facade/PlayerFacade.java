@@ -28,9 +28,7 @@ public class PlayerFacade {
     private final RoundService roundService;
     private final UserService userService;
 
-    //
     public List<PlayerInfoResponse> getPlayersStatus(Long roundId) {
-        //레디스에서 roundId와 일치하는 key값들 찾아서 aliveUserResoponse로 변환한 다음에 List로 만들어서 반환하기
         Round round = roundService.findById(roundId);
         return playerService.getPlayersInfo(round);
     }
@@ -38,20 +36,14 @@ public class PlayerFacade {
     public void saveClickLog(Long userId, Long roundId, ClickRequest request) {
         Round round = roundService.findById(roundId);
         User user = userService.findById(userId);
-        //피해자 있는지 없는지도 확인해야 함.
         User victimUser = userService.findById(request.getVictimId());
-
-
-        clickVO click = new clickVO(user.getId(),victimUser.getId(),round.getId(),request.getClickTime());
+        clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime());
         playerService.saveClickLog(round, click);
     }
-
-
 
    /* public List<AlivePlayerResponse> getAliveUsers(Long roomRoundId) {
         //레디스 뒤져서 stamina가 1 이상인 사람들 찾아오기
         return playerService.getAliveUsers(roomRoundId);
-    }
-*/
+    }*/
 
 }

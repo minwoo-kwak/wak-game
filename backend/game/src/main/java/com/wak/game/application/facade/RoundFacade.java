@@ -17,10 +17,12 @@ import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,18 +37,22 @@ public class RoundFacade {
 
     @Transactional
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
+
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
         if (gameStartRequest.getRoundNumber() != 1){
             throw new BusinessException(ErrorInfo.ROUND_NOT_ONE);
         }
+
         roomService.isHost(user, room);
         roomService.isInGame(room);
 
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
+
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+
         roomService.gameStart(room);
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
@@ -57,6 +63,9 @@ public class RoundFacade {
     public List<Long> startRound (GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
         List<Long> players = roundService.initializeGameStatuses(room,round);
+
+        //스레드 생성 및 실행
+        roundService.startThread(round.getId());
 
         //FE에서 웹소켓 구독하기 위해 현재 게임에 참여한 userId 리스트로 담아서 반환(List<Long>)
         return players;
@@ -92,9 +101,7 @@ public class RoundFacade {
         Round round = roundService.findById(roundId);
         User user = userService.findById(userId);
 
-       //레디스에서
         SummaryCountResponse summary = roundService.getSummaryCount(round);
-        //해당 user가 살았는지
         boolean isAlive = roundService.isAlive(round,user);
 
         return DashBoardResponse.builder()
@@ -103,8 +110,8 @@ public class RoundFacade {
                 .aliveCount(summary.getAliveCount())
                 .isAlive(isAlive)
                 .build();
-
     }
+
 
 
 }

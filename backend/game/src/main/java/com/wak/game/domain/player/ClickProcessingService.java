@@ -1,5 +1,7 @@
 package com.wak.game.domain.player;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -10,42 +12,49 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class ClickProcessingService {
 
     private final RedisUtil redisUtil;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
     @Async
-    public void processClickEvents(Long roundId) {
-        /*while (!Thread.currentThread().isInterrupted()) {
-            // Redis 리스트에서 가장 오래된 클릭 로그 하나를 가져온다
-            String clickData = redisTemplate.opsForList().leftPop(key, 0, TimeUnit.SECONDS);
+    public void processClickEvents(String key) {
 
-            if (clickData != null) {
-                try {
-                    // JSON 문자열을 clickVO 객체로 변환
-                    clickVO click = objectMapper.readValue(clickData, clickVO.class);
-                    // 클릭 처리 로직 수행
-                    handleClickedUser(click);
-                } catch (IOException e) {
-                    System.err.println("Error processing click data: " + e.getMessage());
-                }
-            }
-
-            // 일정 시간 대기하며 폴링 간격 조절
+        while (!Thread.currentThread().isInterrupted()) {
             try {
+                // Redis에서 가장 오래된 클릭 로그를 가져옵니다
+                String clickData = redisTemplate.opsForList().leftPop(key, 0, TimeUnit.SECONDS);
+                clickVO click = convertToVO(clickData, clickVO.class);
+
+                if(click != null)
+                    handleClickedUser(click);
+
                 Thread.sleep(1000); // 1초 대기
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // 인터럽트 발생 시 스레드 인터럽트 상태를 설정하여 while 루프 종료
+                Thread.currentThread().interrupt();
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
             }
-        }*/
+        }
+
+    }
+
+    private clickVO convertToVO(String clickData, Class<clickVO> clickVOClass) throws JsonProcessingException {
+        if (clickData != null) {
+            clickVO click = objectMapper.readValue(clickData, clickVO.class);
+            handleClickedUser(click);
+            return click;
+        }
+        return null;
     }
 
     private void handleClickedUser(clickVO click) {
-        // 클릭에 대한 실제 처리 로직
-        System.out.println("Processed click from user " + click.userId());
-        //redisUtil.delete(//해당 벨류)
+        //클릭에 대한 실제 처리 로직
     }
 }
 

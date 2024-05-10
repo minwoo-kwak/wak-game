@@ -2,7 +2,7 @@ package com.wak.game.domain.player;
 
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.vo.clickVO;
-import com.wak.game.application.vo.gameVO;
+import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +20,18 @@ public class PlayerService {
     public List<PlayerInfoResponse> getPlayersInfo(Round round) {
         //레디스에서 roundId:를 키로 저장된
         String key = "roundId:" + round.getId()+":users";
-        Map<String, gameVO> playersMap = redisUtil.getData(key, gameVO.class);
+        Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
         List<PlayerInfoResponse> players = new ArrayList<>();
-        for (Map.Entry<String, gameVO> entry : playersMap.entrySet()) {
-            gameVO player = entry.getValue();
+        for (Map.Entry<String, PlayerInfo> entry : playersMap.entrySet()) {
+            PlayerInfo player = entry.getValue();
             players.add(
                     PlayerInfoResponse.builder()
                             .roundId(round.getId())
-                            .userId(player.userId())
-                            .nickname(player.nickname())
-                            .color(player.color())
-                            .stamina(player.stamina())
-                            .team(player.team())
+                            .userId(player.getUserId())
+                            .nickname(player.getNicKName())
+                            .color(player.getColor())
+                            .stamina(player.getStamina())
+                            .team(player.getTeam())
                             .build()
             );
         }
@@ -40,8 +40,6 @@ public class PlayerService {
     }
 
     public void saveClickLog(Round round, clickVO click) {
-
-
         //<roundId, List<clickVO>>
         String key = "round:" + round.getId() + ":clicks";
         double score = System.currentTimeMillis(); // 시간을 점수로 사용

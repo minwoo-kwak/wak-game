@@ -51,6 +51,7 @@ public enum ErrorInfo {
     /* ROUND */
     ROUND_NOT_EXIST(HttpStatus.NOT_FOUND, "ROUND IS NOT FOUND"),
     ROUND_NOT_ONE(HttpStatus.NOT_FOUND, "ROUND IS NOT ONE"),
+    THREAD_ID_IS_DIFFERENT(HttpStatus.NOT_FOUND, "현재 동작하는 스레드와 처리하려는 데이터의 roundId가 다릅니다."),/*나중에 지울겠습니다*/
 
     /**/;
 

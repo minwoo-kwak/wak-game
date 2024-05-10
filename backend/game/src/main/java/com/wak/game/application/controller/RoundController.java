@@ -2,7 +2,6 @@ package com.wak.game.application.controller;
 
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.facade.PlayerFacade;
-import com.wak.game.application.facade.RoomFacade;
 import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
@@ -19,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,7 +37,6 @@ public class RoundController {
     private final SimpMessagingTemplate messagingTemplate;
     private final RoundFacade roundFacade;
     private final PlayerFacade playerFacade;
-
 
     @Operation(
             summary = "게임 시작",
@@ -50,6 +50,7 @@ public class RoundController {
     @PostMapping("/api/game/start/{room-id}")
     public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
         GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
+
         return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
@@ -67,8 +68,7 @@ public class RoundController {
 
     @MessageMapping("/topic/games/{roundId}/dashboard")
     public void getDashBoard(@AuthUser Long userId, @DestinationVariable Long roundId) {
-      //user마다 생존여부 다르게 해서 웹소켓으로 전송
-        DashBoardResponse result = roundFacade.getDashBoard(roundId,userId);
+        DashBoardResponse result = roundFacade.getDashBoard(roundId, userId);
         messagingTemplate.convertAndSend("/topic/games/" + roundId + "dashboard", result);
     }
 
