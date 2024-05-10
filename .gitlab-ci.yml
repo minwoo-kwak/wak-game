@@ -1,30 +1,43 @@
 stages:
+  - prepare
   - build
 
 variables:
   DOCKER_IMAGE_NAME: minwoo540/wak:backend-chat-latest
 
-build:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.14.0-debug
-    entrypoint: [""]
-  variables:
-    SECURE_FILES_DOWNLOAD_PATH: './'
+prepare:
+  stage: prepare
+  image: docker:19.03.12
   before_script:
+    - apk add --no-cache curl bash  # curl과 bash를 설치
+  script:
     - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - mkdir -p $CI_PROJECT_DIR/backend/chat/src/main/resources/private
     - mkdir -p $CI_PROJECT_DIR/backend/chat/src/test/resources/private
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
     - ls
-    - cp $CI_PROJECT_DIR/application-private.yml $CI_PROJECT_DIR/backend/chat/src/main/resources/private/application-private.yml
-    - cp $CI_PROJECT_DIR/application-private-test.yml $CI_PROJECT_DIR/backend/chat/src/test/resources/private/application-private.yml
-  script:
-    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
+    - cp .secure_files/application-private.yml $CI_PROJECT_DIR/backend/chat/src/main/resources/private/application-private.yml
+    - cp .secure_files/application-private-test.yml $CI_PROJECT_DIR/backend/chat/src/test/resources/private/application-private.yml
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/backend/chat/src/main/resources/private/
+      - $CI_PROJECT_DIR/backend/chat/src/test/resources/private/
   only:
     refs:
       - develop
     changes:
       - backend/chat/**/*
 
+build:
+  stage: build
+  image: gcr.io/kaniko-project/executor:v1.14.0-debug
+  script:
+    - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
+  dependencies:
+    - prepare
+  only:
+    refs:
+      - develop
+    changes:
+      - backend/chat/**/*
