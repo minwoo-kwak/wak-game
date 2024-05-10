@@ -9,12 +9,16 @@ build:
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
     entrypoint: [""]
+  variables:
+    SECURE_FILES_DOWNLOAD_PATH: './'
   before_script:
     - mkdir -p /kaniko/.docker
     - mkdir -p $CI_PROJECT_DIR/backend/chat/src/main/resources/private
     - mkdir -p $CI_PROJECT_DIR/backend/chat/src/test/resources/private
-    - cp $CI_PROJECT_DIR/$CI_SECURE_FILES_APPLICATION_PRIVATE_YML $CI_PROJECT_DIR/backend/chat/src/main/resources/private/application-private.yml
-    - cp $CI_PROJECT_DIR/$CI_SECURE_FILES_APPLICATION_PRIVATE_YML $CI_PROJECT_DIR/backend/chat/src/test/resources/private/application-private.yml
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - ls
+    - cp $CI_PROJECT_DIR/application-private.yml $CI_PROJECT_DIR/backend/chat/src/main/resources/private/application-private.yml
+    - cp $CI_PROJECT_DIR/application-private-test.yml $CI_PROJECT_DIR/backend/chat/src/test/resources/private/application-private.yml
   script:
     - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR/backend/chat --dockerfile $CI_PROJECT_DIR/backend/chat/Dockerfile --destination $DOCKER_IMAGE_NAME
