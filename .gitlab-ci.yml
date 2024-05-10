@@ -54,7 +54,7 @@ deploy:
     - echo "ARGOCD_APP_NAME:$ARGOCD_APP_NAME"
     - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
   script:
-    - argocd login https://k10a708.p.ssafy.io:443 --grpc-web --grpc-web-root-path /argocd --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
+    - argocd login k10a708.p.ssafy.io:443 --grpc-web --grpc-web-root-path /argocd --insecure --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
     - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
     - cat response.txt
     # if response.txt have content, exit with error, empty response means success
