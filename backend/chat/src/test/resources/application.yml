@@ -1,0 +1,6 @@
+spring:
+  profiles:
+    include: private
+  config:
+    import:
+      - private/application-private.yml
