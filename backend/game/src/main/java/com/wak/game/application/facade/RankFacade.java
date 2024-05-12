@@ -22,9 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,17 +31,13 @@ public class RankFacade {
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
 
-    public void getRank(Long roundId) {
-
-        String key = "roundId" + roundId + ":rankings";
-
+    public void sendRank(Long roundId) {
+        String key = "roundId" + roundId + ":ranks";
         Map<String, RankInfo> map = redisUtil.getData(key, RankInfo.class);
+
         List<RankInfo> ranks = new ArrayList<>(map.values());
-        //todo: 킬수 내림차순 조회
+        ranks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
 
-
-        socketUtil.sendMessage("/games", roundId + "/rank", new RankListResponse(ranks));
-
+        socketUtil.sendMessage("/topic/games/" + roundId + "/rank", new RankListResponse(ranks));
     }
-
 }

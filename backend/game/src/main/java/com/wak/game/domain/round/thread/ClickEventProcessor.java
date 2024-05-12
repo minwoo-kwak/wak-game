@@ -2,12 +2,22 @@ package com.wak.game.domain.round.thread;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wak.game.application.facade.RankFacade;
+import com.wak.game.application.facade.RoundFacade;
+import com.wak.game.application.response.DashBoardResponse;
+import com.wak.game.application.response.PlayerInfoResponse;
+import com.wak.game.application.response.socket.KillLogResponse;
 import com.wak.game.application.vo.clickVO;
+import com.wak.game.domain.player.Player;
+import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.rank.RankService;
+import com.wak.game.domain.round.Round;
+import com.wak.game.domain.round.RoundService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
+import com.wak.game.global.util.SocketUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -18,13 +28,22 @@ public class ClickEventProcessor implements Runnable {
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private RankService rankService;
+    private final SocketUtil socketUtil;
+    private final RoundService roundService;
+    private final PlayerService playerService;
+    private final RankFacade rankFacade;
+    private final RoundFacade roundFacade;
 
-    public ClickEventProcessor(boolean running, Long roundId, RedisUtil redisUtil, ObjectMapper objectMapper, RankService rankService) {
-        this.running = running;
+    public ClickEventProcessor(Long roundId, RedisUtil redisUtil, ObjectMapper objectMapper, RankService rankService, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RankFacade rankFacade, RoundFacade roundFacade) {
         this.roundId = roundId;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
         this.rankService = rankService;
+        this.socketUtil = socketUtil;
+        this.roundService = roundService;
+        this.playerService = playerService;
+        this.rankFacade = rankFacade;
+        this.roundFacade = roundFacade;
     }
 
     @Override
@@ -64,40 +83,29 @@ public class ClickEventProcessor implements Runnable {
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
-            rankService.updateRankings(click);
-            saveSuccessfulClick(click);
-        }
+            //게임 필드
+            Round round = roundService.findById(roundId);
+            List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
+            socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
+            //대시보드
+            DashBoardResponse result = roundFacade.getDashBoard(roundId);
+            socketUtil.sendMessage("/games/" + roundId.toString() + "dashboard", result);
+
+            //킬로그
+            saveSuccessfulClick(click);
+            socketUtil.sendMessage("/games" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
+
+            //랭킹
+            rankService.updateRankings(click);
+            rankFacade.sendRank(roundId);
+        }
     }
 
     private boolean isAlive(PlayerInfo user) {
         return user.getStamina() > 0;
     }
 
-    /**
-     * 실시간 랭킹 조회하기 위해서 킬 성공했으면 랭킹 관련 레디스에 추가
-     * 랭킹: HashMap<roundId, HashMap<userId,킬 수>> 형태로 저장
-     *
-     * @param click
-     */
-    private void updateRankings(clickVO click) {
-        Long userId = click.userId();
-        Long roundId = click.roundId();
-        Map<String, Integer> curRoundRanks = redisUtil.getData("roundId:" + roundId + ":rankings", Integer.class);
-
-        int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);
-        curRoundRanks.put(Long.toString(userId), curKillCnt + 1);
-
-        redisUtil.saveData("roundId:" + roundId + ":rankings", Long.toString(userId), curRoundRanks);
-    }
-
-    /**
-     * 성공 클릭 저장
-     * 성공 클릭: HashMap<key,List<toString(clickVo)>>
-     * list에 추가하기
-     *
-     * @param click
-     */
     private void saveSuccessfulClick(clickVO click) {
         String key = "roundId:" + roundId + ":availableClicks";
 

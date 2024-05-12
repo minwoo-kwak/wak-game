@@ -16,7 +16,7 @@ public class RankService {
         Long userId = click.userId();
         Long roundId = click.roundId();
 
-        String key = "roundId:" + roundId + ":rankings";
+        String key = "roundId:" + roundId + ":ranks";
         Map<String, Integer> curRoundRanks = redisUtil.getData(key, Integer.class);
 
         int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);

@@ -61,16 +61,15 @@ public class RoundService {
                     .nickName(roomUser.nickname())
                     .userId(roomUser.userId())
                     .build();
-            String userkey = "roundId:" + round.getId() + ":users";
+
+            String userKey = "roundId:" + round.getId() + ":users";
             String rankKey = "roundId:" + round.getId() + ":ranks";
 
-            redisUtil.saveData(userkey, "userId:" + roomUser.userId(), gameUser);
-            redisUtil.saveData(rankKey, "userId:" + roomUser.userId(), rankInfo);
+            redisUtil.saveData(userKey, Long.toString(roomUser.userId()), gameUser);
+            redisUtil.saveData(rankKey, Long.toString(roomUser.userId()), rankInfo);
 
             playersId.add(gameUser.getUserId());
         }
-
-        // todo: roundId:___:ranks키로 HashMap<userId, RankInfo(킬수, 닉네임, userId)> 넣어놓기
 
         return playersId;
     }
@@ -85,7 +84,6 @@ public class RoundService {
 
             if (player.getStamina() > 0)
                 aliveCount++;
-
         }
 
         return SummaryCountResponse.builder()
@@ -102,10 +100,7 @@ public class RoundService {
             PlayerInfo player = entry.getValue();
 
             if (player.getUserId() == user.getId()) {
-                if (player.getStamina() > 0)
-                    return true;
-
-                return false;
+                return player.getStamina() > 0;
             }
         }
 
@@ -146,7 +141,6 @@ public class RoundService {
             System.out.println("Game stopped in room: " + id);
         }
     }
-
 }
 
 

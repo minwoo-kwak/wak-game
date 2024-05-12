@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     public void saveData(String key, String hashkey, Object data) {
         redisTemplate.opsForHash().put(key, hashkey, data);
@@ -41,9 +42,19 @@ public class RedisUtil {
         return result;
     }
     public <T> List<T> getListData(String key, Class<T> classType) {
-        List<Object> rawList = redisTemplate.opsForList().range(key, 0, -1);
-        return rawList.stream().map(classType::cast).collect(Collectors.toList());
+        List<Object> serializedData = redisTemplate.opsForList().range(key, 0, -1);
+
+        return serializedData.stream()
+                .map(data -> {
+                    try {
+                        return objectMapper.readValue(String.valueOf(data), classType);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException("Error deserializing data from Redis", e);
+                    }
+                })
+                .collect(Collectors.toList());
     }
+
 
     public void deleteKey(String key) {
         redisTemplate.delete(key);

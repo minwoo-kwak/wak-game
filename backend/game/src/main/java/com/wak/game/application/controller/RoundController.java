@@ -31,7 +31,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class RoundController {
-    private final SimpMessagingTemplate messagingTemplate;
     private final RoundFacade roundFacade;
     private final PlayerFacade playerFacade;
 
@@ -51,35 +50,44 @@ public class RoundController {
         return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
-    /**
-     * 구독한 모든 유저에게 체력이 1이상인 유저들의 정보 리턴
-     *
-     * @param userId
-     * @param roundId
-     */
-    @MessageMapping("/topic/games/{roundId}/battle-field")
-    public void getBattleField(@AuthUser Long userId, @DestinationVariable Long roundId) {
-        List<PlayerInfoResponse> usersInfo = playerFacade.getPlayersStatus(roundId);
-        messagingTemplate.convertAndSend("/topic/games/" + roundId + "/battle-field", usersInfo);
+    @Operation(
+            summary = "게임 시작 시 publish 요청",
+            description = "게임 시작 시 게임 필드에 대한 정보를 publish 요청하는 API 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "game field 구독 " +
+                            "성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @MessageMapping("/topic/games/{round-id}/battle-field")
+    public void getBattleField(@DestinationVariable("round-id") Long roundId) {
+        playerFacade.getPlayersStatus(roundId);
     }
 
-    @MessageMapping("/topic/games/{roundId}/dashboard")
-    public void getDashBoard(@AuthUser Long userId, @DestinationVariable Long roundId) {
-        DashBoardResponse result = roundFacade.getDashBoard(roundId, userId);
-        messagingTemplate.convertAndSend("/topic/games/" + roundId + "dashboard", result);
+    @Operation(
+            summary = "게임 시작 시 publish 요청",
+            description = "게임 시작 시 대시보드 대한 정보를 publish 요청하는 API 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "dashboard 구독 성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @MessageMapping("/topic/games/{round-id}/dashboard")
+    public void getDashBoard(@AuthUser Long userId, @DestinationVariable("round-id") Long roundId) {
+        DashBoardResponse result = roundFacade.getDashBoard(roundId);
     }
 
-    @MessageMapping("/{roomId}/kill-log")
-    public void getKillLog(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId) {
-
-        //messagingTemplate.convertAndSend("/topic/games/" + roomId + "kill-log", aliveUsers);
-    }
-
-    @MessageMapping("/{roomId}/mention")
-    public void mention(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId) {
+    @Operation(
+            summary = "도발 멘트 작성",
+            description = "각 라운드 시작 전 도발 멘트 작성",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "멘션 성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @MessageMapping("/{room-id}/mention")
+    public void mention(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable("room-id") Long roundId) {
         // List<AlivePlayerResponse> aliveUsers = roundFacade.startGameAndReturnStatus(gameStartRequest, roomId);
         //messagingTemplate.convertAndSend("/topic/games/" + roomId + "mention", aliveUsers);
     }
-
-
 }

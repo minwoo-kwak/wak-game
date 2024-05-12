@@ -39,7 +39,7 @@ public class RoundFacade {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
-        if (gameStartRequest.getRoundNumber() != 1){
+        if (gameStartRequest.getRoundNumber() != 1) {
             throw new BusinessException(ErrorInfo.ROUND_NOT_ONE);
         }
 
@@ -58,15 +58,13 @@ public class RoundFacade {
         return GameStartResponse.of(startRound(gameStartRequest, room));
     }
 
-    public List<Long> startRound (GameStartRequest gameStartRequest, Room room) {
+    public List<Long> startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        List<Long> players = roundService.initializeGameStatuses(room,round);
+        List<Long> players = roundService.initializeGameStatuses(room, round);
 
         roundService.startThread(round.getId());
-
         return players;
     }
-
 
     public void endRound(Long roomId, Long userId) {
         User user = userService.findById(userId);
@@ -88,26 +86,20 @@ public class RoundFacade {
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
-
-
     }
 
-    public DashBoardResponse getDashBoard(Long roundId, Long userId) {
+    public DashBoardResponse getDashBoard(Long roundId) {
 
         Round round = roundService.findById(roundId);
-        User user = userService.findById(userId);
 
         SummaryCountResponse summary = roundService.getSummaryCount(round);
-        boolean isAlive = roundService.isAlive(round,user);
 
         return DashBoardResponse.builder()
-                .roomName(round.getRoom().getRoomName())
                 .totalCount(summary.getTotalCount())
                 .aliveCount(summary.getAliveCount())
-                .isAlive(isAlive)
+                .roundId(roundId)
                 .build();
     }
-
 
 
 }

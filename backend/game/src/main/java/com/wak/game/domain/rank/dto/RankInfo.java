@@ -1,9 +1,11 @@
 package com.wak.game.domain.rank.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 
+@Getter
+@ToString
 public class RankInfo {
     private Long userId;
     private String nickName;
