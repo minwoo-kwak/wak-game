@@ -93,6 +93,7 @@ public class RoundService {
 
             if (player.getStamina() > 0)
                 aliveCount++;
+
         }
 
         return SummaryCountResponse.builder()

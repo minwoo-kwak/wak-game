@@ -57,25 +57,33 @@ public class RoundFacade {
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
+
         return GameStartResponse.of(startRound(gameStartRequest, room));
     }
 
+    //TODO: 1라운드 시작
     public List<Long> startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        List<Long> players = roundService.initializeGameStatuses(room, round);
 
-        roundService.startThread(round.getId());
+        // todo: 현재 방이 몇라운드인지 확인하기 위해 레디스에 저장(생존자/참가자 비율이 1/2 일때 라운드를 종료하기 위함)
+        String key = "roomId:roundNumbers";
+        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
+
+        List<Long> players = roundService.initializeGameStatuses(room, round);
+        roundService.startThread(room.getId());
         return players;
     }
 
+    //TODO: 2라운드 3라운드 시작
     public List<Long> startRound(Round r, Room room) {
         Round round = roundService.startRound(r, " ");
-        List<Long> players = roundService.initializeGameStatuses(room,round);
+        List<Long> players = roundService.initializeGameStatuses(room, round);
 
-        //스레드 생성 및 실행
-        roundService.startThread(round.getId());
+        String key = "roomId:roundNumbers";
+        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
 
-        //FE에서 웹소켓 구독하기 위해 현재 게임에 참여한 userId 리스트로 담아서 반환(List<Long>)
+        roundService.startThread(room.getId());
+
         return players;
     }
 
@@ -122,7 +130,6 @@ public class RoundFacade {
                 .roundId(roundId)
                 .build();
     }
-
 
 
 }

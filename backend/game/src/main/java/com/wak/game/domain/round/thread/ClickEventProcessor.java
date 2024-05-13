@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
-    private Long roundId;
+    private Long roomId;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private RankService rankService;
@@ -34,8 +34,9 @@ public class ClickEventProcessor implements Runnable {
     private final RankFacade rankFacade;
     private final RoundFacade roundFacade;
 
-    public ClickEventProcessor(Long roundId, RedisUtil redisUtil, ObjectMapper objectMapper, RankService rankService, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RankFacade rankFacade, RoundFacade roundFacade) {
-        this.roundId = roundId;
+    //todo: 너무 많은 것들을 주입받는데..? facade를 주입받을지 service를 주입받을지도 생각해야겠다
+    public ClickEventProcessor(Long roomId, RedisUtil redisUtil, ObjectMapper objectMapper, RankService rankService, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RankFacade rankFacade, RoundFacade roundFacade) {
+        this.roomId = roomId;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
         this.rankService = rankService;
@@ -50,8 +51,10 @@ public class ClickEventProcessor implements Runnable {
     public void run() {
         while (running) {
             try {
-                List<String> clickDataList = redisUtil.getListData("clicks:" + roundId, String.class);
+                // todo: room별로 저장하니까, 라운드가 끝나면 다음 라운드가 시작되기 전에 바로 db로 옮겨야 함.
+                List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
 
+                // todo: click 싹 가져오고.. 그 다음에 가져올때는 이전에꺼를 가져오면 안되잖아.. 그렇다고 하나 처리하고 바로 db에 저장하기에는 너무 오래걸리는데? 우짜누..
                 for (String clickData : clickDataList) {
                     clickVO click = objectMapper.readValue(clickData, clickVO.class);
 
@@ -70,8 +73,8 @@ public class ClickEventProcessor implements Runnable {
 
     private void handleClickedUser(clickVO click) {
 
-        if (!click.roundId().equals(this.roundId))
-            throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
+        /*if (!click.roundId().equals(this.roundId))
+            throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);*/
 
         String key = "roundId:" + click.roundId() + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
@@ -84,21 +87,30 @@ public class ClickEventProcessor implements Runnable {
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
             //게임 필드
-            Round round = roundService.findById(roundId);
+            Round round = roundService.findById(roomId);
             List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
+            socketUtil.sendMessage("/games/" + roomId.toString() + "/battle-field", playersInfo);
 
             //대시보드
-            DashBoardResponse result = roundFacade.getDashBoard(roundId);
-            socketUtil.sendMessage("/games/" + roundId.toString() + "dashboard", result);
+            DashBoardResponse result = roundFacade.getDashBoard(roomId);
+            socketUtil.sendMessage("/games/" + roomId.toString() + "dashboard", result);
+
+            /*
+               todo
+                1R 종료 기준: 생존자 / 참여자 = 1/2
+                1R 종료 기준: 생존자 / 참여자 = 1/4
+                1. 몇 라운드인지 확인 후
+                2. 기준 적용해서 라운드 끝났는지 확인
+                3. 라운드 끝내기
+             */
 
             //킬로그
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
+            socketUtil.sendMessage("/games" + roomId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
 
             //랭킹
             rankService.updateRankings(click);
-            rankFacade.sendRank(roundId);
+            rankFacade.sendRank(roomId);
         }
     }
 
@@ -107,7 +119,7 @@ public class ClickEventProcessor implements Runnable {
     }
 
     private void saveSuccessfulClick(clickVO click) {
-        String key = "roundId:" + roundId + ":availableClicks";
+        String key = "roundId:" + roomId.toString() + ":availableClicks";
 
         try {
             String clickData = objectMapper.writeValueAsString(click);

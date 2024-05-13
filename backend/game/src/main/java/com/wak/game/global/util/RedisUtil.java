@@ -41,6 +41,7 @@ public class RedisUtil {
         }
         return result;
     }
+
     public <T> List<T> getListData(String key, Class<T> classType) {
         List<Object> serializedData = redisTemplate.opsForList().range(key, 0, -1);
 
