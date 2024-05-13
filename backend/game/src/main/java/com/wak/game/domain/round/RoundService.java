@@ -42,6 +42,15 @@ public class RoundService {
         return roundRepository.save(round);
     }
 
+    public Round startRound(Round round, String aggro) {
+        return roundRepository.save(Round.builder()
+                .roundNumber(round.getRoundNumber() + 1)
+                .room(round.getRoom())
+                .aggro(aggro)
+                .showNickname(round.getShowNickname())
+                .build());
+    }
+
     /**
      * 대기방(레디스) 유저 -> 게임중(레디스) 유저로 덮어씌우기
      *
@@ -140,6 +149,10 @@ public class RoundService {
             }
             System.out.println("Game stopped in room: " + id);
         }
+    }
+
+    public void deleteRound(Long id) {
+        roundRepository.deleteRound(id);
     }
 }
 

@@ -42,7 +42,7 @@ public class RoundController {
             },
             security = {@SecurityRequirement(name = "Access-Token")}
     )
-    @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED})
+    @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED, ErrorInfo.ROUND_NOT_ONE, ErrorInfo.ROOM_ALREADY_STARTED})
     @PostMapping("/api/game/start/{room-id}")
     public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
         GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
