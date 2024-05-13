@@ -63,7 +63,7 @@ public class RoomController {
             },
             security = { @SecurityRequirement(name = "Access-Token") }
     )
-    @ApiErrorExamples({ErrorInfo.ROOM_USER_ALREADY_EXIST, ErrorInfo.ROOM_NOT_EXIST_IN_REDIS, ErrorInfo.ROOM_PLAYER_IS_FULL})
+    @ApiErrorExamples({ErrorInfo.ROOM_USER_ALREADY_EXIST, ErrorInfo.ROOM_NOT_EXIST_IN_REDIS, ErrorInfo.ROOM_PLAYER_IS_FULL, ErrorInfo.ROOM_IS_START})
     @PostMapping("/{roomId}")
     public ResponseEntity<ApiResult<Void>> enterRoom(@AuthUser Long id, @RequestBody RoomEnterRequest request ,@PathVariable("roomId") Long roomId) {
         roomFacade.enterRoom(id, request, roomId);
