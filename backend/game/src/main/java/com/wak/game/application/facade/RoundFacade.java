@@ -54,7 +54,7 @@ public class RoundFacade {
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
         roomService.gameStart(room);
-        socketUtil.sendRoomList();
+//        socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
         return GameStartResponse.of(startRound(gameStartRequest, room));
@@ -89,7 +89,7 @@ public class RoundFacade {
         roomInfo.gameEnd();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
         roomService.gameStart(room);
-        socketUtil.sendRoomList();
+//        socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
 
