@@ -10,6 +10,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -21,20 +22,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
-
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public void saveData(String key, String hashkey, Object data) {
         redisTemplate.opsForHash().put(key, hashkey, data);
     }
 
-    public void saveList(String key, String hashKey, List<Object> list) {
-        try {
-            String listAsString = objectMapper.writeValueAsString(list);
-            saveData(key, hashKey, listAsString);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error serializing list to JSON", e);
-        }
+    public void saveToList(String key, String value) {
+        ListOperations<String, Object> listOps = redisTemplate.opsForList();
+        listOps.rightPush(key, value);
     }
 
     public <T> Map<String, T> getData(String key, Class<T> classType) {
@@ -45,10 +41,21 @@ public class RedisUtil {
         }
         return result;
     }
+
     public <T> List<T> getListData(String key, Class<T> classType) {
-        List<Object> rawList = redisTemplate.opsForList().range(key, 0, -1);
-        return rawList.stream().map(classType::cast).collect(Collectors.toList());
+        List<Object> serializedData = redisTemplate.opsForList().range(key, 0, -1);
+
+        return serializedData.stream()
+                .map(data -> {
+                    try {
+                        return objectMapper.readValue(String.valueOf(data), classType);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException("Error deserializing data from Redis", e);
+                    }
+                })
+                .collect(Collectors.toList());
     }
+
 
     public void deleteKey(String key) {
         redisTemplate.delete(key);

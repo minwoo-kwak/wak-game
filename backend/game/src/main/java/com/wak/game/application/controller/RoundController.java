@@ -1,5 +1,6 @@
 package com.wak.game.application.controller;
 
+import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.facade.PlayerFacade;
 import com.wak.game.application.facade.RoundFacade;
@@ -11,32 +12,27 @@ import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
 import com.wak.game.global.util.ApiResult;
 import com.wak.game.global.util.ApiUtils;
-import com.wak.game.global.util.SocketUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/games")
 public class RoundController {
-    private final SimpMessagingTemplate messagingTemplate;
     private final RoundFacade roundFacade;
-    private final PlayerFacade playerFacade;
+    private final RankFacade rankFacade;
+
 
     @Operation(
             summary = "게임 시작",
@@ -46,46 +42,54 @@ public class RoundController {
             },
             security = {@SecurityRequirement(name = "Access-Token")}
     )
-    @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED})
-    @PostMapping("/api/game/start/{room-id}")
+    @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED, ErrorInfo.ROUND_NOT_ONE, ErrorInfo.ROOM_ALREADY_STARTED})
+    @PostMapping("/start/{room-id}")
     public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
         GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
-
         return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
-    /**
-     * 구독한 모든 유저에게 체력이 1이상인 유저들의 정보 리턴
-     *
-     * @param userId
-     * @param roundId
-     */
-    @MessageMapping("/topic/games/{roundId}/battle-field")
-    public void getBattleField(@AuthUser Long userId, @DestinationVariable Long roundId) {
-        List<PlayerInfoResponse> usersInfo = playerFacade.getPlayersStatus(roundId);
-        messagingTemplate.convertAndSend("/topic/games/" + roundId + "/battle-field", usersInfo);
+    @Operation(
+            summary = "게임 시작 시 publish 요청",
+            description = "게임 시작 시 대시보드 대한 정보를 publish 요청하는 API 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "dashboard 초기값 반환 성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @GetMapping("/{round-id}/dashboard")
+    public ResponseEntity<ApiResult<Void>> getDashBoard(@DestinationVariable("round-id") Long roundId) {
+        roundFacade.sendDashBoard(roundId);
+        return ResponseEntity.ok(ApiUtils.success(null));
     }
 
-    @MessageMapping("/topic/games/{roundId}/dashboard")
-    public void getDashBoard(@AuthUser Long userId, @DestinationVariable Long roundId) {
-        DashBoardResponse result = roundFacade.getDashBoard(roundId, userId);
-        messagingTemplate.convertAndSend("/topic/games/" + roundId + "dashboard", result);
+    @Operation(
+            summary = "게임 시작 시 publish 요청",
+            description = "게임 시작 시 랭킹에 대한 정보를 publish 요청하는 API 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Rank 초기값 반환 성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @GetMapping("/{round-id}/rank")
+    public ResponseEntity<ApiResult<Void>> getRank(@DestinationVariable("round-id") Long roundId) {
+        rankFacade.sendRank(roundId);
+        return ResponseEntity.ok(ApiUtils.success(null));
     }
 
-    @MessageMapping("/{roomId}/kill-log")
-    public void getKillLog(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId) {
-
-        /**
-         * 성공로그 에서 가해자가 살아있고 피해자가 살아있으면 킬로그
-         */
-        //messagingTemplate.convertAndSend("/topic/games/" + roomId + "kill-log", aliveUsers);
-    }
-
-    @MessageMapping("/{roomId}/mention")
-    public void mention(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable Long roomId) {
+    @Operation(
+            summary = "도발 멘트 작성",
+            description = "각 라운드 시작 전 도발 멘트 작성",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "멘션 성공")
+            },
+            security = {@SecurityRequirement(name = "Access-Token")}
+    )
+    @MessageMapping("/{room-id}/mention")
+    public void mention(@RequestBody GameStartRequest gameStartRequest, @DestinationVariable("room-id") Long roundId) {
         // List<AlivePlayerResponse> aliveUsers = roundFacade.startGameAndReturnStatus(gameStartRequest, roomId);
         //messagingTemplate.convertAndSend("/topic/games/" + roomId + "mention", aliveUsers);
     }
-
-
 }
+
+
