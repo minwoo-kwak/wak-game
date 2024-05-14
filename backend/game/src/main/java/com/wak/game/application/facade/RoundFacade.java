@@ -56,15 +56,15 @@ public class RoundFacade {
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
-        return GameStartResponse.of(startRound(gameStartRequest, room));
+        return startRound(gameStartRequest, room);
     }
 
-    public List<Long> startRound(GameStartRequest gameStartRequest, Room room) {
+    public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
         List<Long> players = roundService.initializeGameStatuses(room, round);
 
         roundService.startThread(room.getId(), round.getId());
-        return players;
+        return GameStartResponse.of(round.getId(), players);
     }
 
     public Round startNextRound(Round previousRound) {

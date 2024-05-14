@@ -22,32 +22,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/player")
 @RequiredArgsConstructor
 public class PlayerController {
-    private final PlayerFacade playerFacade;
-
-    @Operation(
-            summary = "게임입장 시 클릭 publish 요청",
-            description = "게임 입장 시 킬 로그에 대한 정보를 publish 요청하는 API 입니다.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "반환 성공")
-            },
-            security = {@SecurityRequirement(name = "Access-Token")}
-    )
-    @MessageMapping("/topic/games/{roundId}/click")
-    public void click(@AuthUser Long userId, @DestinationVariable Long roundId, @RequestBody ClickRequest clickRequest) {
-        playerFacade.saveClickLog(userId, roundId, clickRequest);
-    }
-
-    @Operation(
-            summary = "게임입장 시 킬로그 publish 요청",
-            description = "킬 로그에 대한 정보를 publish 요청하는 API 입니다.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "반환 성공")
-            },
-            security = {@SecurityRequirement(name = "Access-Token")}
-    )
-    @MessageMapping("/topic/games/{roundId}/kill-log")
-    public void getKillLog(@DestinationVariable("round-id") Long roundId) {
-        playerFacade.getKillLog(roundId);
-    }
 
 }

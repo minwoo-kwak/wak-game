@@ -38,9 +38,9 @@ public class PlayerFacade {
         socketUtil.sendMessage("/topic/games/" + roundId + "/battle-field", playersInfo);
     }
 
-    public void saveClickLog(Long userId, Long roundId, ClickRequest request) {
-        Round round = roundService.findById(roundId);
-        User user = userService.findById(userId);
+    public void saveClickLog(ClickRequest request) {
+        Round round = roundService.findById(request.getRoundId());
+        User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
         clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime());
 

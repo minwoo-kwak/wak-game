@@ -2,12 +2,13 @@ package com.wak.game.application.response;
 
 import java.util.List;
 
-public record GameStartResponse(List<Long> players) {
-    public static GameStartResponse of(List<Long> players) {
-        return new GameStartResponse(players);
+public record GameStartResponse(Long roundId, List<Long> players) {
+    public static GameStartResponse of(Long roundId, List<Long> players) {
+        return new GameStartResponse(roundId, players);
     }
 
-    public GameStartResponse(List<Long> players) {
+    public GameStartResponse(Long roundId, List<Long> players) {
+        this.roundId = roundId;
         this.players = players;
     }
 }
