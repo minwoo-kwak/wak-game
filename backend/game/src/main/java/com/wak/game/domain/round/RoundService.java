@@ -39,7 +39,7 @@ public class RoundService {
 
     public Round startRound(Room room, GameStartRequest gameStartRequest) {
         Round round = Round.builder()
-                .roundNumber(gameStartRequest.getRoundNumber())
+                .roundNumber(1)
                 .room(room)
                 .aggro(gameStartRequest.getComment())
                 .showNickname(gameStartRequest.isShowNickname())
