@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,7 +40,11 @@ public class RankFacade {
         List<RankInfo> ranks = new ArrayList<>(map.values());
         ranks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
 
-        socketUtil.sendMessage("/topic/games/" + roundId + "/rank", new RankListResponse(ranks));
+        List<RankInfo> topRanks = ranks.stream()
+                .limit(6)
+                .collect(Collectors.toList());
+
+        socketUtil.sendMessage("/topic/games/" + roundId + "/rank", new RankListResponse(topRanks));
     }
 
     public void updateRankings(clickVO click) {
