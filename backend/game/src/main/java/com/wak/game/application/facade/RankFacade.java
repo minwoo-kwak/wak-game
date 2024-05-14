@@ -5,6 +5,7 @@ import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.response.socket.RankListResponse;
+import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
@@ -40,4 +41,18 @@ public class RankFacade {
 
         socketUtil.sendMessage("/topic/games/" + roundId + "/rank", new RankListResponse(ranks));
     }
+
+    public void updateRankings(clickVO click) {
+        Long userId = click.userId();
+        Long roundId = click.roundId();
+
+        String key = "roundId:" + roundId + ":ranks";
+        Map<String, Integer> curRoundRanks = redisUtil.getData(key, Integer.class);
+
+        int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);
+        curRoundRanks.put(Long.toString(userId), curKillCnt + 1);
+
+        redisUtil.saveData(key, Long.toString(userId), curRoundRanks);
+    }
+
 }

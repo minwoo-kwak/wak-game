@@ -10,18 +10,5 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class RankService {
-    private RedisUtil redisUtil;
 
-    public void updateRankings(clickVO click) {
-        Long userId = click.userId();
-        Long roundId = click.roundId();
-
-        String key = "roundId:" + roundId + ":ranks";
-        Map<String, Integer> curRoundRanks = redisUtil.getData(key, Integer.class);
-
-        int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);
-        curRoundRanks.put(Long.toString(userId), curKillCnt + 1);
-
-        redisUtil.saveData(key, Long.toString(userId), curRoundRanks);
-    }
 }

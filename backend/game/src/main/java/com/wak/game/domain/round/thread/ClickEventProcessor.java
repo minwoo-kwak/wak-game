@@ -14,6 +14,7 @@ import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.rank.RankService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
+import com.wak.game.domain.round.dto.PlayerCount;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
@@ -25,43 +26,38 @@ import java.util.Map;
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
+    private Long roundId;
+
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
-    private RankService rankService;
     private final SocketUtil socketUtil;
     private final RoundService roundService;
     private final PlayerService playerService;
-    private final RankFacade rankFacade;
     private final RoundFacade roundFacade;
+    private final RankFacade rankFacade;
 
-    //todo: 너무 많은 것들을 주입받는데..? facade를 주입받을지 service를 주입받을지도 생각해야겠다
-    public ClickEventProcessor(Long roomId, RedisUtil redisUtil, ObjectMapper objectMapper, RankService rankService, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RankFacade rankFacade, RoundFacade roundFacade) {
+    public ClickEventProcessor(Long roundId, Long roomId, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade) {
+        this.roundId = roundId;
         this.roomId = roomId;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
-        this.rankService = rankService;
         this.socketUtil = socketUtil;
         this.roundService = roundService;
         this.playerService = playerService;
-        this.rankFacade = rankFacade;
         this.roundFacade = roundFacade;
+        this.rankFacade = rankFacade;
     }
 
     @Override
     public void run() {
         while (running) {
             try {
-                // todo: room별로 저장하니까, 라운드가 끝나면 다음 라운드가 시작되기 전에 바로 db로 옮겨야 함.
                 List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-
-                // todo: click 싹 가져오고.. 그 다음에 가져올때는 이전에꺼를 가져오면 안되잖아.. 그렇다고 하나 처리하고 바로 db에 저장하기에는 너무 오래걸리는데? 우짜누..
                 for (String clickData : clickDataList) {
                     clickVO click = objectMapper.readValue(clickData, clickVO.class);
-
                     if (click != null)
                         handleClickedUser(click);
                 }
-
                 Thread.sleep(1000); // 1초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -71,10 +67,10 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-    private void handleClickedUser(clickVO click) {
 
-        /*if (!click.roundId().equals(this.roundId))
-            throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);*/
+    private void handleClickedUser(clickVO click) {
+        if (!click.roundId().equals(this.roundId))
+            throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
         String key = "roundId:" + click.roundId() + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
@@ -86,31 +82,54 @@ public class ClickEventProcessor implements Runnable {
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
-            //게임 필드
-            Round round = roundService.findById(roomId);
+            // 게임 필드 업데이트
+            Round round = roundService.findById(click.roundId());
             List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-            socketUtil.sendMessage("/games/" + roomId.toString() + "/battle-field", playersInfo);
+            socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
-            //대시보드
-            DashBoardResponse result = roundFacade.getDashBoard(roomId);
-            socketUtil.sendMessage("/games/" + roomId.toString() + "dashboard", result);
+            // 대시보드 업데이트
+            DashBoardResponse result = roundFacade.getDashBoard(round.getId());
+            socketUtil.sendMessage("/games/" + roundId.toString() + "/dashboard", result);
 
-            /*
-               todo
-                1R 종료 기준: 생존자 / 참여자 = 1/2
-                1R 종료 기준: 생존자 / 참여자 = 1/4
-                1. 몇 라운드인지 확인 후
-                2. 기준 적용해서 라운드 끝났는지 확인
-                3. 라운드 끝내기
-             */
+            // 생존자 수 업데이트
+            String countKey = "aliveAndTotalPlayers";
+            Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
+            PlayerCount playerCount = playerCountMap.get(roundId.toString());
 
-            //킬로그
+            // 킬 로그 업데이트
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games" + roomId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
+            socketUtil.sendMessage("/games" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
 
-            //랭킹
-            rankService.updateRankings(click);
-            rankFacade.sendRank(roomId);
+            // 랭킹 업데이트
+            rankFacade.updateRankings(click);
+            rankFacade.sendRank(roundId);
+
+            int roundNumber = round.getRoundNumber();
+            boolean shouldEndRound = false;
+
+            if (roundNumber < 3) {
+                shouldEndRound = (double) playerCount.getAliveCountA() / playerCount.getTotalCountA() <= 0.5;
+            } else if (roundNumber == 3) {
+                shouldEndRound = playerCount.getAliveCountA() == 1 || playerCount.getAliveCountB() == 1;
+            }
+
+            if (shouldEndRound) {
+                try {
+                    socketUtil.sendMessage("/games/" + roundId.toString() + "/message", "Round ending in 1 minute.");
+
+                    roundFacade.endRound(round.getId());
+                    Thread.sleep(60000); // 1분 대기
+
+                    if (roundNumber < 3) {
+                        Round nextRound = roundFacade.startNextRound(round);
+                        updateRoundId(nextRound.getId());
+                    } else {
+                        stop();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 
@@ -120,12 +139,19 @@ public class ClickEventProcessor implements Runnable {
 
     private void saveSuccessfulClick(clickVO click) {
         String key = "roundId:" + roomId.toString() + ":availableClicks";
-
         try {
             String clickData = objectMapper.writeValueAsString(click);
             redisUtil.saveToList(key, clickData);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error serializing clickVO", e);
         }
+    }
+
+    public void stop() {
+        running = false;
+    }
+
+    private void updateRoundId(Long newRoundId) {
+        this.roundId = newRoundId;
     }
 }

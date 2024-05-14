@@ -4,6 +4,7 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.response.socket.RankListResponse;
 import com.wak.game.domain.room.dto.RoomInfo;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
@@ -37,7 +38,6 @@ public class RoundFacade {
 
     @Transactional
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
-
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
@@ -49,7 +49,6 @@ public class RoundFacade {
         roomService.isInGame(room);
 
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
-
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
@@ -57,36 +56,20 @@ public class RoundFacade {
         socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
-
         return GameStartResponse.of(startRound(gameStartRequest, room));
     }
 
-    //TODO: 1라운드 시작
     public List<Long> startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-
-        // todo: 현재 방이 몇라운드인지 확인하기 위해 레디스에 저장(생존자/참가자 비율이 1/2 일때 라운드를 종료하기 위함)
-        String key = "roomId:roundNumbers";
-        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
-
         List<Long> players = roundService.initializeGameStatuses(room, round);
-        roundService.startThread(room.getId());
+
+        roundService.startThread(room.getId(), round.getId());
         return players;
     }
 
-    //TODO: 2라운드 3라운드 시작
-    public List<Long> startRound(Round r, Room room) {
-        Round round = roundService.startRound(r, " ");
-        List<Long> players = roundService.initializeGameStatuses(room, round);
-
-        String key = "roomId:roundNumbers";
-        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
-
-        roundService.startThread(room.getId());
-
-        return players;
+    public Round startNextRound(Round previousRound) {
+        return roundService.startNextRound(previousRound);
     }
-
 
     public void endRound(Long roundId) {
         Round round = roundService.findById(roundId);
@@ -98,6 +81,9 @@ public class RoundFacade {
         socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
 
         // 게임 시작 시 만들어 놨던 redis 저장소를 다 없앤다.
+        // todo: availableClicks에 있는 정보에 기반한 players 로그들 다 저장한다.
+        // todo: 모든 클릭 로그들을 player_logs에 저장한다.
+        // todo : 관전자인지, 무슨팀인지, 여왕여부 이런거 없음.
         redisUtil.deleteKey("roundId:" + roundId + ":users");
 
         // gameEnd 할지 결정
@@ -119,9 +105,7 @@ public class RoundFacade {
     }
 
     public DashBoardResponse getDashBoard(Long roundId) {
-
         Round round = roundService.findById(roundId);
-
         SummaryCountResponse summary = roundService.getSummaryCount(round);
 
         return DashBoardResponse.builder()
@@ -131,5 +115,10 @@ public class RoundFacade {
                 .build();
     }
 
+    public void sendDashBoard(Long roundId) {
+        Round round = roundService.findById(roundId);
+        SummaryCountResponse summaryCount = roundService.getSummaryCount(round);
 
+        socketUtil.sendMessage("topic/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+    }
 }

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RoomInfo {
-
     private long roomId;
     private String roomName;
     private int currentPlayers;
