@@ -18,27 +18,41 @@ public class PlayerService {
     private final RedisUtil redisUtil;
 
     public List<PlayerInfoResponse> getPlayersInfo(Round round) {
-        String key = "roundId:" + round.getId()+":users";
+        String key = "roundId:" + round.getId() + ":users";
         Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
+        return buildPlayerInfoList(round, playersMap);
+    }
 
+    private List<PlayerInfoResponse> buildPlayerInfoList(Round round, Map<String, PlayerInfo> playersMap) {
         List<PlayerInfoResponse> players = new ArrayList<>();
+        boolean showNickname = round.getShowNickname();
 
         for (Map.Entry<String, PlayerInfo> entry : playersMap.entrySet()) {
-            PlayerInfo player = entry.getValue();
-            players.add(
-                    PlayerInfoResponse.builder()
-                            .roundId(round.getId())
-                            .userId(player.getUserId())
-                            .nickname(player.getNicKName())
-                            .color(player.getColor())
-                            .stamina(player.getStamina())
-                            .team(player.getTeam())
-                            .build()
-            );
+            players.add(buildPlayerInfoResponse(round, entry.getValue(), showNickname));
         }
 
         return players;
     }
+
+    private PlayerInfoResponse buildPlayerInfoResponse(Round round, PlayerInfo player, boolean showNickname) {
+        PlayerInfoResponse.PlayerInfoResponseBuilder responseBuilder = PlayerInfoResponse.builder()
+                .roundId(round.getId())
+                .userId(player.getUserId())
+                .color(player.getColor())
+                .stamina(player.getStamina())
+                .team(player.getTeam());
+
+        if (showNickname) {
+            responseBuilder.nickname(player.getNicKName());
+        } else {
+            responseBuilder.nickname("");
+        }
+
+        return responseBuilder.build();
+    }
+
+
+
 
     public void saveClickLog(Round round, clickVO click) {
         String key = "round:" + round.getId() + ":clicks";
