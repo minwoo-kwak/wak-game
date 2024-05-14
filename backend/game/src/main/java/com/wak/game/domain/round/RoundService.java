@@ -135,6 +135,7 @@ public class RoundService {
         }
 
         return SummaryCountResponse.builder()
+                .roundNumber(round.getRoundNumber())
                 .aliveCount(aliveCount)
                 .totalCount(result.size())
                 .build();
