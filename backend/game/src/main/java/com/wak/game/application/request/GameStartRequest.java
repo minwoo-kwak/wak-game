@@ -6,15 +6,11 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 public class GameStartRequest {
-    private Long roomId;
-    private int roundNumber;
     private String comment;
     private boolean showNickname;
 
     @Builder
-    public GameStartRequest(Long roomId, int roundNumber, String comment, boolean showNickname) {
-        this.roomId = roomId;
-        this.roundNumber = roundNumber;
+    public GameStartRequest(String comment, boolean showNickname) {
         this.comment = comment;
         this.showNickname = showNickname;
     }

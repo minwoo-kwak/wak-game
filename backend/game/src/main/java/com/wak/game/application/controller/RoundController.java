@@ -2,11 +2,7 @@ package com.wak.game.application.controller;
 
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.request.GameStartRequest;
-import com.wak.game.application.facade.PlayerFacade;
 import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.response.DashBoardResponse;
-import com.wak.game.application.response.GameStartResponse;
-import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
@@ -21,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,9 +39,9 @@ public class RoundController {
     )
     @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED, ErrorInfo.ROUND_NOT_ONE, ErrorInfo.ROOM_ALREADY_STARTED})
     @PostMapping("/start/{room-id}")
-    public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
-        GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
-        return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
+    public ResponseEntity<ApiResult<Void>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
+        roundFacade.startGame(gameStartRequest, roomId, userId);
+        return ResponseEntity.ok(ApiUtils.success(null));
     }
 
     @Operation(

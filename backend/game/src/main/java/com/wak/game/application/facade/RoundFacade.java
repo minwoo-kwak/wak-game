@@ -41,10 +41,6 @@ public class RoundFacade {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
-        if (gameStartRequest.getRoundNumber() != 1) {
-            throw new BusinessException(ErrorInfo.ROUND_NOT_ONE);
-        }
-
         roomService.isHost(user, room);
         roomService.isInGame(room);
 
@@ -53,7 +49,6 @@ public class RoundFacade {
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
         roomService.gameStart(room);
-//        socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
         return startRound(gameStartRequest, room);
@@ -61,10 +56,10 @@ public class RoundFacade {
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        List<Long> players = roundService.initializeGameStatuses(room, round);
+        roundService.initializeGameStatuses(room, round);
 
         roundService.startThread(room.getId(), round.getId());
-        return GameStartResponse.of(round.getId(), players);
+        return GameStartResponse.of(round.getId());
     }
 
     public Round startNextRound(Round previousRound) {
