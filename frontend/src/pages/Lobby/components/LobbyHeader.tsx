@@ -1,8 +1,5 @@
-import { UserDataType } from '../../../types/UserTypes.ts';
-
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { RegularText } from '../../../styles/fonts';
-import { FlexLayout } from '../../../styles/layout';
 
 import NewRoomButton from './NewRoomButton';
 
@@ -13,28 +10,31 @@ const HeaderBlock = styled.div`
   align-items: end;
 `;
 
-const TextBlock = styled.div`
+const TextBlock = styled.div<{ $isCol?: boolean }>`
   display: flex;
-  flex-direction: column;
+  ${(props) =>
+    props.$isCol &&
+    css`
+      flex-direction: column;
+    `}
   gap: 2rem;
 `;
 
 type LobbyHeaderProps = {
-  userData: UserDataType;
   openDialog: () => void;
 };
 
-export default function LobbyHeader({
-  userData,
-  openDialog,
-}: LobbyHeaderProps) {
+export default function LobbyHeader({ openDialog }: LobbyHeaderProps) {
+  const userStore = sessionStorage.getItem('userStore');
+  const { color, nickname } = userStore && JSON.parse(userStore).state.userData;
+
   return (
     <HeaderBlock>
-      <TextBlock>
-        <FlexLayout gap='1.6rem'>
+      <TextBlock $isCol>
+        <TextBlock>
           <RegularText>{`내 이름 :`}</RegularText>
-          <RegularText color={userData.color}>{userData.nickname}</RegularText>
-        </FlexLayout>
+          <RegularText color={color}>{nickname}</RegularText>
+        </TextBlock>
         <RegularText>{`참여할 수 있는 게임`}</RegularText>
       </TextBlock>
       <NewRoomButton handleClick={openDialog} />

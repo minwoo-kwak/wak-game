@@ -1,4 +1,4 @@
-import { axiosInstance } from './baseInstance';
+import { axiosInstance } from './base';
 
 export const login = async (nickname: string) => {
   const response = await axiosInstance.post(

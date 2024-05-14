@@ -6,6 +6,7 @@ import com.wak.game.application.request.RoomEnterRequest;
 import com.wak.game.application.response.RoomBasicInfoResponse;
 import com.wak.game.application.response.RoomCreateResponse;
 import com.wak.game.application.response.UserInfoResponse;
+import com.wak.game.application.response.socket.RoomListResponse;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
@@ -62,7 +63,7 @@ public class RoomController {
             },
             security = { @SecurityRequirement(name = "Access-Token") }
     )
-    @ApiErrorExamples({ErrorInfo.ROOM_USER_ALREADY_EXIST, ErrorInfo.ROOM_NOT_EXIST_IN_REDIS, ErrorInfo.ROOM_PLAYER_IS_FULL})
+    @ApiErrorExamples({ErrorInfo.ROOM_USER_ALREADY_EXIST, ErrorInfo.ROOM_NOT_EXIST_IN_REDIS, ErrorInfo.ROOM_PLAYER_IS_FULL, ErrorInfo.ROOM_IS_START})
     @PostMapping("/{roomId}")
     public ResponseEntity<ApiResult<Void>> enterRoom(@AuthUser Long id, @RequestBody RoomEnterRequest request ,@PathVariable("roomId") Long roomId) {
         roomFacade.enterRoom(id, request, roomId);
@@ -108,9 +109,10 @@ public class RoomController {
             security = { @SecurityRequirement(name = "Access-Token") }
     )
     @GetMapping("/topic/lobby")
-    public ResponseEntity<ApiResult<Void>> publishLobbyInfo() {
-        socketUtil.sendRoomList();
-        return ResponseEntity.ok(ApiUtils.success(null));
+    public ResponseEntity<ApiResult<RoomListResponse>> publishLobbyInfo() {
+//        socketUtil.sendRoomList();
+        RoomListResponse response = roomFacade.sendRoomList();
+        return ResponseEntity.ok(ApiUtils.success(response));
     }
 
 }

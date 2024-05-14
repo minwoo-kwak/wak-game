@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { UserDataType } from '../types/UserTypes.ts';
+import { UserDataType } from '../types/UserTypes.ts.js';
 
 interface Store {
   userData: UserDataType;
@@ -11,7 +11,8 @@ const useUserStore = create(
   persist<Store>(
     (set) => ({
       userData: { nickname: '', color: '', token: null } as UserDataType,
-      setUserData: (userData: UserDataType) => set(() => ({ userData })),
+      setUserData: (userData: UserDataType) =>
+        set(() => ({ userData: { ...userData } })),
     }),
     {
       name: 'userStore',
