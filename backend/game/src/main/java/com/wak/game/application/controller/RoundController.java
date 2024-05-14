@@ -3,6 +3,7 @@ package com.wak.game.application.controller;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.facade.RoundFacade;
+import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.token.AuthUser;
 import com.wak.game.global.util.ApiErrorExamples;
@@ -39,9 +40,9 @@ public class RoundController {
     )
     @ApiErrorExamples({ErrorInfo.USER_NOT_EXIST, ErrorInfo.ROOM_NOT_EXIST, ErrorInfo.ROOM_NOT_HOST, ErrorInfo.ROUND_NOT_EXIST, ErrorInfo.ROOM_ALREADY_STARTED, ErrorInfo.ROUND_NOT_ONE, ErrorInfo.ROOM_ALREADY_STARTED})
     @PostMapping("/start/{room-id}")
-    public ResponseEntity<ApiResult<Void>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
-        roundFacade.startGame(gameStartRequest, roomId, userId);
-        return ResponseEntity.ok(ApiUtils.success(null));
+    public ResponseEntity<ApiResult<GameStartResponse>> startGame(@RequestBody GameStartRequest gameStartRequest, @PathVariable("room-id") Long roomId, @AuthUser Long userId) {
+        GameStartResponse gameStartResponse = roundFacade.startGame(gameStartRequest, roomId, userId);
+        return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
     @Operation(
