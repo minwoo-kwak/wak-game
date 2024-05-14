@@ -24,8 +24,8 @@ public class PlayerInfo {
         this.stamina = stamina;
     }
 
-    public void updateStamina(int amount){
-        this.stamina+=amount;
+    public void updateStamina(int amount) {
+        this.stamina += amount;
     }
 }
 

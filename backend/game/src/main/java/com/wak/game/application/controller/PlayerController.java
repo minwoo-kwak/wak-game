@@ -6,6 +6,9 @@ import com.wak.game.application.request.ClickRequest;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.global.token.AuthUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -20,13 +23,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlayerController {
 
-    private final SimpMessagingTemplate messagingTemplate;
-    private final RoundFacade roundFacade;
-    private final PlayerFacade playerFacade;
-    @MessageMapping("/topic/games/{roundId}/click")
-    public void  click(@AuthUser Long userId, @DestinationVariable Long roundId, @RequestBody ClickRequest clickRequest) {
-        //레디스에 적재
-        playerFacade.saveClickLog(userId, roundId, clickRequest);
-        //messagingTemplate.convertAndSend("/topic/games/" + roundId + "dashboard", result);
-    }
 }

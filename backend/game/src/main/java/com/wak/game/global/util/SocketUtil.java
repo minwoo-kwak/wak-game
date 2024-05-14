@@ -55,7 +55,7 @@ public class SocketUtil {
 
     public void sendRoomInfoSocket(Room room) {
         Map<String, RoomInfo> roominfo = redisUtil.getData("roomInfo", RoomInfo.class);
-        RoomInfo roomInfo = roominfo.get(room.getId().toString());
+        RoomInfo roomInfo = roominfo.get(room.getId().toString()); // todo: Typo roominfo -> roomInfo
 
         Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
         List<RoomVO> users = new ArrayList<>(userinfo.values());
