@@ -41,7 +41,7 @@ public class RoundFacade {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
-        if (gameStartRequest.getRoundNumber() != 1){
+        if (gameStartRequest.getRoundNumber() != 1) {
             throw new BusinessException(ErrorInfo.ROUND_NOT_ONE);
         }
 
@@ -57,61 +57,79 @@ public class RoundFacade {
 //        socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
 
+
         return GameStartResponse.of(startRound(gameStartRequest, room));
     }
 
-    public List<Long> startRound (GameStartRequest gameStartRequest, Room room) {
+    //TODO: 1라운드 시작
+    public List<Long> startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        List<Long> players = roundService.initializeGameStatuses(room,round);
 
-        //스레드 생성 및 실행
-        roundService.startThread(round.getId());
+        // todo: 현재 방이 몇라운드인지 확인하기 위해 레디스에 저장(생존자/참가자 비율이 1/2 일때 라운드를 종료하기 위함)
+        String key = "roomId:roundNumbers";
+        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
 
-        //FE에서 웹소켓 구독하기 위해 현재 게임에 참여한 userId 리스트로 담아서 반환(List<Long>)
+        List<Long> players = roundService.initializeGameStatuses(room, round);
+        roundService.startThread(room.getId());
+        return players;
+    }
+
+    //TODO: 2라운드 3라운드 시작
+    public List<Long> startRound(Round r, Room room) {
+        Round round = roundService.startRound(r, " ");
+        List<Long> players = roundService.initializeGameStatuses(room, round);
+
+        String key = "roomId:roundNumbers";
+        redisUtil.saveData(key, room.getId().toString(), String.valueOf(round.getRoundNumber()));
+
+        roundService.startThread(room.getId());
+
         return players;
     }
 
 
-    public void endRound(Long roomId, Long userId) {
-        User user = userService.findById(userId);
-        Room room = roomService.findById(roomId);
+    public void endRound(Long roundId) {
+        Round round = roundService.findById(roundId);
+        Room room = roomService.findById(round.getRoom().getId());
 
         roomService.isNotInGame(room);
+
+        roundService.deleteRound(roundId);
+        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
+
+        // 게임 시작 시 만들어 놨던 redis 저장소를 다 없앤다.
+        redisUtil.deleteKey("roundId:" + roundId + ":users");
+
+        // gameEnd 할지 결정
+        if ((room.getMode().toString().equals("SOLO") && round.getRoundNumber() == 3)
+                || room.getMode().toString().equals("TEAM")) {
+            endGame(room);
+        }
+
     }
 
-    public void roundEnd() {
-
-    }
-
-    public void gameRoomEnd(Room room) {
+    public void endGame(Room room) {
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
 
         roomInfo.gameEnd();
+        roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
-        roomService.gameStart(room);
-//        socketUtil.sendRoomList();
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
+        socketUtil.sendRoomList();
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
-
-
     }
 
-    public DashBoardResponse getDashBoard(Long roundId, Long userId) {
+    public DashBoardResponse getDashBoard(Long roundId) {
 
         Round round = roundService.findById(roundId);
-        User user = userService.findById(userId);
 
         SummaryCountResponse summary = roundService.getSummaryCount(round);
-        boolean isAlive = roundService.isAlive(round,user);
 
         return DashBoardResponse.builder()
-                .roomName(round.getRoom().getRoomName())
                 .totalCount(summary.getTotalCount())
                 .aliveCount(summary.getAliveCount())
-                .isAlive(isAlive)
+                .roundId(roundId)
                 .build();
     }
-
 
 
 }

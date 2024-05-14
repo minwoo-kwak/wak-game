@@ -4,7 +4,8 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.player.thread.ClickEventProcessor;
+import com.wak.game.domain.rank.dto.RankInfo;
+import com.wak.game.domain.round.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
@@ -41,6 +42,15 @@ public class RoundService {
         return roundRepository.save(round);
     }
 
+    public Round startRound(Round round, String aggro) {
+        return roundRepository.save(Round.builder()
+                .roundNumber(round.getRoundNumber() + 1)
+                .room(round.getRoom())
+                .aggro(aggro)
+                .showNickname(round.getShowNickname())
+                .build());
+    }
+
     /**
      * 대기방(레디스) 유저 -> 게임중(레디스) 유저로 덮어씌우기
      *
@@ -55,9 +65,17 @@ public class RoundService {
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
             PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
-            String key = "roundId:" + round.getId() + ":users";
+            RankInfo rankInfo = RankInfo.builder()
+                    .killCnt(0)
+                    .nickName(roomUser.nickname())
+                    .userId(roomUser.userId())
+                    .build();
 
-            redisUtil.saveData(key, "userId:" + roomUser.userId(), gameUser);
+            String userKey = "roundId:" + round.getId() + ":users";
+            String rankKey = "roundId:" + round.getId() + ":ranks";
+
+            redisUtil.saveData(userKey, Long.toString(roomUser.userId()), gameUser);
+            redisUtil.saveData(rankKey, Long.toString(roomUser.userId()), rankInfo);
 
             playersId.add(gameUser.getUserId());
         }
@@ -92,10 +110,7 @@ public class RoundService {
             PlayerInfo player = entry.getValue();
 
             if (player.getUserId() == user.getId()) {
-                if (player.getStamina() > 0)
-                    return true;
-
-                return false;
+                return player.getStamina() > 0;
             }
         }
 
@@ -108,9 +123,7 @@ public class RoundService {
      * @param id
      */
     public void startThread(Long id) {
-        /**
-         * 생성자 다시 생각해보기
-         */
+        //todo 생성자 다시 생각해보기
         ClickEventProcessor clickProcessor = applicationContext.getBean(ClickEventProcessor.class, id);
         Thread thread = new Thread(clickProcessor);
 
@@ -127,6 +140,7 @@ public class RoundService {
      */
     public void endThread(Long id) {
         Thread thread = gameThreads.remove(id);
+
         if (thread != null) {
             thread.interrupt();
             try {
@@ -138,6 +152,9 @@ public class RoundService {
         }
     }
 
+    public void deleteRound(Long id) {
+        roundRepository.deleteRound(id);
+    }
 }
 
 
