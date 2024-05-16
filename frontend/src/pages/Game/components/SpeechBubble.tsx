@@ -1,3 +1,5 @@
+import useGameStore from '../../../store/gameStore';
+
 import styled from 'styled-components';
 import { FlexLayout } from '../../../styles/layout';
 import { SmallText, textStyles } from '../../../styles/fonts';
@@ -20,13 +22,19 @@ const Text = styled.div`
   line-height: 1.2;
 `;
 
-export default function SpeechBubble() {
+type SpeechBubbleProps = {
+  isWaiting?: boolean;
+};
+
+export default function SpeechBubble({ isWaiting }: SpeechBubbleProps) {
+  const { hostName, comment } = useGameStore().gameData;
+
   return (
     <SpeechBubbleBlock $isCol gap='1rem'>
       <SmallText color='black'>{`방장의 한마디!`}</SmallText>
       <FlexLayout>
-        <Text color='#725bff'>{`김라쿤`}</Text>
-        <Text color='black'>{`: 바보들아 ~`}</Text>
+        <Text color='#725bff'>{isWaiting ? hostName : `김라쿤`}</Text>
+        <Text color='black'>{isWaiting ? comment : `: 바보들아 ~`}</Text>
       </FlexLayout>
     </SpeechBubbleBlock>
   );

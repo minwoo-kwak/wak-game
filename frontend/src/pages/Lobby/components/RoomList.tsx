@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getRoomlist } from '../../../services/room';
 import { RoomListTypes } from '../../../types/RoomTypes';
 
 import styled, { css } from 'styled-components';
@@ -7,6 +10,17 @@ import { LargeText, SmallText, textStyles } from '../../../styles/fonts';
 import WhiteRoundBox from '../../../components/WhiteRoundBox';
 
 import arrow from '../../../assets/img-arrow.png';
+import Button from '../../../components/Button';
+
+const ListBlock = styled(FlexLayout)`
+  position: relative;
+`;
+
+const ReloadBlock = styled.div`
+  position: absolute;
+  top: -6.8rem;
+  left: 31.6rem;
+`;
 
 const TextBlock = styled(FlexLayout)`
   width: 100%;
@@ -44,21 +58,58 @@ const PageButton = styled.button<{ $right?: boolean }>`
 `;
 
 type RoomListProps = {
-  rooms: RoomListTypes[];
   openDialog: (id: number, isPublic: boolean) => void;
 };
 
-export default function RoomList({ rooms, openDialog }: RoomListProps) {
+export default function RoomList({ openDialog }: RoomListProps) {
+  const navigate = useNavigate();
   const ROOM_NUM_SINGLE_PAGE = 6;
   const roomBlocks = Array.from({ length: ROOM_NUM_SINGLE_PAGE });
+
+  const [roomPage, setRoomPage] = useState<{
+    totalPage: number;
+    rooms: RoomListTypes[];
+  }>({
+    totalPage: 0,
+    rooms: [],
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const { totalPage, rooms } = roomPage;
+
+  const showRoomList = async () => {
+    try {
+      const fetchedData = await getRoomlist();
+      setRoomPage(fetchedData.data);
+    } catch (error: any) {
+      console.error('방 목록 가져오기 에러', error);
+      navigate(`/error`);
+    }
+  };
+
+  useEffect(() => {
+    showRoomList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = (index: number) => {
     if (index < rooms.length) {
       openDialog(rooms[index].roomId, rooms[index].isPublic);
     }
   };
-  const clickRight = () => {};
-  const clickLeft = () => {};
+  const clickReload = () => {
+    showRoomList();
+    setCurrentPage(1);
+  };
+  const clickRight = () => {
+    if (currentPage < totalPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  const clickLeft = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const RoomBlock = (index: number) => {
     return (
@@ -88,17 +139,21 @@ export default function RoomList({ rooms, openDialog }: RoomListProps) {
   };
 
   return (
-    <FlexLayout $isCol gap='3.6rem'>
+    <ListBlock $isCol gap='3.6rem'>
+      <ReloadBlock>
+        <Button label={`⟳`} onClick={clickReload} />
+      </ReloadBlock>
       <GridLayout $col={2} gap='2.4rem'>
         {roomBlocks.map((_, index) => {
-          return RoomBlock(index);
+          const roomsIndex = index + (currentPage - 1) * ROOM_NUM_SINGLE_PAGE;
+          return RoomBlock(roomsIndex);
         })}
       </GridLayout>
       <FlexLayout gap='8rem'>
         <PageButton onClick={clickLeft} />
-        <LargeText>1</LargeText>
+        <LargeText>{currentPage}</LargeText>
         <PageButton $right onClick={clickRight} />
       </FlexLayout>
-    </FlexLayout>
+    </ListBlock>
   );
 }

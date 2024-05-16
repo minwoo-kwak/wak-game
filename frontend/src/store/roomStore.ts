@@ -11,7 +11,7 @@ const useRoomStore = create<Store>((set) => ({
     roomId: -1,
     roomName: '',
     mode: '',
-    limitPlayers: -1,
+    limitPlayers: 0,
     isPublic: true,
     userId: -1,
     isHost: false,

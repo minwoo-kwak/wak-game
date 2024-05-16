@@ -1,8 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { exitRoom } from '../../../services/room';
+import { startGame } from '../../../services/game';
+import useRoomStore from '../../../store/roomStore';
+import useGameStore from '../../../store/gameStore';
+import { PlayerTypes } from '../../../types/RoomTypes';
 
 import styled from 'styled-components';
 import { FlexLayout } from '../../../styles/layout';
-
 import RoundButton from '../../../components/RoundButton';
 
 const Layout = styled(FlexLayout)`
@@ -11,16 +15,62 @@ const Layout = styled(FlexLayout)`
 
 type ButtonGroupProps = {
   isHost: boolean;
+  canStart: boolean;
+  users: PlayerTypes[];
+  openDialog: () => void;
 };
 
-export default function ButtonGroup({ isHost }: ButtonGroupProps) {
+export default function ButtonGroup({
+  isHost,
+  canStart,
+  users,
+  openDialog,
+}: ButtonGroupProps) {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { roomData } = useRoomStore();
+  const { gameData, setGameData } = useGameStore();
 
-  const handleStart = () => {
-    navigate(`/game`);
+  const handleStart = async () => {
+    if (canStart) {
+      try {
+        const fetchedData =
+          id &&
+          (await startGame(
+            parseInt(id),
+            gameData.comment,
+            gameData.showNickname
+          ));
+        setGameData({
+          ...gameData,
+          roundId: fetchedData.data.roundId,
+          roomName: roomData.roomName,
+          players: users.map((user) => ({
+            roundId: fetchedData.data.roundId,
+            userId: user.userId,
+            nickname: user.nickname,
+            color: user.color,
+            team: user.team,
+            stamina: 1,
+          })),
+        });
+      } catch (error: any) {
+        console.error('게임 시작 에러', error);
+        navigate(`/error`);
+      }
+    } else {
+      openDialog();
+    }
   };
 
-  const hanndleBack = () => {
+  const hanndleBack = async () => {
+    try {
+      id && (await exitRoom(parseInt(id)));
+    } catch (error: any) {
+      console.error('방 나가기 에러', error);
+      navigate(`/error`);
+    }
+
     navigate(`/lobby`, { replace: true });
   };
 

@@ -55,3 +55,12 @@ export const enterRoom = async (roomId: number, roomPassword: string) => {
   );
   return response.data;
 };
+
+export const exitRoom = async (roomId: number) => {
+  const response = await axiosInstance.put(`/rooms/${roomId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.data;
+};
