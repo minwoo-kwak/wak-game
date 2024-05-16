@@ -30,6 +30,10 @@ public class SocketUtil {
         simpMessageSendingOperations.convertAndSend("/topic" + destination, message);
     }
 
+    public <T> void sendToSpecificUser(String userId, String destination, T message) {
+        simpMessageSendingOperations.convertAndSendToUser(userId, "/topic/games/" + destination + "/battle-feild", message);
+    }
+
     public void sendRoomList() {
         Map<String, RoomInfo> map = redisUtil.getData("roomInfo", RoomInfo.class);
         List<RoomInfo> valueList = new ArrayList<>(map.values());
@@ -57,7 +61,7 @@ public class SocketUtil {
         Map<String, RoomInfo> roominfo = redisUtil.getData("roomInfo", RoomInfo.class);
         RoomInfo roomInfo = roominfo.get(room.getId().toString()); // todo: Typo roominfo -> roomInfo
 
-        Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId() , RoomVO.class);
+        Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId(), RoomVO.class);
         List<RoomVO> users = new ArrayList<>(userinfo.values());
 
         simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfo.getCurrentPlayers(), room.getUser().getId(), roomInfo.getIsStart(), users));

@@ -6,6 +6,7 @@ import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.vo.RoomVO;
+import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.rank.dto.RankInfo;
@@ -70,56 +71,6 @@ public class RoundService {
         return nextRound;
     }
 
-    /**
-     * 대기방(레디스) 유저 -> 게임중(레디스) 유저로 덮어씌우기
-     *
-     * @param room
-     * @param round
-     * @return
-     */
-    public List<Long> initializeGameStatuses(Room room, Round round) {
-        Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
-        List<Long> playersId = new ArrayList<>();
-
-        int teamATotal = 0;
-        int teamBTotal = 0;
-
-        for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
-            RoomVO roomUser = entry.getValue();
-            //todo:  RoomVO에 관전자인지, 여왕인지 여부가 없음.
-            PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
-            RankInfo rankInfo = RankInfo.builder()
-                    .killCnt(0)
-                    .nickName(roomUser.nickname())
-                    .userId(roomUser.userId())
-                    .build();
-
-            String userKey = "roundId:" + round.getId() + ":users";
-            String rankKey = "roundId:" + round.getId() + ":ranks";
-
-            redisUtil.saveData(userKey, Long.toString(roomUser.userId()), gameUser);
-            redisUtil.saveData(rankKey, Long.toString(roomUser.userId()), rankInfo);
-
-            playersId.add(gameUser.getUserId());
-
-            if (roomUser.team().equals("A"))
-                teamATotal++;
-            else if (roomUser.team().equals("B"))
-                teamBTotal++;
-        }
-
-        String key = "aliveAndTotalPlayers";
-        PlayerCount count = PlayerCount.builder()
-                .aliveCountA(teamATotal)
-                .totalCountA(teamATotal)
-                .aliveCountB(teamBTotal)
-                .totalCountB(teamBTotal)
-                .build();
-
-        redisUtil.saveData(key, round.getId().toString(), count);
-
-        return playersId;
-    }
 
     public SummaryCountResponse getSummaryCount(Round round) {
         String key = "roundId:" + round.getId() + ":users";

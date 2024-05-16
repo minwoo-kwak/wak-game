@@ -7,11 +7,14 @@ import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
+import com.wak.game.application.response.socket.ResultResponse;
+import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.rank.RankService;
+import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.PlayerCount;
@@ -27,7 +30,7 @@ public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
     private Long roundId;
-
+    private long lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
@@ -50,15 +53,20 @@ public class ClickEventProcessor implements Runnable {
 
     @Override
     public void run() {
+        countDown(3);
+
         while (running) {
             try {
                 List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-                for (String clickData : clickDataList) {
+                for (long i = lastProcessedIndex; i < clickDataList.size(); i++) {
+                    String clickData = clickDataList.get((int) i);
                     clickVO click = objectMapper.readValue(clickData, clickVO.class);
-                    if (click != null)
-                        handleClickedUser(click);
+                    if (click != null) {
+                        checkClickedUser(click);
+                        lastProcessedIndex = i + 1;
+                    }
                 }
-                Thread.sleep(1000); // 1초 대기
+                Thread.sleep(10); // 1초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -67,8 +75,7 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-
-    private void handleClickedUser(clickVO click) {
+    private void checkClickedUser(clickVO click) {
         if (!click.roundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
@@ -88,8 +95,7 @@ public class ClickEventProcessor implements Runnable {
             socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
             // 대시보드 업데이트
-            DashBoardResponse result = roundFacade.getDashBoard(round.getId());
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/dashboard", result);
+            roundFacade.sendDashBoard(round.getId());
 
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
@@ -114,23 +120,50 @@ public class ClickEventProcessor implements Runnable {
             }
 
             if (shouldEndRound) {
-                try {
-                    socketUtil.sendMessage("/games/" + roundId.toString() + "/message", "Round ending in 1 minute.");
+                sendResult();
+                countDown(60);
 
-                    roundFacade.endRound(round.getId());
-                    Thread.sleep(60000); // 1분 대기
+                roundFacade.endRound(round.getId());
 
-                    if (roundNumber < 3) {
-                        Round nextRound = roundFacade.startNextRound(round);
-                        updateRoundId(nextRound.getId());
-                    } else {
-                        stop();
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                if (roundNumber < 3) {
+                    Round nextRound = roundFacade.startNextRound(round);
+                    updateRoundId(nextRound.getId());
+                } else {
+                    stop();
                 }
             }
         }
+    }
+
+    private void sendResult() {
+        String key = "roundId:" + roundId + ":users";
+        Round round = roundService.findById(roundId);
+
+        Map<String, RankInfo> ranks = redisUtil.getData("roundId:" + roundId.toString() + ":ranks", RankInfo.class);
+        Map<String, PlayerInfo> map = redisUtil.getData(key, PlayerInfo.class);
+
+        for (Map.Entry<String, PlayerInfo> entry : map.entrySet()) {
+            PlayerInfo player = entry.getValue();
+            ResultResponse result = new ResultResponse(
+                    round.getRoundNumber(),
+                    ranks.get(player.getUserId().toString()).getKillCnt());
+            socketUtil.sendToSpecificUser(player.getUserId().toString(), roundId.toString(), result);
+        }
+    }
+
+    private void countDown(int sec) {
+        new Thread(() -> {
+            try {
+                for (int i = sec; i > 0; i--) {
+                    socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", "Round will start in " + i + " seconds");
+                    Thread.sleep(1000);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        socketUtil.sendMessage("/games/" + roomId.toString() + "/battle-field", "Game Start!");
     }
 
     private boolean isAlive(PlayerInfo user) {
@@ -154,4 +187,5 @@ public class ClickEventProcessor implements Runnable {
     private void updateRoundId(Long newRoundId) {
         this.roundId = newRoundId;
     }
+
 }
