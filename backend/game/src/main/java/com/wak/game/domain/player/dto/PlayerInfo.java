@@ -1,16 +1,18 @@
 package com.wak.game.domain.player.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-@Getter
+
 @ToString
+@NoArgsConstructor
 public class PlayerInfo {
+    private Long roundId;
     private Long userId;
     private String color;
     private String nicKName;
     private String team;
+    @JsonProperty("isHost")
     private boolean isHost;
     private int stamina;
 
@@ -26,6 +28,36 @@ public class PlayerInfo {
 
     public void updateStamina(int amount) {
         this.stamina += amount;
+    }
+
+
+    public Long getRoundId() {
+        return roundId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getTeam() {
+        return team;
+    }
+
+    @JsonProperty("isHost")
+    public boolean getIsHost() {
+        return isHost;
+    }
+
+    public int getStamina() {
+        return stamina;
     }
 }
 
