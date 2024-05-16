@@ -57,6 +57,10 @@ public class PlayerFacade {
 
     }
 
+    public void convertToPlayer(Long roundId, Long userId) {
+
+    }
+
    /* public List<AlivePlayerResponse> getAliveUsers(Long roomRoundId) {
         //레디스 뒤져서 stamina가 1 이상인 사람들 찾아오기
         return playerService.getAliveUsers(roomRoundId);
