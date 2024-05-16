@@ -122,7 +122,7 @@ public class RoundService {
 
         ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
         Thread thread = new Thread(clickProcessor);
-        clickProcessor.run();
+        thread.start();
 
         gameThreads.put(roomId, thread);
     }
