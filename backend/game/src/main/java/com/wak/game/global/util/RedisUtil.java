@@ -28,9 +28,13 @@ public class RedisUtil {
         redisTemplate.opsForHash().put(key, hashkey, data);
     }
 
-    public void saveToList(String key, String value) {
-        ListOperations<String, Object> listOps = redisTemplate.opsForList();
-        listOps.rightPush(key, value);
+    public <T> void saveToList(String key, T data) {
+        try {
+            String jsonData = objectMapper.writeValueAsString(data);
+            redisTemplate.opsForList().rightPush(key, jsonData);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializing data to Redis", e);
+        }
     }
 
     public <T> Map<String, T> getData(String key, Class<T> classType) {
@@ -44,7 +48,9 @@ public class RedisUtil {
 
     public <T> List<T> getListData(String key, Class<T> classType) {
         List<Object> serializedData = redisTemplate.opsForList().range(key, 0, -1);
-
+        if (serializedData == null || serializedData.isEmpty()) {
+            return new ArrayList<>();
+        }
         return serializedData.stream()
                 .map(data -> {
                     try {

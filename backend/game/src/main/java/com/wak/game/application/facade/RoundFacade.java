@@ -4,7 +4,10 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.response.socket.BattleFeildInGameResponse;
 import com.wak.game.application.response.socket.RankListResponse;
+import com.wak.game.application.response.socket.ResultResponse;
+import com.wak.game.application.response.socket.RoundInfoResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
@@ -45,7 +48,6 @@ public class RoundFacade {
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
 
-    @Transactional
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
@@ -54,12 +56,11 @@ public class RoundFacade {
         roomService.isInGame(room);
 
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
+
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
         roomService.gameStart(room);
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
-
         return startRound(gameStartRequest, room);
     }
 
@@ -68,10 +69,12 @@ public class RoundFacade {
         initializeGameStatuses(room, round);
 
         roundService.startThread(room.getId(), round.getId());
+
+        socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId()));
+
         return GameStartResponse.of(round.getId());
     }
 
-    @Transactional
     public void initializeGameStatuses(Room room, Round round) {
 
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
@@ -79,15 +82,18 @@ public class RoundFacade {
         int teamATotal = 0;
         int teamBTotal = 0;
         List<Player> players = new ArrayList<>();
+        List<PlayerInfo> p = new ArrayList<>();
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
-            PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
+            PlayerInfo gameUser = new PlayerInfo(round.getId(),roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
             RankInfo rankInfo = RankInfo.builder()
                     .killCnt(0)
-                    .nickName(roomUser.nickname())
+                    .nickname(roomUser.nickname())
                     .userId(roomUser.userId())
+                    .color(roomUser.color())
                     .build();
+            p.add(gameUser);
 
             String userKey = "roundId:" + round.getId() + ":users";
             String rankKey = "roundId:" + round.getId() + ":ranks";
@@ -118,7 +124,10 @@ public class RoundFacade {
             }
         }
 
+        BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
+
         playerService.savePlayers(players);
+        socketUtil.sendMessage("/games/" + round.getId().toString() + "/battle-field", battleFeildInGameResponse);
 
         String key = "aliveAndTotalPlayers";
         PlayerCount count = PlayerCount.builder()
@@ -184,6 +193,21 @@ public class RoundFacade {
         Round round = roundService.findById(roundId);
         SummaryCountResponse summaryCount = roundService.getSummaryCount(round);
 
-        socketUtil.sendMessage("topic/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+        socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+    }
+
+    public void getBattleField(Long roundId, boolean isFinished) {
+        roundService.findById(roundId);
+
+        String key = "roundId:"+roundId.toString()+":users";
+        Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
+
+        List<PlayerInfo> players = new ArrayList<>();
+
+        for (Map.Entry<String, PlayerInfo> entry : data.entrySet()) {
+            players.add(entry.getValue());
+        }
+
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new BattleFeildInGameResponse(isFinished, players));
     }
 }

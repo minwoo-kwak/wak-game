@@ -34,17 +34,13 @@ public class RankFacade {
     private final SocketUtil socketUtil;
 
     public void sendRank(Long roundId) {
-        String key = "roundId" + roundId + ":ranks";
+        String key = "roundId:" + roundId + ":ranks";
         Map<String, RankInfo> map = redisUtil.getData(key, RankInfo.class);
 
         List<RankInfo> ranks = new ArrayList<>(map.values());
         ranks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
 
-        List<RankInfo> topRanks = ranks.stream()
-                .limit(6)
-                .collect(Collectors.toList());
-
-        socketUtil.sendMessage("/topic/games/" + roundId + "/rank", new RankListResponse(topRanks));
+        socketUtil.sendMessage("/games/" + roundId + "/rank", new RankListResponse(ranks));
     }
 
     public void updateRankings(clickVO click) {
@@ -52,12 +48,13 @@ public class RankFacade {
         Long roundId = click.roundId();
 
         String key = "roundId:" + roundId + ":ranks";
-        Map<String, Integer> curRoundRanks = redisUtil.getData(key, Integer.class);
+        Map<String, RankInfo> curRoundRanks = redisUtil.getData(key, RankInfo.class);
+        RankInfo rank = curRoundRanks.get(click.userId().toString());
 
-        int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);
-        curRoundRanks.put(Long.toString(userId), curKillCnt + 1);
+        rank.updateKill();
+        curRoundRanks.put(Long.toString(userId), rank);
 
-        redisUtil.saveData(key, Long.toString(userId), curRoundRanks);
+        redisUtil.saveData(key, Long.toString(userId), rank);
     }
 
 }

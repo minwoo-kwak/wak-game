@@ -1,9 +1,8 @@
 package com.wak.game.application.vo;
 
-import java.time.LocalDateTime;
 
-public record clickVO(Long userId, Long victimId, Long roundId, LocalDateTime time) {
-    public clickVO(Long userId, Long victimId, Long roundId, LocalDateTime time) {
+public record clickVO(Long userId, Long victimId, Long roundId, String time) {
+    public clickVO(Long userId, Long victimId, Long roundId, String time) {
         this.userId = userId;
         this.victimId = victimId;
         this.roundId = roundId;

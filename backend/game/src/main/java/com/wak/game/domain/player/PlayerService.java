@@ -45,7 +45,7 @@ public class PlayerService {
                 .team(player.getTeam());
 
         if (showNickname) {
-            responseBuilder.nickname(player.getNicKName());
+            responseBuilder.nickname(player.getNickname());
         } else {
             responseBuilder.nickname("");
         }
@@ -54,10 +54,8 @@ public class PlayerService {
     }
 
     public void saveClickLog(Round round, clickVO click) {
-        String key = "round:" + round.getId() + ":clicks";
-        double score = System.currentTimeMillis(); // 시간을 점수로 사용
-
-        redisUtil.saveData(key, String.valueOf(click), score);
+        String key = "roundId:" + round.getId() + ":clicks";
+        redisUtil.saveToList(key, click);
     }
 
     @Transactional

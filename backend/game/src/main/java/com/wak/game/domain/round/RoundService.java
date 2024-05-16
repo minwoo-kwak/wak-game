@@ -21,6 +21,7 @@ import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,9 +36,10 @@ public class RoundService {
     private final ConcurrentHashMap<Long, Thread> gameThreads = new ConcurrentHashMap<>();
 
     public Round findById(Long roundId) {
-        return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
+        return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROUND_NOT_EXIST));
     }
 
+    @Transactional
     public Round startRound(Room room, GameStartRequest gameStartRequest) {
         Round round = Round.builder()
                 .roundNumber(1)
@@ -58,6 +60,7 @@ public class RoundService {
                 .build());
     }
 
+    @Transactional
     public Round startNextRound(Round previousRound) {
         Room room = previousRound.getRoom();
         Round nextRound = Round.builder()
@@ -108,6 +111,7 @@ public class RoundService {
     }
 
     public void startThread(Long roomId, Long roundId) {
+
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         SocketUtil socketUtil = applicationContext.getBean(SocketUtil.class);
@@ -139,14 +143,13 @@ public class RoundService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            System.out.println("Game stopped in room: " + id);
         }
     }
 
+    @Transactional
     public void deleteRound(Long id) {
         roundRepository.deleteRound(id);
     }
-
 }
 
 

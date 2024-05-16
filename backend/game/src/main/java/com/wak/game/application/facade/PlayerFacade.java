@@ -35,7 +35,7 @@ public class PlayerFacade {
     public void getPlayersStatus(Long roundId) {
         Round round = roundService.findById(roundId);
         List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-        socketUtil.sendMessage("/topic/games/" + roundId + "/battle-field", playersInfo);
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", playersInfo);
     }
 
     public void saveClickLog(ClickRequest request) {
@@ -44,7 +44,6 @@ public class PlayerFacade {
         User victimUser = userService.findById(request.getVictimId());
         clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime());
 
-        System.out.println("click: "+click.userId().toString());
         playerService.saveClickLog(round, click);
     }
 
