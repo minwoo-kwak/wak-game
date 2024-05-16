@@ -86,7 +86,7 @@ public class RoundFacade {
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
-            PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
+            PlayerInfo gameUser = new PlayerInfo(round.getId(),roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
             RankInfo rankInfo = RankInfo.builder()
                     .killCnt(0)
                     .nickname(roomUser.nickname())

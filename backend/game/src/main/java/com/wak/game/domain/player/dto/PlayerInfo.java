@@ -10,14 +10,15 @@ public class PlayerInfo {
     private Long roundId;
     private Long userId;
     private String color;
-    private String nicKName;
+    private String nickname;
     private String team;
     @JsonProperty("isHost")
     private boolean isHost;
     private int stamina;
 
     @Builder
-    public PlayerInfo(Long userId, String color, String nicKName, String team, boolean isHost, int stamina) {
+    public PlayerInfo(Long roundId, Long userId, String color, String nickname, String team, boolean isHost, int stamina) {
+        this.roundId = roundId;
         this.userId = userId;
         this.color = color;
         this.nickname = nickname;
