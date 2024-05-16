@@ -19,4 +19,8 @@ public class PlayerCount {
         this.totalCountB = totalCountB;
         this.aliveCountB = aliveCountB;
     }
+
+    public void updateAliveCont() {
+        --this.aliveCountA;
+    }
 }

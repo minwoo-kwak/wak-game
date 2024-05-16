@@ -105,6 +105,8 @@ public class ClickEventProcessor implements Runnable {
             String countKey = "aliveAndTotalPlayers";
             Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
             PlayerCount playerCount = playerCountMap.get(roundId.toString());
+            playerCount.updateAliveCont();
+            redisUtil.saveData(countKey, roundId.toString(), playerCount);
 
             // 킬 로그 업데이트
             saveSuccessfulClick(click);
