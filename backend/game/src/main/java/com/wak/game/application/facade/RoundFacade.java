@@ -47,7 +47,6 @@ public class RoundFacade {
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
 
-    @Transactional
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
         System.out.println("roundfacade: ");
         User user = userService.findById(userId);
@@ -72,12 +71,11 @@ public class RoundFacade {
 
         roundService.startThread(room.getId(), round.getId());
 
-        socketUtil.sendMessage("/games" + round.getId().toString() + "/battle-feild", new RoundInfoResponse(round.getId()));
+        socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId()));
 
         return GameStartResponse.of(round.getId());
     }
 
-    @Transactional
     public void initializeGameStatuses(Room room, Round round) {
         System.out.println("initializeGameStatuses: ");
 
