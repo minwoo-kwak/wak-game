@@ -6,6 +6,7 @@ import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.response.socket.BattleFeildInGameResponse;
 import com.wak.game.application.response.socket.RankListResponse;
+import com.wak.game.application.response.socket.ResultResponse;
 import com.wak.game.application.response.socket.RoundInfoResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.player.Player;
@@ -127,7 +128,7 @@ public class RoundFacade {
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
-        socketUtil.sendMessage("games" + round.getId().toString(), battleFeildInGameResponse);
+        socketUtil.sendMessage("/games/" + round.getId().toString() + "/battle-field", battleFeildInGameResponse);
 
         String key = "aliveAndTotalPlayers";
         PlayerCount count = PlayerCount.builder()
