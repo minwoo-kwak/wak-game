@@ -16,14 +16,14 @@ const Layout = styled(FlexLayout)`
 type ButtonGroupProps = {
   isHost: boolean;
   canStart: boolean;
-  users: PlayerTypes[];
+  usersNumber: number;
   openDialog: () => void;
 };
 
 export default function ButtonGroup({
   isHost,
   canStart,
-  users,
+  usersNumber,
   openDialog,
 }: ButtonGroupProps) {
   const navigate = useNavigate();
@@ -45,14 +45,7 @@ export default function ButtonGroup({
           ...gameData,
           roundId: fetchedData.data.roundId,
           roomName: roomData.roomName,
-          players: users.map((user) => ({
-            roundId: fetchedData.data.roundId,
-            userId: user.userId,
-            nickname: user.nickname,
-            color: user.color,
-            team: user.team,
-            stamina: 1,
-          })),
+          playersNumber: usersNumber,
         });
       } catch (error: any) {
         console.error('게임 시작 에러', error);

@@ -16,7 +16,8 @@ const useGameStore = create(
         hostName: '',
         comment: '',
         showNickname: true,
-        players: [],
+        isAlive: true,
+        playersNumber: 0,
       } as GameTypes,
       setGameData: (gameData: GameTypes) =>
         set(() => ({ gameData: { ...gameData } })),
