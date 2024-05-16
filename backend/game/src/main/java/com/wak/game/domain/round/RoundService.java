@@ -21,6 +21,7 @@ import com.wak.game.global.util.SocketUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +39,7 @@ public class RoundService {
         return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROUND_NOT_EXIST));
     }
 
+    @Transactional
     public Round startRound(Room room, GameStartRequest gameStartRequest) {
         Round round = Round.builder()
                 .roundNumber(1)
@@ -58,6 +60,7 @@ public class RoundService {
                 .build());
     }
 
+    @Transactional
     public Round startNextRound(Round previousRound) {
         Room room = previousRound.getRoom();
         Round nextRound = Round.builder()
@@ -145,6 +148,7 @@ public class RoundService {
         }
     }
 
+    @Transactional
     public void deleteRound(Long id) {
         roundRepository.deleteRound(id);
     }
