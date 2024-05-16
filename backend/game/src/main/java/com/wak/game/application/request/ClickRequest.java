@@ -13,10 +13,10 @@ public class ClickRequest {
     private final Long roundId;
     private final Long userId;
     private final Long victimId;
-    private final LocalDateTime clickTime;
+    private final String clickTime;
 
     @Builder
-    public ClickRequest(Long roundId, Long userId, Long victimId, LocalDateTime clickTime) {
+    public ClickRequest(Long roundId, Long userId, Long victimId, String clickTime) {
         this.roundId = roundId;
         this.userId = userId;
         this.victimId = victimId;

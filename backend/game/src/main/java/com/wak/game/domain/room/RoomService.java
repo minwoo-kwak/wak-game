@@ -5,6 +5,7 @@ import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -84,6 +85,7 @@ public class RoomService {
             throw new BusinessException(ErrorInfo.ROOM_ALREADY_ENDED);
     }
 
+    @Transactional
     public void gameStart(Room room) {
         roomRepository.startGame(room.getId());
     }

@@ -23,6 +23,7 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
     private Long roundId;
-    private long lastProcessedIndex = 0;
+    private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
@@ -57,20 +58,21 @@ public class ClickEventProcessor implements Runnable {
 
         while (running) {
             try {
-                List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-                for (long i = lastProcessedIndex; i < clickDataList.size(); i++) {
-                    String clickData = clickDataList.get((int) i);
-                    clickVO click = objectMapper.readValue(clickData, clickVO.class);
+                List<clickVO> clickDataList = redisUtil.getListData("roundId:" + roundId.toString() + ":clicks", clickVO.class);
+
+                for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
+                    clickVO click = clickDataList.get(i);
                     if (click != null) {
                         checkClickedUser(click);
                         lastProcessedIndex = i + 1;
                     }
                 }
-                Thread.sleep(10); // 1초 대기
+
+                Thread.sleep(1000); // 10밀리초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                throw new RuntimeException("Error processing click data", e);
+                e.printStackTrace();
             }
         }
     }
@@ -85,26 +87,28 @@ public class ClickEventProcessor implements Runnable {
         PlayerInfo user = data.get(Long.toString(click.userId()));
         PlayerInfo victim = data.get(Long.toString(click.victimId()));
 
+
         if (isAlive(user) && isAlive(victim)) {
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
+            roundFacade.getBattleField(roundId, false);
             // 게임 필드 업데이트
             Round round = roundService.findById(click.roundId());
-            List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
             // 대시보드 업데이트
-            roundFacade.sendDashBoard(round.getId());
+            roundFacade.sendDashBoard(roundId);
 
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
             Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
             PlayerCount playerCount = playerCountMap.get(roundId.toString());
+            playerCount.updateAliveCont();
+            redisUtil.saveData(countKey, roundId.toString(), playerCount);
 
             // 킬 로그 업데이트
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
+            socketUtil.sendMessage("/games/" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
 
             // 랭킹 업데이트
             rankFacade.updateRankings(click);
@@ -121,6 +125,8 @@ public class ClickEventProcessor implements Runnable {
 
             if (shouldEndRound) {
                 sendResult();
+                //todo: isFinished
+                roundFacade.getBattleField(roundId, true);
                 countDown(60);
 
                 roundFacade.endRound(round.getId());
@@ -146,7 +152,8 @@ public class ClickEventProcessor implements Runnable {
             PlayerInfo player = entry.getValue();
             ResultResponse result = new ResultResponse(
                     round.getRoundNumber(),
-                    ranks.get(player.getUserId().toString()).getKillCnt());
+                    ranks.get(player.getUserId().toString()).getKillCnt()
+                    , true);
             socketUtil.sendToSpecificUser(player.getUserId().toString(), roundId.toString(), result);
         }
     }
