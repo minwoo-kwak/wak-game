@@ -96,11 +96,9 @@ public class ClickEventProcessor implements Runnable {
             roundFacade.getBattleField(roundId, false);
             // 게임 필드 업데이트
             Round round = roundService.findById(click.roundId());
-            List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
             // 대시보드 업데이트
-            roundFacade.sendDashBoard(round.getId());
+            roundFacade.sendDashBoard(roundId);
 
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
@@ -111,7 +109,7 @@ public class ClickEventProcessor implements Runnable {
 
             // 킬 로그 업데이트
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNicKName(), user.getColor(), victim.getNicKName(), victim.getColor()));
+            socketUtil.sendMessage("/games/" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
 
             // 랭킹 업데이트
             rankFacade.updateRankings(click);

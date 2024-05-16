@@ -45,7 +45,7 @@ public class PlayerService {
                 .team(player.getTeam());
 
         if (showNickname) {
-            responseBuilder.nickname(player.getNicKName());
+            responseBuilder.nickname(player.getNickname());
         } else {
             responseBuilder.nickname("");
         }

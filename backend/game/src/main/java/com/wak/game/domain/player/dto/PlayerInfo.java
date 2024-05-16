@@ -20,7 +20,7 @@ public class PlayerInfo {
     public PlayerInfo(Long userId, String color, String nicKName, String team, boolean isHost, int stamina) {
         this.userId = userId;
         this.color = color;
-        this.nicKName = nicKName;
+        this.nickname = nickname;
         this.team = team;
         this.isHost = isHost;
         this.stamina = stamina;
