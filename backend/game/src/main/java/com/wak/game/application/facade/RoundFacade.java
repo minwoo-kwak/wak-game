@@ -91,8 +91,9 @@ public class RoundFacade {
             PlayerInfo gameUser = new PlayerInfo(roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
             RankInfo rankInfo = RankInfo.builder()
                     .killCnt(0)
-                    .nickName(roomUser.nickname())
+                    .nickname(roomUser.nickname())
                     .userId(roomUser.userId())
+                    .color(roomUser.color())
                     .build();
             p.add(gameUser);
 
