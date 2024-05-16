@@ -17,16 +17,18 @@ type PlayerNicknameProps = {
   isCol?: boolean;
   nickname: string;
   color: string;
+  onClick?: () => void;
 };
 
 export default function PlayerNickname({
   isCol,
   nickname,
   color,
+  ...props
 }: PlayerNicknameProps) {
   return (
     <FlexLayout $isCol={isCol} gap={isCol ? '0.2rem' : '1rem'}>
-      <NicknameBox color={color} />
+      <NicknameBox color={color} {...props} />
       {isCol ? (
         <TinyText color={color}>{nickname}</TinyText>
       ) : (

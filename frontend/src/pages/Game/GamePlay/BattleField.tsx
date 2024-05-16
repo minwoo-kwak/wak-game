@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
+import useGameStore from '../../../store/gameStore';
 import { isOverlap } from '../../../utils/isOverlap';
 
 import styled from 'styled-components';
-
 import GrayBox from '../../../components/GrayBox';
 import PlayerNickname from '../../../components/PlayerNickname';
 
@@ -23,7 +23,10 @@ type DotPosition = {
   left: string;
 };
 
+// type BattleFieldProps = {};
+
 export default function BattleField() {
+  const { gameData } = useGameStore();
   const [dots, setDots] = useState<DotPosition[]>([]);
 
   useEffect(() => {
@@ -33,7 +36,7 @@ export default function BattleField() {
       left: `${Math.random() * 92}%`,
     });
 
-    while (generatedDots.length < 100) {
+    while (generatedDots.length < gameData.players.length) {
       const newPosition = generateRandomPosition();
       if (!isOverlap(newPosition, generatedDots)) {
         generatedDots.push(newPosition);
@@ -41,6 +44,7 @@ export default function BattleField() {
     }
 
     setDots(generatedDots);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -48,7 +52,11 @@ export default function BattleField() {
       <BattleFieldLayout>
         {dots.map((dot, index) => (
           <Dot key={index} $top={dot.top} $left={dot.left}>
-            <PlayerNickname isCol nickname={`김라쿤`} color={`white`} />
+            <PlayerNickname
+              isCol
+              nickname={gameData.players[index].nickname}
+              color={gameData.players[index].color}
+            />
           </Dot>
         ))}
       </BattleFieldLayout>

@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import SockJS from 'sockjs-client';
+import { CompatClient, Stomp } from '@stomp/stompjs';
+
+import { CHAT_URL, getAccessToken } from '../constants/api';
 import useUserStore from '../store/userStore';
 
 import styled from 'styled-components';
@@ -9,6 +13,7 @@ import WhiteBox from './WhiteBox';
 import GrayTitleBox from './GrayTitleBox';
 import Input from './Input';
 import Button from './Button';
+import { useParams } from 'react-router-dom';
 
 const ChatBlock = styled.div<{ height: string }>`
   width: 32rem;
@@ -30,32 +35,103 @@ const ChatText = styled.div`
 `;
 
 type ChatBoxProps = {
+  mode: 'LOBBY' | 'ROOM';
   isShort?: boolean;
   text: string;
 };
 
-export default function ChatBox({ isShort, text }: ChatBoxProps) {
-  const [userChatting, setUserChatting] = useState<string[][]>([]);
-  const [chatting, setChatting] = useState('');
+export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
+  const ACCESS_TOKEN = getAccessToken();
+  const header = {
+    Authorization: `Bearer ${ACCESS_TOKEN}`,
+    'Content-Type': 'application/json',
+  };
+  const storage = window.sessionStorage;
+  const chattingData = storage.getItem('chattingData');
+
   const { userData } = useUserStore();
+  const [chatting, setChatting] = useState('');
+  const [userChatting, setUserChatting] = useState<string[][]>(
+    chattingData ? JSON.parse(chattingData) : []
+  );
+  const clientRef = useRef<CompatClient | null>(null);
+
+  let url: string;
+  const id = useParams();
+  const changeMode = () => {
+    if (storage.getItem('mode') !== mode) {
+      storage.removeItem('chattingData');
+      storage.setItem('mode', mode);
+    }
+  };
+
+  if (mode === 'LOBBY') {
+    url = 'lobby-chat';
+    changeMode();
+  } else {
+    url = `chats/${id}`;
+    changeMode();
+  }
 
   const handleChange = (e: { target: { value: string } }) => {
     setChatting(e.target.value);
   };
 
   const handleClick = () => {
-    setUserChatting([...userChatting, [userData.nickname, chatting]]);
+    const message = JSON.stringify({
+      text: chatting,
+      nickname: userData.nickname,
+      color: userData.color,
+    });
+    clientRef.current?.send(`/topic/${url}`, header, message);
   };
+
+  const connectChatHandler = () => {
+    const socket = new SockJS(`${CHAT_URL}/socket`);
+    clientRef.current = Stomp.over(socket);
+    clientRef.current.connect(header, () => {
+      clientRef.current?.subscribe(
+        `/topic/${url}`,
+        (message) => {
+          const fetchedData = JSON.parse(message.body);
+          setUserChatting((prevChatting) => {
+            const newChatting = [
+              ...prevChatting,
+              [fetchedData.color, fetchedData.nickname, fetchedData.text],
+            ];
+            return newChatting;
+          });
+        },
+        header
+      );
+    });
+  };
+
+  useEffect(() => {
+    storage.setItem('chattingData', JSON.stringify(userChatting));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userChatting]);
+
+  useEffect(() => {
+    connectChatHandler();
+    return () => {
+      clientRef.current?.disconnect(() => {
+        clientRef.current?.unsubscribe(`/topic/${url}`);
+      }, header);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <WhiteBox mode={isShort ? 'MEDIUM' : 'TALL'} width='32rem'>
       <GrayTitleBox text={text} />
       <ChatBlock height={isShort ? '15.2rem' : '45.2rem'}>
         {userChatting.map((value, index) => {
+          const [color, nickname, text] = value;
           return (
             <ChatLine key={index}>
-              <ChatText color={userData.color}>{`${value[0]}`}</ChatText>
-              <ChatText>{`: ${value[1]}`}</ChatText>
+              <ChatText color={color}>{nickname}</ChatText>
+              <ChatText>{`: ${text}`}</ChatText>
             </ChatLine>
           );
         })}
