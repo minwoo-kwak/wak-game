@@ -45,7 +45,7 @@ public class RoundController {
         return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
-    @Operation(
+    /*@Operation(
             summary = "게임 시작 시 publish 요청",
             description = "게임 시작 시 대시보드 대한 정보를 publish 요청하는 API 입니다.",
             responses = {
@@ -57,7 +57,7 @@ public class RoundController {
     public ResponseEntity<ApiResult<Void>> getDashBoard(@DestinationVariable("round-id") Long roundId) {
         roundFacade.sendDashBoard(roundId);
         return ResponseEntity.ok(ApiUtils.success(null));
-    }
+    }*/
 
     @Operation(
             summary = "게임 시작 시 publish 요청",

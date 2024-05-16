@@ -7,6 +7,7 @@ import com.wak.game.domain.round.Round;
 import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PlayerService {
     private final RedisUtil redisUtil;
+    private final PlayerRepository playerRepository;
 
     public List<PlayerInfoResponse> getPlayersInfo(Round round) {
         String key = "roundId:" + round.getId() + ":users";
@@ -51,14 +53,16 @@ public class PlayerService {
         return responseBuilder.build();
     }
 
-
-
-
     public void saveClickLog(Round round, clickVO click) {
         String key = "round:" + round.getId() + ":clicks";
         double score = System.currentTimeMillis(); // 시간을 점수로 사용
 
         redisUtil.saveData(key, String.valueOf(click), score);
+    }
+
+    @Transactional
+    public void savePlayers(List<Player> players) {
+        playerRepository.saveAll(players);
     }
 }
 

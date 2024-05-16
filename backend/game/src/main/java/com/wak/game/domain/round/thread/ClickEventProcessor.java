@@ -7,11 +7,14 @@ import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
+import com.wak.game.application.response.socket.ResultResponse;
+import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.rank.RankService;
+import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.PlayerCount;
@@ -72,7 +75,6 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-
     private void checkClickedUser(clickVO click) {
         if (!click.roundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
@@ -93,8 +95,7 @@ public class ClickEventProcessor implements Runnable {
             socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", playersInfo);
 
             // 대시보드 업데이트
-            DashBoardResponse result = roundFacade.getDashBoard(round.getId());
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/dashboard", result);
+            roundFacade.sendDashBoard(round.getId());
 
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
@@ -119,10 +120,10 @@ public class ClickEventProcessor implements Runnable {
             }
 
             if (shouldEndRound) {
-                socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", roundNumber + " ROUND FINISH!");
+                sendResult();
+                countDown(60);
 
                 roundFacade.endRound(round.getId());
-                countDown(60);
 
                 if (roundNumber < 3) {
                     Round nextRound = roundFacade.startNextRound(round);
@@ -134,20 +135,19 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-    private void processClickLogsAndCleanup(Long roundId, Long roomId) {
-        try {
-            List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-            for (String clickData : clickDataList) {
-                clickVO click = objectMapper.readValue(clickData, clickVO.class);
-                if (click != null) {
-                    // 클릭 로그를 DB에 저장하는 로직
-                    saveClickLogToDB(click);
-                }
-            }
-            // Redis에서 클릭 로그 제거
-            redisUtil.deleteKey("clicks:" + roomId.toString());
-        } catch (JsonProcessingException e) {
-            System.out.println(e);
+    private void sendResult() {
+        String key = "roundId:" + roundId + ":users";
+        Round round = roundService.findById(roundId);
+
+        Map<String, RankInfo> ranks = redisUtil.getData("roundId:" + roundId.toString() + ":ranks", RankInfo.class);
+        Map<String, PlayerInfo> map = redisUtil.getData(key, PlayerInfo.class);
+
+        for (Map.Entry<String, PlayerInfo> entry : map.entrySet()) {
+            PlayerInfo player = entry.getValue();
+            ResultResponse result = new ResultResponse(
+                    round.getRoundNumber(),
+                    ranks.get(player.getUserId().toString()).getKillCnt());
+            socketUtil.sendToSpecificUser(player.getUserId().toString(), roundId.toString(), result);
         }
     }
 
