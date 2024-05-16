@@ -27,7 +27,7 @@ public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
     private Long roundId;
-
+    private long lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
@@ -50,15 +50,20 @@ public class ClickEventProcessor implements Runnable {
 
     @Override
     public void run() {
+        countDown(3);
+
         while (running) {
             try {
                 List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-                for (String clickData : clickDataList) {
+                for (long i = lastProcessedIndex; i < clickDataList.size(); i++) {
+                    String clickData = clickDataList.get((int) i);
                     clickVO click = objectMapper.readValue(clickData, clickVO.class);
-                    if (click != null)
-                        handleClickedUser(click);
+                    if (click != null) {
+                        checkClickedUser(click);
+                        lastProcessedIndex = i + 1;
+                    }
                 }
-                Thread.sleep(1000); // 1초 대기
+                Thread.sleep(10); // 1초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -68,7 +73,7 @@ public class ClickEventProcessor implements Runnable {
     }
 
 
-    private void handleClickedUser(clickVO click) {
+    private void checkClickedUser(clickVO click) {
         if (!click.roundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
@@ -114,23 +119,51 @@ public class ClickEventProcessor implements Runnable {
             }
 
             if (shouldEndRound) {
-                try {
-                    socketUtil.sendMessage("/games/" + roundId.toString() + "/message", "Round ending in 1 minute.");
+                socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", roundNumber + " ROUND FINISH!");
 
-                    roundFacade.endRound(round.getId());
-                    Thread.sleep(60000); // 1분 대기
+                roundFacade.endRound(round.getId());
+                countDown(60);
 
-                    if (roundNumber < 3) {
-                        Round nextRound = roundFacade.startNextRound(round);
-                        updateRoundId(nextRound.getId());
-                    } else {
-                        stop();
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                if (roundNumber < 3) {
+                    Round nextRound = roundFacade.startNextRound(round);
+                    updateRoundId(nextRound.getId());
+                } else {
+                    stop();
                 }
             }
         }
+    }
+
+    private void processClickLogsAndCleanup(Long roundId, Long roomId) {
+        try {
+            List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
+            for (String clickData : clickDataList) {
+                clickVO click = objectMapper.readValue(clickData, clickVO.class);
+                if (click != null) {
+                    // 클릭 로그를 DB에 저장하는 로직
+                    saveClickLogToDB(click);
+                }
+            }
+            // Redis에서 클릭 로그 제거
+            redisUtil.deleteKey("clicks:" + roomId.toString());
+        } catch (JsonProcessingException e) {
+            System.out.println(e);
+        }
+    }
+
+    private void countDown(int sec) {
+        new Thread(() -> {
+            try {
+                for (int i = sec; i > 0; i--) {
+                    socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", "Round will start in " + i + " seconds");
+                    Thread.sleep(1000);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+
+        socketUtil.sendMessage("/games/" + roomId.toString() + "/battle-field", "Game Start!");
     }
 
     private boolean isAlive(PlayerInfo user) {
@@ -154,4 +187,5 @@ public class ClickEventProcessor implements Runnable {
     private void updateRoundId(Long newRoundId) {
         this.roundId = newRoundId;
     }
+
 }
