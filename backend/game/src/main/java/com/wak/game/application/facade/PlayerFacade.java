@@ -35,7 +35,7 @@ public class PlayerFacade {
     public void getPlayersStatus(Long roundId) {
         Round round = roundService.findById(roundId);
         List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-        socketUtil.sendMessage("/topic/games/" + roundId + "/battle-field", playersInfo);
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", playersInfo);
     }
 
     public void saveClickLog(ClickRequest request) {

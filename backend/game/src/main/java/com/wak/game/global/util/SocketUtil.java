@@ -64,7 +64,7 @@ public class SocketUtil {
         Map<String, RoomVO> userinfo = redisUtil.getData("room" + room.getId(), RoomVO.class);
         List<RoomVO> users = new ArrayList<>(userinfo.values());
 
-        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfo.getCurrentPlayers(), room.getUser().getId(), roomInfo.getIsStart(), users));
+        simpMessageSendingOperations.convertAndSend("/topic/rooms/" + room.getId(), new RoomInfoResponse(room.getId(), roomInfo.getCurrentPlayers(), roomInfo.getIsStart(), users));
     }
 
     public int getSize(int size) {

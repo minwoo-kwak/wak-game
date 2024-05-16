@@ -25,6 +25,7 @@ public class GameController {
 
     @MessageMapping("/click/{roundId}")
     public void handleClick(ClickRequest clickRequest) {
+        System.out.println(clickRequest.toString());
         playerFacade.saveClickLog(clickRequest);
     }
 }

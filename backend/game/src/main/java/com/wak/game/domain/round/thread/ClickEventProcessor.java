@@ -53,14 +53,17 @@ public class ClickEventProcessor implements Runnable {
 
     @Override
     public void run() {
+        System.out.println(roundId+" 스레드 시작!");
         countDown(3);
 
         while (running) {
             try {
+                //System.out.println("이번턴 클릭로그 처리");
                 List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
                 for (long i = lastProcessedIndex; i < clickDataList.size(); i++) {
                     String clickData = clickDataList.get((int) i);
                     clickVO click = objectMapper.readValue(clickData, clickVO.class);
+                    System.out.println("click!: "+ click.toString());
                     if (click != null) {
                         checkClickedUser(click);
                         lastProcessedIndex = i + 1;
@@ -84,6 +87,8 @@ public class ClickEventProcessor implements Runnable {
 
         PlayerInfo user = data.get(Long.toString(click.userId()));
         PlayerInfo victim = data.get(Long.toString(click.victimId()));
+
+        System.out.println(user.getNicKName() + "-> "+ victim.getNicKName());
 
         if (isAlive(user) && isAlive(victim)) {
             victim.updateStamina(-1);
@@ -146,7 +151,8 @@ public class ClickEventProcessor implements Runnable {
             PlayerInfo player = entry.getValue();
             ResultResponse result = new ResultResponse(
                     round.getRoundNumber(),
-                    ranks.get(player.getUserId().toString()).getKillCnt());
+                    ranks.get(player.getUserId().toString()).getKillCnt()
+                    , true);
             socketUtil.sendToSpecificUser(player.getUserId().toString(), roundId.toString(), result);
         }
     }

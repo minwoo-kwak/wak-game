@@ -4,7 +4,9 @@ import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
+import com.wak.game.application.response.socket.BattleFeildInGameResponse;
 import com.wak.game.application.response.socket.RankListResponse;
+import com.wak.game.application.response.socket.RoundInfoResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
@@ -47,6 +49,7 @@ public class RoundFacade {
 
     @Transactional
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
+        System.out.println("roundfacade: ");
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
@@ -54,31 +57,36 @@ public class RoundFacade {
         roomService.isInGame(room);
 
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
+
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
 
         roomService.gameStart(room);
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME START");
-
         return startRound(gameStartRequest, room);
     }
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
+        System.out.println("facade service()호출 2번");
         Round round = roundService.startRound(room, gameStartRequest);
         initializeGameStatuses(room, round);
 
         roundService.startThread(room.getId(), round.getId());
+
+        socketUtil.sendMessage("/games" + round.getId().toString() + "/battle-feild", new RoundInfoResponse(round.getId()));
+
         return GameStartResponse.of(round.getId());
     }
 
     @Transactional
     public void initializeGameStatuses(Room room, Round round) {
+        System.out.println("initializeGameStatuses: ");
 
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
 
         int teamATotal = 0;
         int teamBTotal = 0;
         List<Player> players = new ArrayList<>();
+        List<PlayerInfo> p = new ArrayList<>();
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
@@ -88,6 +96,7 @@ public class RoundFacade {
                     .nickName(roomUser.nickname())
                     .userId(roomUser.userId())
                     .build();
+            p.add(gameUser);
 
             String userKey = "roundId:" + round.getId() + ":users";
             String rankKey = "roundId:" + round.getId() + ":ranks";
@@ -118,7 +127,10 @@ public class RoundFacade {
             }
         }
 
+        BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
+
         playerService.savePlayers(players);
+        socketUtil.sendMessage("games" + round.getId().toString(), battleFeildInGameResponse);
 
         String key = "aliveAndTotalPlayers";
         PlayerCount count = PlayerCount.builder()

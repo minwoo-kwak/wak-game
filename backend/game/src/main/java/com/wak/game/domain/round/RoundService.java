@@ -35,7 +35,7 @@ public class RoundService {
     private final ConcurrentHashMap<Long, Thread> gameThreads = new ConcurrentHashMap<>();
 
     public Round findById(Long roundId) {
-        return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROOM_NOT_EXIST));
+        return roundRepository.findById(roundId).orElseThrow(() -> new BusinessException(ErrorInfo.ROUND_NOT_EXIST));
     }
 
     public Round startRound(Room room, GameStartRequest gameStartRequest) {
@@ -108,6 +108,8 @@ public class RoundService {
     }
 
     public void startThread(Long roomId, Long roundId) {
+        System.out.println("roundService!- startThread()");
+
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         SocketUtil socketUtil = applicationContext.getBean(SocketUtil.class);
@@ -118,7 +120,7 @@ public class RoundService {
 
         ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
         Thread thread = new Thread(clickProcessor);
-        thread.start();
+        clickProcessor.run();
 
         gameThreads.put(roomId, thread);
     }
