@@ -76,7 +76,6 @@ public class RoundFacade {
     }
 
     public void initializeGameStatuses(Room room, Round round) {
-        System.out.println("initializeGameStatuses: ");
 
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
 
