@@ -23,6 +23,7 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,6 @@ public class ClickEventProcessor implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(roundId+" 스레드 시작!");
         countDown(3);
 
         while (running) {
@@ -87,7 +87,6 @@ public class ClickEventProcessor implements Runnable {
         PlayerInfo user = data.get(Long.toString(click.userId()));
         PlayerInfo victim = data.get(Long.toString(click.victimId()));
 
-        System.out.println(user.getNicKName() + "-> "+ victim.getNicKName());
 
         if (isAlive(user) && isAlive(victim)) {
             victim.updateStamina(-1);
