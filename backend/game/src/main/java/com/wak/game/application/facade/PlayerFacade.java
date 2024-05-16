@@ -44,7 +44,6 @@ public class PlayerFacade {
         User victimUser = userService.findById(request.getVictimId());
         clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime());
 
-        System.out.println("click: "+click.userId().toString());
         playerService.saveClickLog(round, click);
     }
 

@@ -48,7 +48,6 @@ public class RoundFacade {
     private final SocketUtil socketUtil;
 
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
-        System.out.println("roundfacade: ");
         User user = userService.findById(userId);
         Room room = roomService.findById(roomId);
 
@@ -65,7 +64,6 @@ public class RoundFacade {
     }
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
-        System.out.println("facade service()호출 2번");
         Round round = roundService.startRound(room, gameStartRequest);
         initializeGameStatuses(room, round);
 

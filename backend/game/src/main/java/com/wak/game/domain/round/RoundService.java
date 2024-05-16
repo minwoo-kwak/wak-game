@@ -111,7 +111,6 @@ public class RoundService {
     }
 
     public void startThread(Long roomId, Long roundId) {
-        System.out.println("roundService!- startThread()");
 
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
@@ -144,7 +143,6 @@ public class RoundService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            System.out.println("Game stopped in room: " + id);
         }
     }
 
@@ -152,7 +150,6 @@ public class RoundService {
     public void deleteRound(Long id) {
         roundRepository.deleteRound(id);
     }
-
 }
 
 
