@@ -48,7 +48,9 @@ public class RedisUtil {
 
     public <T> List<T> getListData(String key, Class<T> classType) {
         List<Object> serializedData = redisTemplate.opsForList().range(key, 0, -1);
-
+        if (serializedData == null || serializedData.isEmpty()) {
+            return new ArrayList<>();
+        }
         return serializedData.stream()
                 .map(data -> {
                     try {
