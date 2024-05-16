@@ -125,6 +125,8 @@ public class ClickEventProcessor implements Runnable {
 
             if (shouldEndRound) {
                 sendResult();
+                //todo: isFinished
+                roundFacade.getBattleField(roundId, true);
                 countDown(60);
 
                 roundFacade.endRound(round.getId());

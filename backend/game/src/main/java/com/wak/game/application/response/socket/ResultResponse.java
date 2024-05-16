@@ -1,10 +1,10 @@
 package com.wak.game.application.response.socket;
 
-public record ResultResponse(int roundNumber, int killCount, boolean isFinish/* todo String aliveTime, int rank, String victim, String victimColor*/) {
-    public ResultResponse(int roundNumber, int killCount, boolean isFinish) {
+public record ResultResponse(int roundNumber, int killCount, boolean isFinished/* todo String aliveTime, int rank, String victim, String victimColor*/) {
+    public ResultResponse(int roundNumber, int killCount, boolean isFinished) {
         this.roundNumber = roundNumber;
         this.killCount = killCount;
-        this.isFinish = isFinish;
+        this.isFinished = isFinished;
     }
     /* todo
     public ResultResponse(int roundNumber, String aliveTime, int killCount, int rank, String victim, String victimColor) {
