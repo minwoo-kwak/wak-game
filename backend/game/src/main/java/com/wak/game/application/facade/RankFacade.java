@@ -53,11 +53,15 @@ public class RankFacade {
 
         String key = "roundId:" + roundId + ":ranks";
         Map<String, Integer> curRoundRanks = redisUtil.getData(key, Integer.class);
+        Map<String, RankInfo> curRoundRanks = redisUtil.getData(key, RankInfo.class);
+        RankInfo rank = curRoundRanks.get(click.userId().toString());
 
         int curKillCnt = curRoundRanks.getOrDefault(Long.toString(userId), 0);
         curRoundRanks.put(Long.toString(userId), curKillCnt + 1);
+        rank.updateKill();
+        curRoundRanks.put(Long.toString(userId), rank);
 
-        redisUtil.saveData(key, Long.toString(userId), curRoundRanks);
+        redisUtil.saveData(key, Long.toString(userId), rank);
     }
 
 }

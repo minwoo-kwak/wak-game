@@ -21,5 +21,7 @@ public class RankInfo {
         this.killCnt = killCnt;
         this.color = color;
     }
+    public void updateKill() {
+        ++this.killCnt;
     }
 }
