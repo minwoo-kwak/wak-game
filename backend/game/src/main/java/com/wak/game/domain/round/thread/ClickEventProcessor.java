@@ -93,6 +93,7 @@ public class ClickEventProcessor implements Runnable {
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
+            roundFacade.getBattleField(roundId, false);
             // 게임 필드 업데이트
             Round round = roundService.findById(click.roundId());
             List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);

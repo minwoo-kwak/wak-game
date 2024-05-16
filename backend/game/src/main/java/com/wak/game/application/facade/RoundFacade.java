@@ -196,6 +196,21 @@ public class RoundFacade {
         Round round = roundService.findById(roundId);
         SummaryCountResponse summaryCount = roundService.getSummaryCount(round);
 
-        socketUtil.sendMessage("topic/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+        socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+    }
+
+    public void getBattleField(Long roundId, boolean isFinished) {
+        roundService.findById(roundId);
+
+        String key = "roundId:"+roundId.toString()+":users";
+        Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
+
+        List<PlayerInfo> players = new ArrayList<>();
+
+        for (Map.Entry<String, PlayerInfo> entry : data.entrySet()) {
+            players.add(entry.getValue());
+        }
+
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new BattleFeildInGameResponse(isFinished, players));
     }
 }
