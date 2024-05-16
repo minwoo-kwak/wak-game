@@ -30,7 +30,7 @@ public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
     private Long roundId;
-    private long lastProcessedIndex = 0;
+    private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
@@ -58,22 +58,21 @@ public class ClickEventProcessor implements Runnable {
 
         while (running) {
             try {
-                //System.out.println("이번턴 클릭로그 처리");
-                List<String> clickDataList = redisUtil.getListData("clicks:" + roomId.toString(), String.class);
-                for (long i = lastProcessedIndex; i < clickDataList.size(); i++) {
-                    String clickData = clickDataList.get((int) i);
-                    clickVO click = objectMapper.readValue(clickData, clickVO.class);
-                    System.out.println("click!: "+ click.toString());
+                List<clickVO> clickDataList = redisUtil.getListData("roundId:" + roundId.toString() + ":clicks", clickVO.class);
+
+                for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
+                    clickVO click = clickDataList.get(i);
                     if (click != null) {
                         checkClickedUser(click);
                         lastProcessedIndex = i + 1;
                     }
                 }
-                Thread.sleep(10); // 1초 대기
+
+                Thread.sleep(1000); // 10밀리초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                throw new RuntimeException("Error processing click data", e);
+                e.printStackTrace();
             }
         }
     }
