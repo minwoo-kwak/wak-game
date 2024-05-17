@@ -95,9 +95,9 @@ public class RoundController {
             },
             security = {@SecurityRequirement(name = "Access-Token")}
     )
-    @GetMapping("/{roundId}/battle-field")
-    public ResponseEntity<ApiResult<Void>> publishBattleField(@PathVariable Long roundId) {
-        roundFacade.sendBattleField(roundId, false);
+    @GetMapping("/{roomId}/battle-field")
+    public ResponseEntity<ApiResult<Void>> publishBattleField(@PathVariable Long roomId) {
+        roundFacade.sendBattleField(roomId, false);
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 }

@@ -19,12 +19,6 @@ public class PlayerService {
     private final RedisUtil redisUtil;
     private final PlayerRepository playerRepository;
 
-    public List<PlayerInfoResponse> getPlayersInfo(Round round) {
-        String key = "roundId:" + round.getId() + ":users";
-        Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
-        return buildPlayerInfoList(round, playersMap);
-    }
-
     private List<PlayerInfoResponse> buildPlayerInfoList(Round round, Map<String, PlayerInfo> playersMap) {
         List<PlayerInfoResponse> players = new ArrayList<>();
         boolean showNickname = round.getShowNickname();
@@ -53,8 +47,8 @@ public class PlayerService {
         return responseBuilder.build();
     }
 
-    public void saveClickLog(Round round, clickVO click) {
-        String key = "roundId:" + round.getId() + ":clicks";
+    public void saveClickLog(long roomId, clickVO click) {
+        String key = "roomId:" + roomId + ":clicks";
         redisUtil.saveToList(key, click);
     }
 

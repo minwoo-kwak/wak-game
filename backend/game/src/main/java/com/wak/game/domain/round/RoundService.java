@@ -66,8 +66,8 @@ public class RoundService {
     }
 
 
-    public SummaryCountResponse getSummaryCount(Round round) {
-        String key = "roundId:" + round.getId() + ":users";
+    public SummaryCountResponse getSummaryCount(long roomId, int roundNumber) {
+        String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> result = redisUtil.getData(key, PlayerInfo.class);
         int aliveCount = 0;
 
@@ -80,25 +80,10 @@ public class RoundService {
         }
 
         return SummaryCountResponse.builder()
-                .roundNumber(round.getRoundNumber())
+                .roundNumber(roundNumber)
                 .aliveCount(aliveCount)
                 .totalCount(result.size())
                 .build();
-    }
-
-    public boolean isAlive(Round round, User user) {
-        String key = "roundId:" + round.getId() + ":users";
-        Map<String, PlayerInfo> result = redisUtil.getData(key, PlayerInfo.class);
-
-        for (Map.Entry<String, PlayerInfo> entry : result.entrySet()) {
-            PlayerInfo player = entry.getValue();
-
-            if (player.getUserId() == user.getId()) {
-                return player.getStamina() > 0;
-            }
-        }
-
-        throw new BusinessException(ErrorInfo.USER_NOT_EXIST);
     }
 
     public void startThread(Long roomId, Long roundId) {

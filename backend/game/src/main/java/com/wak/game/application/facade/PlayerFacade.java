@@ -4,6 +4,8 @@ import com.wak.game.application.request.ClickRequest;
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.PlayerService;
+import com.wak.game.domain.room.Room;
+import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.user.User;
@@ -30,17 +32,20 @@ public class PlayerFacade {
     private final PlayerService playerService;
     private final RoundService roundService;
     private final UserService userService;
-    private final RedisUtil redisUtil;
-    private final SocketUtil socketUtil;
+    private final RoomService roomService;
+
     private final TimeUtil timeUtil;
 
-    public void saveClickLog(ClickRequest request) {
+    public void saveClickLog(long roomId, ClickRequest request) {
+
+        Room room = roomService.findById(roomId);
+
         Round round = roundService.findById(request.getRoundId());
         User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
         String currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
         clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
 
-        playerService.saveClickLog(round, click);
+        playerService.saveClickLog(room.getId(), click);
     }
 }
