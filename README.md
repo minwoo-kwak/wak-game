@@ -122,7 +122,7 @@ exec 폴더 내 포팅 메뉴얼 참조
     <tr>
         <td align="center">
             <a href="https://github.com/ryuu9505">
-            <img src="#" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="60px"/>
                 <br/>
                 <b>조형준</b>
             </a>
@@ -131,7 +131,7 @@ exec 폴더 내 포팅 메뉴얼 참조
         </td>
         <td align="center">
             <a href="https://github.com/olnuyh">
-            <img src="#" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="60px"/>
                 <br/>
                 <b>김이현</b>
             </a>
@@ -149,7 +149,7 @@ exec 폴더 내 포팅 메뉴얼 참조
         </td>
         <td align="center">
             <a href="https://github.com/">
-            <img src="https://thumbnail13.coupangcdn.com/thumbnails/remote/292x292q65ex/image/retail/images/99212757171500-b264f16c-f06d-4156-aee1-6f6dffc3d11e.jpg" width="100px"/>
+            <img src="#" width="100px"/>
                 <br/>
                 <b>김한슬</b>
             </a>
@@ -166,7 +166,7 @@ exec 폴더 내 포팅 메뉴얼 참조
             <sub>FE</sub>
         </td>
         <td align="center">
-            <a href="#">
+            <a href="https://github.com/">
             <img src="#" width="100px"/>
                 <br/>
                 <b>곽민우</b>
