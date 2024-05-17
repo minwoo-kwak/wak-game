@@ -1,4 +1,4 @@
-![logo](asset/logo.png)
+![logo](asset/banner.png)
 
 #### 📃 목차
 
