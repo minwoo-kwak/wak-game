@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/api/socket")
 			.setAllowedOriginPatterns("*")
-//			.withSockJS()  // apic test 시 주석 처리 필요
+			.withSockJS()  // apic test 시 주석 처리 필요
 		;
 	}
 
