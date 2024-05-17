@@ -8,6 +8,7 @@ import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
 import com.wak.game.application.response.socket.ResultResponse;
+import com.wak.game.application.response.socket.RoundEndResultResponse;
 import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
@@ -23,6 +24,7 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 
+import javax.xml.transform.Result;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -124,9 +126,6 @@ public class ClickEventProcessor implements Runnable {
             }
 
             if (shouldEndRound) {
-                sendResult();
-                //todo: isFinished
-                roundFacade.getBattleField(roundId, true);
                 countDown(60);
 
                 roundFacade.endRound(round.getId());
@@ -134,28 +133,44 @@ public class ClickEventProcessor implements Runnable {
                 if (roundNumber < 3) {
                     Round nextRound = roundFacade.startNextRound(round);
                     updateRoundId(nextRound.getId());
+                    sendResult(nextRound.getId());
                 } else {
+                    sendResult(null);
                     stop();
                 }
             }
         }
     }
 
-    private void sendResult() {
+    private Long sendResult(Long nextRoundId) {
         String key = "roundId:" + roundId + ":users";
         Round round = roundService.findById(roundId);
 
-        Map<String, RankInfo> ranks = redisUtil.getData("roundId:" + roundId.toString() + ":ranks", RankInfo.class);
-        Map<String, PlayerInfo> map = redisUtil.getData(key, PlayerInfo.class);
+        Map<String, RankInfo> ranks = redisUtil.getData("roundId:" + roundId + ":ranks", RankInfo.class);
+        Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
 
-        for (Map.Entry<String, PlayerInfo> entry : map.entrySet()) {
-            PlayerInfo player = entry.getValue();
-            ResultResponse result = new ResultResponse(
-                    round.getRoundNumber(),
-                    ranks.get(player.getUserId().toString()).getKillCnt()
-                    , true);
-            socketUtil.sendToSpecificUser(player.getUserId().toString(), roundId.toString(), result);
+        List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
+        sortedRanks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
+
+        List<ResultResponse> results = new ArrayList<>();
+        int rank = 1;
+
+        for (RankInfo rankInfo : sortedRanks) {
+            long userId = rankInfo.getUserId();
+            PlayerInfo player = playersMap.get(Long.toString(userId));
+            if (player != null) {
+                ResultResponse result = new ResultResponse(
+                        userId,
+                        rank++,
+                        rankInfo.getKillCnt()
+                );
+                results.add(result);
+            }
         }
+
+        Round nextRound = roundFacade.startNextRound(round);
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));
+        return nextRound.getId();
     }
 
     private void countDown(int sec) {
@@ -179,6 +194,7 @@ public class ClickEventProcessor implements Runnable {
 
     private void saveSuccessfulClick(clickVO click) {
         String key = "roundId:" + roomId.toString() + ":availableClicks";
+
         try {
             String clickData = objectMapper.writeValueAsString(click);
             redisUtil.saveToList(key, clickData);

@@ -31,7 +31,6 @@ public class PlayerInfo {
         this.stamina += amount;
     }
 
-
     public Long getRoundId() {
         return roundId;
     }
