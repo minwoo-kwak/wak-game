@@ -12,6 +12,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
+import com.wak.game.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,38 +32,15 @@ public class PlayerFacade {
     private final UserService userService;
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
-
-    public void getPlayersStatus(Long roundId) {
-        Round round = roundService.findById(roundId);
-        List<PlayerInfoResponse> playersInfo = playerService.getPlayersInfo(round);
-        socketUtil.sendMessage("/games/" + roundId + "/battle-field", playersInfo);
-    }
+    private final TimeUtil timeUtil;
 
     public void saveClickLog(ClickRequest request) {
         Round round = roundService.findById(request.getRoundId());
         User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
-        clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime());
+        String currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
+        clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
 
         playerService.saveClickLog(round, click);
     }
-
-    public void getKillLog(Long roundId) {
-        Round round = roundService.findById(roundId);
-
-        String key = "roundId:" + roundId + ":availableClicks";
-
-        Map<String, clickVO> data = redisUtil.getData(key, clickVO.class);
-
-    }
-
-    public void convertToPlayer(Long roundId, Long userId) {
-
-    }
-
-   /* public List<AlivePlayerResponse> getAliveUsers(Long roomRoundId) {
-        //레디스 뒤져서 stamina가 1 이상인 사람들 찾아오기
-        return playerService.getAliveUsers(roomRoundId);
-    }*/
-
 }
