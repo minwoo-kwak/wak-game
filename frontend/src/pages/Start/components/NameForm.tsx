@@ -38,7 +38,7 @@ export default function NicknameForm() {
   const [message, setMessage] = useState<
     'NO_INPUT' | 'INVALID_LENGTH' | 'DUPLICATED'
   >('NO_INPUT');
-  const { setUserData } = useUserStore();
+  const { userData, setUserData } = useUserStore();
 
   const handleChange = (e: { target: { value: string } }) => {
     setNickname(e.target.value);
@@ -53,6 +53,7 @@ export default function NicknameForm() {
       try {
         const fetchedData = await login(nickname);
         setUserData({
+          ...userData,
           nickname: nickname,
           color: fetchedData.data.color,
           token: fetchedData.data.token,

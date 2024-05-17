@@ -1,22 +1,22 @@
 import { CompatClient } from '@stomp/stompjs';
-import { FlexLayout } from '../../../styles/layout';
 
+import { FlexLayout } from '../../../styles/layout';
 import KillLog from '../components/KillLog';
 import SpeechBubble from '../components/SpeechBubble';
 import BattleField from './BattleField';
 
 type GamePlayProps = {
-  clientRef: React.MutableRefObject<CompatClient | null>;
+  client: CompatClient;
 };
 
-export default function GamePlay({ clientRef }: GamePlayProps) {
+export default function GamePlay({ client }: GamePlayProps) {
   return (
     <FlexLayout $isCol gap='1rem'>
       <FlexLayout gap='2rem'>
-        <KillLog clientRef={clientRef} />
+        <KillLog client={client} />
         <SpeechBubble />
       </FlexLayout>
-      <BattleField />
+      <BattleField client={client} />
     </FlexLayout>
   );
 }

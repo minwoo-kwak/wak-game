@@ -1,7 +1,11 @@
+import { useEffect, useRef, useState } from 'react';
+import { CompatClient } from '@stomp/stompjs';
+import { getAccessToken } from '../../../constants/api';
+import useGameStore from '../../../store/gameStore';
+
 import styled from 'styled-components';
 import { GridLayout } from '../../../styles/layout';
 import { textStyles } from '../../../styles/fonts';
-
 import WhiteBox from '../../../components/WhiteBox';
 import GrayTitleBox from '../../../components/GrayTitleBox';
 
@@ -15,6 +19,7 @@ const RankLayout = styled(GridLayout)`
 const GridSpan = styled.div<{ $col: number; $align: string }>`
   grid-column: span ${(props) => props.$col} / span ${(props) => props.$col};
   text-align: ${(props) => props.$align};
+  ${textStyles}
 `;
 
 const HorizontalLine = styled.div`
@@ -32,14 +37,51 @@ const RankingBlock = styled.div`
   gap: 1rem;
 `;
 
-// type RankBoxProps = {};
+type RankPlayersTypes = {
+  userId: number;
+  nickname: string;
+  color: string;
+  killCnt: number;
+};
 
-export default function RankBox() {
-  const ranks = Array.from({ length: 40 });
+type RankBoxProps = { client: CompatClient };
+
+export default function RankBox({ client }: RankBoxProps) {
+  const ACCESS_TOKEN = getAccessToken();
+  const header = {
+    Authorization: `Bearer ${ACCESS_TOKEN}`,
+    'Content-Type': 'application/json',
+  };
+  const { gameData } = useGameStore();
+  const [ranks, setRanks] = useState<RankPlayersTypes[]>([]);
+  const subscribedRef = useRef(false);
+
+  const subscribeToTopic = () => {
+    if (!subscribedRef.current) {
+      client.subscribe(
+        `/topic/games/${gameData.roundId}/rank`,
+        (message) => {
+          console.log(JSON.parse(message.body).ranks);
+          setRanks([...JSON.parse(message.body).ranks]);
+        },
+        header
+      );
+      subscribedRef.current = true;
+    }
+  };
+
+  useEffect(() => {
+    if (client && client.connected) {
+      subscribeToTopic();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client]);
+
   const RankText = (
     first: string,
     second: string,
     third: string,
+    color?: string,
     key?: number
   ) => {
     return (
@@ -47,7 +89,7 @@ export default function RankBox() {
         <GridSpan $col={1} $align={`start`}>
           {first}
         </GridSpan>
-        <GridSpan $col={2} $align={`center`}>
+        <GridSpan color={color} $col={2} $align={`center`}>
           {second}
         </GridSpan>
         <GridSpan $col={1} $align={`end`}>
@@ -64,7 +106,13 @@ export default function RankBox() {
       <HorizontalLine />
       <RankingBlock>
         {ranks.map((value, index) => {
-          return RankText('1등', '김싸피', '20킬', index);
+          return RankText(
+            `${index + 1}등`,
+            value.nickname,
+            `${value.killCnt}킬`,
+            value.color,
+            index
+          );
         })}
       </RankingBlock>
     </WhiteBox>

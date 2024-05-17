@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CompatClient } from '@stomp/stompjs';
 
 import { getAccessToken } from '../../../constants/api';
@@ -21,10 +21,10 @@ const TextBlock = styled.div`
 `;
 
 type GameHeaderProps = {
-  clientRef: React.MutableRefObject<CompatClient | null>;
+  client: CompatClient;
 };
 
-export default function GameHeader({ clientRef }: GameHeaderProps) {
+export default function GameHeader({ client }: GameHeaderProps) {
   const ACCESS_TOKEN = getAccessToken();
   const header = {
     Authorization: `Bearer ${ACCESS_TOKEN}`,
@@ -33,49 +33,39 @@ export default function GameHeader({ clientRef }: GameHeaderProps) {
   const { gameData } = useGameStore();
   const [info, setInfo] = useState({
     roundNumber: 1,
-    totalCount: gameData.players.length,
-    aliveCount: gameData.players.length,
+    totalCount: gameData.playersNumber,
+    aliveCount: gameData.playersNumber,
   });
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const subscribedRef = useRef(false);
 
-  useEffect(() => {
-    const subscribeToTopic = () => {
-      clientRef.current?.subscribe(
+  const subscribeToTopic = () => {
+    if (!subscribedRef.current) {
+      client.subscribe(
         `/topic/games/${gameData.roundId}/dashboard`,
         (message) => {
           setInfo(JSON.parse(message.body));
         },
         header
       );
-    };
+      subscribedRef.current = true;
+    }
+  };
 
-    const connectCallback = () => {
-      if (clientRef.current) {
-        subscribeToTopic();
-        setIsSubscribed(true);
-      }
-    };
-
-    if (clientRef.current && clientRef.current.connected) {
+  useEffect(() => {
+    if (client && client.connected) {
       subscribeToTopic();
-      setIsSubscribed(true);
-    } else {
-      setIsSubscribed(false);
     }
-
-    if (clientRef.current) {
-      clientRef.current.onConnect = connectCallback;
-    }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientRef, gameData.roundId, isSubscribed]);
+  }, [client]);
 
   return (
     <HeaderBlock>
       <TextBlock>
         <SmallText>{`현재 방 이름 : ${gameData.roomName} ( ${info.roundNumber} 라운드 )`}</SmallText>
         <SmallText>{`생존자 수 : ${info.totalCount} / ${info.aliveCount} 명`}</SmallText>
-        <SmallText>{`내 상태 : 생존 !`}</SmallText>
+        <SmallText>{`내 상태 : ${
+          gameData.isAlive ? `생존!` : `죽음`
+        }`}</SmallText>
       </TextBlock>
     </HeaderBlock>
   );

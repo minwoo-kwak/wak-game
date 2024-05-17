@@ -19,3 +19,12 @@ export const startGame = async (
   );
   return response.data;
 };
+
+export const getBattleField = async (roundId: number) => {
+  const response = await axiosInstance.get(`/games/${roundId}/battle-field`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.data;
+};

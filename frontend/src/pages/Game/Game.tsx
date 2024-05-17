@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client';
 import { CompatClient, Stomp } from '@stomp/stompjs';
-
 import { BASE_URL, getAccessToken } from '../../constants/api';
-import useGameStore from '../../store/gameStore';
 
 import { FlexLayout } from '../../styles/layout';
 import Background from '../../components/Background';
@@ -17,13 +14,11 @@ import GamePlay from './GamePlay/GamePlay';
 import GameResult from './GameResult/GameResult';
 
 export default function GamePage() {
-  const navigate = useNavigate();
   const ACCESS_TOKEN = getAccessToken();
   const header = {
     Authorization: `Bearer ${ACCESS_TOKEN}`,
     'Content-Type': 'application/json',
   };
-  const { gameData, setGameData } = useGameStore();
   const [state, setState] = useState<'WAIT' | 'PLAY' | 'RESULT'>('WAIT');
   const [countdown, setCountdown] = useState(5);
   const clientRef = useRef<CompatClient | null>(null);
@@ -31,33 +26,16 @@ export default function GamePage() {
   const connectHandler = () => {
     const socket = new SockJS(`${BASE_URL}/socket`);
     clientRef.current = Stomp.over(socket);
-    clientRef.current.connect(header, () => {
-      clientRef.current?.subscribe(
-        `/topic/games/${gameData.roundId}/battle-field`,
-        (message) => {
-          if (message.body === 'ROOM IS EXPIRED') {
-            navigate(`/lobby`);
-          } else {
-            const fetchedData = JSON.parse(message.body);
-            setGameData({ ...gameData, players: fetchedData.players });
-          }
-        },
-        header
-      );
-    });
+    clientRef.current.connect(header, () => {});
   };
 
   useEffect(() => {
     connectHandler();
     return () => {
-      clientRef.current?.disconnect(() => {
-        clientRef.current?.unsubscribe(
-          `/topic/games/${gameData.roundId}/battle-field`
-        );
-      }, header);
+      clientRef.current?.disconnect(() => {}, header);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameData.roundId]);
+  }, []);
 
   useEffect(() => {
     if (countdown === 0) {
@@ -74,18 +52,20 @@ export default function GamePage() {
     <Background>
       <FlexLayout gap='4rem'>
         <FlexLayout $isCol gap='2rem'>
-          <GameHeader clientRef={clientRef} />
+          {clientRef.current && <GameHeader client={clientRef.current} />}
           {state === 'WAIT' ? (
-            <GameWait countdown={countdown} clientRef={clientRef} />
+            clientRef.current && (
+              <GameWait countdown={countdown} client={clientRef.current} />
+            )
           ) : state === 'PLAY' ? (
-            <GamePlay clientRef={clientRef} />
+            clientRef.current && <GamePlay client={clientRef.current} />
           ) : (
             <GameResult isWinner round={3} />
           )}
         </FlexLayout>
         <FlexLayout $isCol gap='1.2rem'>
           <ChatBox mode='ROOM' isShort text={`방 채팅`} />
-          <RankBox />
+          {clientRef.current && <RankBox client={clientRef.current} />}
         </FlexLayout>
       </FlexLayout>
     </Background>
