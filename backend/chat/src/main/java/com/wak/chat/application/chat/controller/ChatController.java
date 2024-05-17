@@ -1,5 +1,6 @@
 package com.wak.chat.application.chat.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -12,6 +13,7 @@ import com.wak.chat.domain.chat.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ChatController {
@@ -22,7 +24,7 @@ public class ChatController {
 	@MessageMapping("/lobby-chat")
 	public void chatInLobby(ChatRequest chatRequest, @Header("Authorization") String token) {
 		ChatResponse chatResponse = chatService.sendMessage(chatRequest, token);
-
+		log.info("[CHAT-LOBBY] message={}", chatResponse.getMessage());
 		simpMessagingTemplate.convertAndSend("/topic/lobby-chat", chatResponse);
 	}
 
