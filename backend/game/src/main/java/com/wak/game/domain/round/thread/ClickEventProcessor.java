@@ -91,14 +91,13 @@ public class ClickEventProcessor implements Runnable {
 
 
         if (isAlive(user) && isAlive(victim)) {
+            Round round = roundService.findById(click.roundId());
+
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
-            roundFacade.getBattleField(roundId, false);
-            // 게임 필드 업데이트
-            Round round = roundService.findById(click.roundId());
+            roundFacade.sendBattleField(roundId, false);
 
-            // 대시보드 업데이트
             roundFacade.sendDashBoard(roundId);
 
             // 생존자 수 업데이트
@@ -108,7 +107,6 @@ public class ClickEventProcessor implements Runnable {
             playerCount.updateAliveCont();
             redisUtil.saveData(countKey, roundId.toString(), playerCount);
 
-            // 킬 로그 업데이트
             saveSuccessfulClick(click);
             socketUtil.sendMessage("/games/" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
 
@@ -116,31 +114,25 @@ public class ClickEventProcessor implements Runnable {
             rankFacade.updateRankings(click);
             rankFacade.sendRank(roundId);
 
-            int roundNumber = round.getRoundNumber();
-            boolean shouldEndRound = false;
+            countDown(60);
 
-            if (roundNumber < 3) {
-                shouldEndRound = (double) playerCount.getAliveCountA() / playerCount.getTotalCountA() <= 0.5;
-            } else if (roundNumber == 3) {
-                shouldEndRound = playerCount.getAliveCountA() == 1 || playerCount.getAliveCountB() == 1;
+            playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
+            playerCount = playerCountMap.get(roundId.toString());
+
+            if (playerCount.getAliveCountA() > 1)
+                return;
+
+            if (round.getRoundNumber() == 3) {
+                sendResult(null);
+                roundFacade.endRound(roundId);
+                stop();
             }
 
-            if (shouldEndRound) {
-                countDown(60);
-                Long curRoundId = roundId;
+            Round nextRound = roundFacade.startNextRound(round);
+            sendResult(nextRound.getId());
 
-                if (roundNumber < 3) {
-                    Round nextRound = roundFacade.startNextRound(round);
-                    sendResult(nextRound.getId());
-                    updateRoundId(nextRound.getId());
-                } else {
-                    sendResult(null);
-                    roundFacade.endRound(round.getId());
-                    stop();
-                }
-                roundFacade.endRound(curRoundId);
-
-            }
+            roundFacade.endRound(roundId);
+            updateRoundId(nextRound.getId());
         }
     }
 
@@ -170,7 +162,7 @@ public class ClickEventProcessor implements Runnable {
             }
         }
 
-        RoundEndResultResponse response = new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results);
+        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));
     }
 
     private void countDown(int sec) {
