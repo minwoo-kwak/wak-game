@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
-    private Long roomId;
+    private long roomId;
     private Long roundId;
     private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
@@ -60,7 +60,7 @@ public class ClickEventProcessor implements Runnable {
 
         while (running) {
             try {
-                List<clickVO> clickDataList = redisUtil.getListData("roundId:" + roundId.toString() + ":clicks", clickVO.class);
+                List<clickVO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", clickVO.class);
 
                 for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
                     clickVO click = clickDataList.get(i);
@@ -83,72 +83,62 @@ public class ClickEventProcessor implements Runnable {
         if (!click.roundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
-        String key = "roundId:" + click.roundId() + ":users";
+        String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
-        PlayerInfo user = data.get(Long.toString(click.userId()));
+        PlayerInfo user = data.get(click.userId().toString());
         PlayerInfo victim = data.get(Long.toString(click.victimId()));
 
 
         if (isAlive(user) && isAlive(victim)) {
+            Round round = roundService.findById(click.roundId());
+
             victim.updateStamina(-1);
             redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
 
-            roundFacade.getBattleField(roundId, false);
-            // 게임 필드 업데이트
-            Round round = roundService.findById(click.roundId());
-
-            // 대시보드 업데이트
-            roundFacade.sendDashBoard(roundId);
+            roundFacade.sendBattleField(roomId, false);
+            roundFacade.sendDashBoard(roomId, round.getRoundNumber());
 
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
             Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            PlayerCount playerCount = playerCountMap.get(roundId.toString());
+            PlayerCount playerCount = playerCountMap.get(Long.toString(roomId));
             playerCount.updateAliveCont();
-            redisUtil.saveData(countKey, roundId.toString(), playerCount);
+            redisUtil.saveData(countKey, Long.toString(roomId), playerCount);
 
-            // 킬 로그 업데이트
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games/" + roundId.toString() + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
+            socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
 
-            // 랭킹 업데이트
-            rankFacade.updateRankings(click);
-            rankFacade.sendRank(roundId);
+            rankFacade.updateRankings(click, roomId);
+            rankFacade.sendRank(roomId);
 
-            int roundNumber = round.getRoundNumber();
-            boolean shouldEndRound = false;
+            countDown(60);
 
-            if (roundNumber < 3) {
-                shouldEndRound = (double) playerCount.getAliveCountA() / playerCount.getTotalCountA() <= 0.5;
-            } else if (roundNumber == 3) {
-                shouldEndRound = playerCount.getAliveCountA() == 1 || playerCount.getAliveCountB() == 1;
+            playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
+            playerCount = playerCountMap.get(roundId.toString());
+
+            if (playerCount.getAliveCountA() > 1)
+                return;
+
+            if (round.getRoundNumber() == 3) {
+                sendResult(null);
+                roundFacade.endRound(roomId);
+                stop();
             }
 
-            if (shouldEndRound) {
-                countDown(60);
-                Long curRoundId = roundId;
+            Round nextRound = roundFacade.startNextRound(round);
+            sendResult(nextRound.getId());
 
-                if (roundNumber < 3) {
-                    Round nextRound = roundFacade.startNextRound(round);
-                    sendResult(nextRound.getId());
-                    updateRoundId(nextRound.getId());
-                } else {
-                    sendResult(null);
-                    roundFacade.endRound(round.getId());
-                    stop();
-                }
-                roundFacade.endRound(curRoundId);
-
-            }
+            roundFacade.endRound(roomId);
+            updateRoundId(nextRound.getId());
         }
     }
 
-    private void sendResult(Long nextRoundId) {
-        String key = "roundId:" + roundId + ":users";
+    private void sendResult(long nextRoundId) {
+        String key = "roomId:" + roomId + ":users";
         Round round = roundService.findById(roundId);
 
-        Map<String, RankInfo> ranks = redisUtil.getData("roundId:" + roundId + ":ranks", RankInfo.class);
+        Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + roomId + ":ranks", RankInfo.class);
         Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
 
         List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
@@ -170,14 +160,14 @@ public class ClickEventProcessor implements Runnable {
             }
         }
 
-        RoundEndResultResponse response = new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results);
+        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));
     }
 
     private void countDown(int sec) {
         new Thread(() -> {
             try {
                 for (int i = sec; i > 0; i--) {
-                    socketUtil.sendMessage("/games/" + roundId.toString() + "/battle-field", "Round will start in " + i + " seconds");
+                    socketUtil.sendMessage("/games/" + roomId + "/battle-field", "Round will start in " + i + " seconds");
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException e) {
@@ -185,7 +175,7 @@ public class ClickEventProcessor implements Runnable {
             }
         }).start();
 
-        socketUtil.sendMessage("/games/" + roomId.toString() + "/battle-field", "Game Start!");
+        socketUtil.sendMessage("/games/" + roomId + "/battle-field", "Game Start!");
     }
 
     private boolean isAlive(PlayerInfo user) {
@@ -193,7 +183,7 @@ public class ClickEventProcessor implements Runnable {
     }
 
     private void saveSuccessfulClick(clickVO click) {
-        String key = "roundId:" + roomId.toString() + ":availableClicks";
+        String key = "roomId:" + roomId + ":availableClicks";
 
         try {
             String clickData = objectMapper.writeValueAsString(click);
