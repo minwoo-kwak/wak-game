@@ -127,22 +127,24 @@ public class ClickEventProcessor implements Runnable {
 
             if (shouldEndRound) {
                 countDown(60);
-
-                roundFacade.endRound(round.getId());
+                Long curRoundId = roundId;
 
                 if (roundNumber < 3) {
                     Round nextRound = roundFacade.startNextRound(round);
-                    updateRoundId(nextRound.getId());
                     sendResult(nextRound.getId());
+                    updateRoundId(nextRound.getId());
                 } else {
                     sendResult(null);
+                    roundFacade.endRound(round.getId());
                     stop();
                 }
+                roundFacade.endRound(curRoundId);
+
             }
         }
     }
 
-    private Long sendResult(Long nextRoundId) {
+    private void sendResult(Long nextRoundId) {
         String key = "roundId:" + roundId + ":users";
         Round round = roundService.findById(roundId);
 
@@ -168,9 +170,7 @@ public class ClickEventProcessor implements Runnable {
             }
         }
 
-        Round nextRound = roundFacade.startNextRound(round);
-        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));
-        return nextRound.getId();
+        RoundEndResultResponse response = new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results);
     }
 
     private void countDown(int sec) {

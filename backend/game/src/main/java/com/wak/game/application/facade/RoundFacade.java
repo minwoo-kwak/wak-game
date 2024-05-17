@@ -86,7 +86,7 @@ public class RoundFacade {
 
         for (Map.Entry<String, RoomVO> entry : map.entrySet()) {
             RoomVO roomUser = entry.getValue();
-            PlayerInfo gameUser = new PlayerInfo(round.getId(),roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
+            PlayerInfo gameUser = new PlayerInfo(round.getId(), roomUser.userId(), roomUser.color(), roomUser.nickname(), roomUser.team(), roomUser.isHost(), 1);
             RankInfo rankInfo = RankInfo.builder()
                     .killCnt(0)
                     .nickname(roomUser.nickname())
@@ -150,16 +150,11 @@ public class RoundFacade {
 
         roomService.isNotInGame(room);
 
-        roundService.deleteRound(roundId);
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
-
-        // 게임 시작 시 만들어 놨던 redis 저장소를 다 없앤다.
+        redisUtil.deleteKey("roundId:" + roundId + ":users");
+        redisUtil.deleteKey("roundId:" + roundId + ":ranks");
         // todo: availableClicks에 있는 정보에 기반한 players 로그들 다 저장한다.
         // todo: 모든 클릭 로그들을 player_logs에 저장한다.
-        // todo : 관전자인지, 무슨팀인지, 여왕여부 이런거 없음.
-        redisUtil.deleteKey("roundId:" + roundId + ":users");
 
-        // gameEnd 할지 결정
         if ((room.getMode().toString().equals("SOLO") && round.getRoundNumber() == 3)
                 || room.getMode().toString().equals("TEAM")) {
             endGame(room);
@@ -193,13 +188,13 @@ public class RoundFacade {
         Round round = roundService.findById(roundId);
         SummaryCountResponse summaryCount = roundService.getSummaryCount(round);
 
-        socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", round.getId().toString(), summaryCount);
+        socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", summaryCount);
     }
 
     public void getBattleField(Long roundId, boolean isFinished) {
         roundService.findById(roundId);
 
-        String key = "roundId:"+roundId.toString()+":users";
+        String key = "roundId:" + roundId.toString() + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
         List<PlayerInfo> players = new ArrayList<>();
