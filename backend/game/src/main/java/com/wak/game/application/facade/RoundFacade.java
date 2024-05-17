@@ -191,7 +191,7 @@ public class RoundFacade {
         socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", summaryCount);
     }
 
-    public void getBattleField(Long roundId, boolean isFinished) {
+    public void sendBattleField(Long roundId, boolean isFinished) {
         roundService.findById(roundId);
 
         String key = "roundId:" + roundId.toString() + ":users";
