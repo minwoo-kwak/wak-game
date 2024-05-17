@@ -86,17 +86,18 @@ public class RoundController {
         // List<AlivePlayerResponse> aliveUsers = roundFacade.startGameAndReturnStatus(gameStartRequest, roomId);
         //messagingTemplate.convertAndSend("/topic/games/" + roomId + "mention", aliveUsers);
     }
+
     @Operation(
             summary = "게임 입장시 게임 참여 유저들 정보 반환",
             description = "게임 입장시 게임 참여 유저들 정보를 publish 요청하는 API 입니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "게임 입장 성공")
             },
-            security = { @SecurityRequirement(name = "Access-Token") }
+            security = {@SecurityRequirement(name = "Access-Token")}
     )
-    @GetMapping("/{roundId}/battle-field")
-    public ResponseEntity<ApiResult<Void>> publishBattleField(@PathVariable Long roundId) {
-        roundFacade.getBattleField(roundId, false);
+    @GetMapping("/{roomId}/battle-field")
+    public ResponseEntity<ApiResult<Void>> publishBattleField(@PathVariable Long roomId) {
+        roundFacade.sendBattleField(roomId, false);
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 }

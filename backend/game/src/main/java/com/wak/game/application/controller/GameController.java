@@ -16,6 +16,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 @RequiredArgsConstructor
@@ -23,8 +24,8 @@ public class GameController {
     private final PlayerFacade playerFacade;
     private final RoundFacade roundFacade;
 
-    @MessageMapping("/click/{roundId}")
-    public void handleClick(ClickRequest clickRequest) {
-        playerFacade.saveClickLog(clickRequest);
+    @MessageMapping("/click/{roomId}")
+    public void handleClick(@PathVariable long roomId, ClickRequest clickRequest) {
+        playerFacade.saveClickLog(roomId,clickRequest);
     }
 }

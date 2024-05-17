@@ -95,11 +95,11 @@ public class RoundFacade {
                     .build();
             p.add(gameUser);
 
-            String userKey = "roundId:" + round.getId() + ":users";
-            String rankKey = "roundId:" + round.getId() + ":ranks";
+            String userKey = "roomId:" + room.getId() + ":users";
+            String rankKey = "roomId:" + room.getId() + ":ranks";
 
-            redisUtil.saveData(userKey, Long.toString(roomUser.userId()), gameUser);
-            redisUtil.saveData(rankKey, Long.toString(roomUser.userId()), rankInfo);
+            redisUtil.saveData(userKey, roomUser.userId().toString(), gameUser);
+            redisUtil.saveData(rankKey, roomUser.userId().toString(), rankInfo);
 
             User user = userService.findById(roomUser.userId());
 
@@ -127,7 +127,7 @@ public class RoundFacade {
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
-        socketUtil.sendMessage("/games/" + round.getId().toString() + "/battle-field", battleFeildInGameResponse);
+        socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
 
         String key = "aliveAndTotalPlayers";
         PlayerCount count = PlayerCount.builder()
@@ -137,21 +137,21 @@ public class RoundFacade {
                 .totalCountB(teamBTotal)
                 .build();
 
-        redisUtil.saveData(key, round.getId().toString(), count);
+        redisUtil.saveData(key, room.getId().toString(), count);
     }
 
     public Round startNextRound(Round previousRound) {
         return roundService.startNextRound(previousRound);
     }
 
-    public void endRound(Long roundId) {
-        Round round = roundService.findById(roundId);
+    public void endRound(Long roomId) {
+        Round round = roundService.findById(roomId);
         Room room = roomService.findById(round.getRoom().getId());
 
         roomService.isNotInGame(room);
 
-        redisUtil.deleteKey("roundId:" + roundId + ":users");
-        redisUtil.deleteKey("roundId:" + roundId + ":ranks");
+        redisUtil.deleteKey("roomId:" + roomId + ":users");
+        redisUtil.deleteKey("roomId:" + roomId + ":ranks");
         // todo: availableClicks에 있는 정보에 기반한 players 로그들 다 저장한다.
         // todo: 모든 클릭 로그들을 player_logs에 저장한다.
 
@@ -173,28 +173,17 @@ public class RoundFacade {
         socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
     }
 
-    public DashBoardResponse getDashBoard(Long roundId) {
-        Round round = roundService.findById(roundId);
-        SummaryCountResponse summary = roundService.getSummaryCount(round);
+    public void sendDashBoard(long roomId, int roundNumber) {
 
-        return DashBoardResponse.builder()
-                .totalCount(summary.getTotalCount())
-                .aliveCount(summary.getAliveCount())
-                .roundId(roundId)
-                .build();
+        SummaryCountResponse summaryCount = roundService.getSummaryCount(roomId, roundNumber);
+
+        socketUtil.sendMessage("/games/" + roomId + "/dashboard", summaryCount);
     }
 
-    public void sendDashBoard(Long roundId) {
-        Round round = roundService.findById(roundId);
-        SummaryCountResponse summaryCount = roundService.getSummaryCount(round);
+    public void sendBattleField(long roomId,  boolean isFinished) {
+        roomService.findById(roomId);
 
-        socketUtil.sendMessage("/games/" + round.getId() + "/dashboard", summaryCount);
-    }
-
-    public void getBattleField(Long roundId, boolean isFinished) {
-        roundService.findById(roundId);
-
-        String key = "roundId:" + roundId.toString() + ":users";
+        String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
         List<PlayerInfo> players = new ArrayList<>();
@@ -203,6 +192,6 @@ public class RoundFacade {
             players.add(entry.getValue());
         }
 
-        socketUtil.sendMessage("/games/" + roundId + "/battle-field", new BattleFeildInGameResponse(isFinished, players));
+        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new BattleFeildInGameResponse(isFinished, players));
     }
 }
