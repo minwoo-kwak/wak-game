@@ -51,15 +51,6 @@ public class RoundService {
         return roundRepository.save(round);
     }
 
-    public Round startRound(Round round, String aggro) {
-        return roundRepository.save(Round.builder()
-                .roundNumber(round.getRoundNumber() + 1)
-                .room(round.getRoom())
-                .aggro(aggro)
-                .showNickname(round.getShowNickname())
-                .build());
-    }
-
     @Transactional
     public Round startNextRound(Round previousRound) {
         Room room = previousRound.getRoom();
