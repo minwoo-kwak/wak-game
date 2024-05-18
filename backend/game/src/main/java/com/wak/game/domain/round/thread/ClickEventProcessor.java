@@ -121,6 +121,8 @@ public class ClickEventProcessor implements Runnable {
             if (aliveCount > 1)
                 return;
 
+            System.out.println("라운드 종료!");
+
             if (round.getRoundNumber() == 3) {
                 sendResult(null);
                 stop();
@@ -143,6 +145,7 @@ public class ClickEventProcessor implements Runnable {
         else
             playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 60;
 
+        System.out.println("플레이 시간: " + playTime);
         List<ResultResponse> results = new ArrayList<>();
 
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
@@ -161,13 +164,17 @@ public class ClickEventProcessor implements Runnable {
                     murderNickname,
                     murderColor
             ));
+
+            System.out.println(murderNickname + "->" + player.getUser().getNickname());
         }
 
         if (round.getRoundNumber() < 3) {
+            System.out.println("3라운드 미만 / 최종결과 미포함");
             socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, null));
             return;
         }
 
+        System.out.println("3라운드 미만 / 최종결과 포함");
         List<FinalResultResponse> finals = getFinalResult();
         socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, finals));
     }
