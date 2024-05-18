@@ -19,4 +19,8 @@ public class TimeUtil {
         Instant instant = dateTime.toInstant(ZoneOffset.UTC);
         return instant.getEpochSecond() * 1_000_000_000L + instant.getNano();
     }
+    public double nanoToDouble(long nano){
+        double totalAliveTime = nano / 1_000_000_000.0;
+        return Math.round(totalAliveTime * 100.0) / 100.0;
+    }
 }

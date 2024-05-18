@@ -19,6 +19,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
+import com.wak.game.global.util.TimeUtil;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -42,8 +43,9 @@ public class ClickEventProcessor implements Runnable {
     private final UserService userService;
     private final RoundFacade roundFacade;
     private final RankFacade rankFacade;
+    private final TimeUtil timeUtil;
 
-    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade, UserService userService) {
+    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade, UserService userService, TimeUtil timeUtil) {
         this.roundId = roundId;
         this.round1Id = roundId;
         this.roomId = roomId;
@@ -56,6 +58,7 @@ public class ClickEventProcessor implements Runnable {
         this.roundFacade = roundFacade;
         this.rankFacade = rankFacade;
         this.userService = userService;
+        this.timeUtil= timeUtil;
     }
 
     @Override
@@ -146,7 +149,7 @@ public class ClickEventProcessor implements Runnable {
                     player.getUser().getId(),
                     player.getRank(),
                     player.getKillCount(),
-                    player.getAliveTime(),
+                    timeUtil.nanoToDouble(Long.parseLong(player.getAliveTime())),
                     murderNickname,
                     murderColor
             ));
@@ -191,9 +194,7 @@ public class ClickEventProcessor implements Runnable {
                     + (playerR2 != null ? parseNanoTime(playerR2.getAliveTime()) : 0)
                     + (playerR3 != null ? parseNanoTime(playerR3.getAliveTime()) : 0);
 
-            double totalAliveTime = totalAliveNanoTime / 1_000_000_000.0;
-            totalAliveTime = Math.round(totalAliveTime * 100.0) / 100.0;
-
+            double totalAliveTime = timeUtil.nanoToDouble(totalAliveNanoTime);
 
             finalResults.add(new FinalResultResponse(userId,totalGameTime, totalAliveTime, totalKillCount));
         }

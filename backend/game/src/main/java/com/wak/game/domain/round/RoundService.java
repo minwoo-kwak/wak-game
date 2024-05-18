@@ -14,6 +14,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
+import com.wak.game.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -92,8 +93,9 @@ public class RoundService {
         RoundFacade roundFacade = applicationContext.getBean(RoundFacade.class);
         RankFacade rankFacade = applicationContext.getBean(RankFacade.class);
         UserService userService = applicationContext.getBean(UserService.class);
+        TimeUtil timeUtil = applicationContext.getBean(TimeUtil.class);
 
-        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade, userService);
+        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade, userService, timeUtil);
         Thread thread = new Thread(clickProcessor);
         thread.start();
 
