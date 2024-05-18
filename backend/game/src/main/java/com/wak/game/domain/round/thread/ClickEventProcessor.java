@@ -126,9 +126,8 @@ public class ClickEventProcessor implements Runnable {
             Round nextRound = roundFacade.startNextRound(round);
             sendResult(nextRound.getId());
 
-            roundFacade.endRound(roomId);
-            updateRoundId(nextRound.getId());
             roundFacade.endRound(roomId, roundId);
+            updateNextRound(nextRound.getId());
         }
     }
 

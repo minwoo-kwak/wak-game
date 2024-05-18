@@ -81,7 +81,7 @@ public class RoundService {
                 .build();
     }
 
-    public void startThread(Long roomId, Long roundId) {
+    public void startThread(Long roomId, Long roundId, int playerCnt) {
 
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
@@ -91,7 +91,7 @@ public class RoundService {
         RoundFacade roundFacade = applicationContext.getBean(RoundFacade.class);
         RankFacade rankFacade = applicationContext.getBean(RankFacade.class);
 
-        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
+        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
         Thread thread = new Thread(clickProcessor);
         thread.start();
 
