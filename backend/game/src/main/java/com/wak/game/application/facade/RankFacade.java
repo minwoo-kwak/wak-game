@@ -33,7 +33,7 @@ public class RankFacade {
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
 
-    public void sendRank(long roomId) {
+    public void sendRank(Long roomId) {
         String key = "roomId:" + roomId + ":ranks";
         Map<String, RankInfo> map = redisUtil.getData(key, RankInfo.class);
 
@@ -43,7 +43,7 @@ public class RankFacade {
         socketUtil.sendMessage("/games/" + roomId + "/rank", new RankListResponse(ranks));
     }
 
-    public void updateRankings(clickVO click, long roomId) {
+    public void updateRankings(clickVO click, Long roomId) {
         Long userId = click.userId();
 
         String key = "roomId:" + roomId + ":ranks";
@@ -51,9 +51,9 @@ public class RankFacade {
         RankInfo rank = curRoundRanks.get(click.userId().toString());
 
         rank.updateKill();
-        curRoundRanks.put(Long.toString(userId), rank);
+        curRoundRanks.put(userId.toString(), rank);
 
-        redisUtil.saveData(key, Long.toString(userId), rank);
+        redisUtil.saveData(key, userId.toString(), rank);
     }
 
 }

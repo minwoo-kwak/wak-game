@@ -66,7 +66,7 @@ public class RoundService {
     }
 
 
-    public SummaryCountResponse getSummaryCount(long roomId, int roundNumber) {
+    public SummaryCountResponse getSummaryCount(Long roomId, int roundNumber) {
         String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> result = redisUtil.getData(key, PlayerInfo.class);
         int aliveCount = 0;
