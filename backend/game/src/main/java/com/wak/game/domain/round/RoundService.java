@@ -5,15 +5,11 @@ import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
-import com.wak.game.application.vo.RoomVO;
-import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.rank.dto.RankInfo;
-import com.wak.game.domain.round.dto.PlayerCount;
 import com.wak.game.domain.round.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
-import com.wak.game.domain.user.User;
+import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
@@ -86,7 +82,7 @@ public class RoundService {
                 .build();
     }
 
-    public void startThread(Long roomId, Long roundId) {
+    public void startThread(Long roomId, Long roundId, int playerCnt) {
 
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
@@ -95,8 +91,9 @@ public class RoundService {
         PlayerService playerService = applicationContext.getBean(PlayerService.class);
         RoundFacade roundFacade = applicationContext.getBean(RoundFacade.class);
         RankFacade rankFacade = applicationContext.getBean(RankFacade.class);
+        UserService userService = applicationContext.getBean(UserService.class);
 
-        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
+        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade, userService);
         Thread thread = new Thread(clickProcessor);
         thread.start();
 

@@ -1,50 +1,53 @@
 package com.wak.game.domain.round.thread;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.response.DashBoardResponse;
-import com.wak.game.application.response.PlayerInfoResponse;
+import com.wak.game.application.response.socket.FinalResultResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
 import com.wak.game.application.response.socket.ResultResponse;
 import com.wak.game.application.response.socket.RoundEndResultResponse;
-import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.rank.RankService;
-import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
-import com.wak.game.domain.round.dto.PlayerCount;
+import com.wak.game.domain.user.User;
+import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 
-import javax.xml.transform.Result;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
-    private Long roomId;
+    private final Long roomId;
     private Long roundId;
+    private Long round1Id;
+    private Long round2Id;
+    private Long round3Id;
+    private final int playerCount;
+    private int aliveCount;
     private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
     private final RoundService roundService;
     private final PlayerService playerService;
+    private final UserService userService;
     private final RoundFacade roundFacade;
     private final RankFacade rankFacade;
 
-    public ClickEventProcessor(Long roundId, Long roomId, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade) {
+    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade, UserService userService) {
         this.roundId = roundId;
+        this.round1Id = roundId;
         this.roomId = roomId;
+        this.playerCount = playerCnt;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
         this.socketUtil = socketUtil;
@@ -52,11 +55,12 @@ public class ClickEventProcessor implements Runnable {
         this.playerService = playerService;
         this.roundFacade = roundFacade;
         this.rankFacade = rankFacade;
+        this.userService = userService;
     }
 
     @Override
     public void run() {
-        countDown(3);
+        //countDown(3);
 
         while (running) {
             try {
@@ -65,8 +69,9 @@ public class ClickEventProcessor implements Runnable {
                 for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
                     clickVO click = clickDataList.get(i);
                     if (click != null) {
+                        System.out.println(click.userId() + "의 공격 처리!");
                         checkClickedUser(click);
-                        lastProcessedIndex = i + 1;
+                        lastProcessedIndex++;
                     }
                 }
 
@@ -100,11 +105,7 @@ public class ClickEventProcessor implements Runnable {
             roundFacade.sendDashBoard(roomId, round.getRoundNumber());
 
             // 생존자 수 업데이트
-            String countKey = "aliveAndTotalPlayers";
-            Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            PlayerCount playerCount = playerCountMap.get(roomId.toString());
-            playerCount.updateAliveCont();
-            redisUtil.saveData(countKey, roomId.toString(), playerCount);
+            --aliveCount;
 
             saveSuccessfulClick(click);
             socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
@@ -112,55 +113,113 @@ public class ClickEventProcessor implements Runnable {
             rankFacade.updateRankings(click, roomId);
             rankFacade.sendRank(roomId);
 
-            countDown(60);
+            //countDown(60);
 
-            playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            playerCount = playerCountMap.get(roundId.toString());
-
-            if (playerCount.getAliveCountA() > 1)
+            if (aliveCount > 1)
                 return;
 
             if (round.getRoundNumber() == 3) {
                 sendResult(null);
-                roundFacade.endRound(roomId);
                 stop();
             }
 
             Round nextRound = roundFacade.startNextRound(round);
             sendResult(nextRound.getId());
 
-            roundFacade.endRound(roomId);
-            updateRoundId(nextRound.getId());
+            roundFacade.endRound(roomId, roundId);
+            updateNextRound(nextRound.getId());
         }
     }
 
     private void sendResult(Long nextRoundId) {
-        String key = "roomId:" + roomId + ":users";
         Round round = roundService.findById(roundId);
-
-        Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + roomId + ":ranks", RankInfo.class);
-        Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
-
-        List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
-        sortedRanks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
-
         List<ResultResponse> results = new ArrayList<>();
-        int rank = 1;
 
-        for (RankInfo rankInfo : sortedRanks) {
-            Long userId = rankInfo.getUserId();
-            PlayerInfo player = playersMap.get(userId.toString());
-            if (player != null) {
-                ResultResponse result = new ResultResponse(
-                        userId,
-                        rank++,
-                        rankInfo.getKillCnt()
-                );
-                results.add(result);
-            }
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
+
+        for (Player player : playerMap.values()) {
+            Player murderPlayer = player.getMurderPlayer();
+            String murderNickname = (murderPlayer != null) ? murderPlayer.getUser().getNickname() : null;
+            String murderColor = (murderPlayer != null) ? murderPlayer.getUser().getColor().getHexColor() : null;
+
+            results.add(new ResultResponse(
+                    player.getUser().getId(),
+                    player.getRank(),
+                    player.getKillCount(),
+                    player.getAliveTime(),
+                    murderNickname,
+                    murderColor
+            ));
         }
 
-        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));
+        if (round.getRoundNumber() < 3) {
+            socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, null));
+            return;
+        }
+
+        List<FinalResultResponse> finals = getFinalResult();
+        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, finals));
+    }
+
+    private List<FinalResultResponse> getFinalResult() {
+
+        List<FinalResultResponse> finalResults = new ArrayList<>();
+
+        Map<Long, Player> playerR1Map = playerService.getPlayerMap(round1Id);//이거를 기준으로 한바퀴 돌면서
+        Map<Long, Player> playerR2Map = playerService.getPlayerMap(round2Id);
+        Map<Long, Player> playerR3Map = playerService.getPlayerMap(round3Id);
+
+        Round round1 = roundService.findById(round1Id);
+        Round round2 = roundService.findById(round2Id);
+        Round round3 = roundService.findById(round3Id);
+
+        int r1Time = (int) ChronoUnit.SECONDS.between(round1.getCreatedAt(), round1.getUpdatedAt());
+        int r2Time = (int) ChronoUnit.SECONDS.between(round2.getCreatedAt(), round2.getUpdatedAt()) - 30;
+        int r3Time = (int) ChronoUnit.SECONDS.between(round3.getCreatedAt(), round3.getUpdatedAt()) - 30;
+
+        int totalGameTime = r1Time + r2Time + r3Time;
+
+        for (Player playerR1 : playerR1Map.values()) {
+            Long userId = playerR1.getUser().getId();
+
+            Player playerR2 = playerR2Map.get(userId);
+            Player playerR3 = playerR3Map.get(userId);
+
+            int totalKillCount = playerR1.getKillCount() + (playerR2 != null ? playerR2.getKillCount() : 0) + (playerR3 != null ? playerR3.getKillCount() : 0);
+
+            long totalAliveNanoTime = parseNanoTime(playerR1.getAliveTime())
+                    + (playerR2 != null ? parseNanoTime(playerR2.getAliveTime()) : 0)
+                    + (playerR3 != null ? parseNanoTime(playerR3.getAliveTime()) : 0);
+
+            double totalAliveTime = totalAliveNanoTime / 1_000_000_000.0;
+            totalAliveTime = Math.round(totalAliveTime * 100.0) / 100.0;
+
+
+            finalResults.add(new FinalResultResponse(userId,totalGameTime, totalAliveTime, totalKillCount));
+        }
+
+        finalResults.sort(Comparator.comparing(FinalResultResponse::getTotalKillCount).reversed()
+                .thenComparing(FinalResultResponse::getTotalAliveTime));
+
+        String winnerName=null;
+        String winnerColor=null;
+        for (int i = 0; i < finalResults.size(); i++) {
+            if(i==0){
+                winnerName= userService.findById(finalResults.get(i).getUserId()).toString();
+                winnerColor= userService.findById(finalResults.get(i).getUserId()).getColor().getHexColor();
+            }
+            finalResults.get(i).updateRank(i + 1);
+            finalResults.get(i).updateWinner(winnerName,winnerColor);
+        }
+
+        return finalResults;
+    }
+
+    private long parseNanoTime(String nanoTime) {
+        String[] parts = nanoTime.split(":");
+        long minutes = Long.parseLong(parts[0]);
+        long seconds = Long.parseLong(parts[1]);
+        return minutes * 60 * 1_000_000_000L + seconds * 1_000_000_000L;
     }
 
     private void countDown(int sec) {
@@ -197,8 +256,21 @@ public class ClickEventProcessor implements Runnable {
         running = false;
     }
 
-    private void updateRoundId(Long newRoundId) {
+    private void updateNextRound(Long newRoundId) {
+        Round round = roundService.findById(roundId);
+
+        if (round.getRoundNumber() == 3)
+            return;
+
+        if (round.getRoundNumber() == 1) {
+            this.round2Id = newRoundId;
+        }
+
+        if (round.getRoundNumber() == 2) {
+            this.round3Id = newRoundId;
+        }
         this.roundId = newRoundId;
+        this.aliveCount = playerCount;
     }
 
 }
