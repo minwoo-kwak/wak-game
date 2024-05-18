@@ -15,7 +15,6 @@ public enum ErrorInfo {
     /* COLOR */
     COLOR_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "COLOR IS NOT FOUND"),
 
-
     /* USER */
     USER_NOT_EXIST(HttpStatus.NOT_FOUND, "USER IS NOT FOUND"),
     USER_ALREADY_EXIST(HttpStatus.NOT_FOUND, "USER IS ALREADY FOUND"),

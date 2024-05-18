@@ -1,24 +1,17 @@
 package com.wak.game.domain.round.thread;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.response.DashBoardResponse;
-import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
 import com.wak.game.application.response.socket.ResultResponse;
 import com.wak.game.application.response.socket.RoundEndResultResponse;
-import com.wak.game.application.vo.RoomVO;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.rank.RankService;
-import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
-import com.wak.game.domain.round.dto.PlayerCount;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
