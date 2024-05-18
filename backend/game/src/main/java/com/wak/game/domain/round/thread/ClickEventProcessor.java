@@ -58,7 +58,7 @@ public class ClickEventProcessor implements Runnable {
         this.roundFacade = roundFacade;
         this.rankFacade = rankFacade;
         this.userService = userService;
-        this.timeUtil= timeUtil;
+        this.timeUtil = timeUtil;
     }
 
     @Override
@@ -136,6 +136,13 @@ public class ClickEventProcessor implements Runnable {
 
     private void sendResult(Long nextRoundId) {
         Round round = roundService.findById(roundId);
+        int playTime;
+
+        if (round.getRoundNumber() == 1)
+            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 3;
+        else
+            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 60;
+
         List<ResultResponse> results = new ArrayList<>();
 
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
@@ -149,6 +156,7 @@ public class ClickEventProcessor implements Runnable {
                     player.getUser().getId(),
                     player.getRank(),
                     player.getKillCount(),
+                    playTime,
                     timeUtil.nanoToDouble(Long.parseLong(player.getAliveTime())),
                     murderNickname,
                     murderColor
@@ -196,21 +204,21 @@ public class ClickEventProcessor implements Runnable {
 
             double totalAliveTime = timeUtil.nanoToDouble(totalAliveNanoTime);
 
-            finalResults.add(new FinalResultResponse(userId,totalGameTime, totalAliveTime, totalKillCount));
+            finalResults.add(new FinalResultResponse(userId, totalGameTime, totalAliveTime, totalKillCount));
         }
 
         finalResults.sort(Comparator.comparing(FinalResultResponse::getTotalKillCount).reversed()
                 .thenComparing(FinalResultResponse::getTotalAliveTime));
 
-        String winnerName=null;
-        String winnerColor=null;
+        String winnerName = null;
+        String winnerColor = null;
         for (int i = 0; i < finalResults.size(); i++) {
-            if(i==0){
-                winnerName= userService.findById(finalResults.get(i).getUserId()).toString();
-                winnerColor= userService.findById(finalResults.get(i).getUserId()).getColor().getHexColor();
+            if (i == 0) {
+                winnerName = userService.findById(finalResults.get(i).getUserId()).toString();
+                winnerColor = userService.findById(finalResults.get(i).getUserId()).getColor().getHexColor();
             }
             finalResults.get(i).updateRank(i + 1);
-            finalResults.get(i).updateWinner(winnerName,winnerColor);
+            finalResults.get(i).updateWinner(winnerName, winnerColor);
         }
 
         return finalResults;
