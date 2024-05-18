@@ -45,20 +45,6 @@ public class RoundController {
         return ResponseEntity.ok(ApiUtils.success(gameStartResponse));
     }
 
-    /*@Operation(
-            summary = "게임 시작 시 publish 요청",
-            description = "게임 시작 시 대시보드 대한 정보를 publish 요청하는 API 입니다.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "dashboard 초기값 반환 성공")
-            },
-            security = {@SecurityRequirement(name = "Access-Token")}
-    )
-    @GetMapping("/{round-id}/dashboard")
-    public ResponseEntity<ApiResult<Void>> getDashBoard(@DestinationVariable("round-id") Long roundId) {
-        roundFacade.sendDashBoard(roundId);
-        return ResponseEntity.ok(ApiUtils.success(null));
-    }*/
-
     @Operation(
             summary = "게임 시작 시 publish 요청",
             description = "게임 시작 시 랭킹에 대한 정보를 publish 요청하는 API 입니다.",
