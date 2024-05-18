@@ -12,6 +12,8 @@ const useGameStore = create(
     (set) => ({
       gameData: {
         roundId: -1,
+        nextRoundId: -1,
+        roundNumber: 1,
         roomName: '',
         hostName: '',
         comment: '',

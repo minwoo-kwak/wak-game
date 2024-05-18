@@ -54,6 +54,7 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
   const [userChatting, setUserChatting] = useState<string[][]>(
     chattingData ? JSON.parse(chattingData) : []
   );
+  const [reset, setReset] = useState(false);
   const clientRef = useRef<CompatClient | null>(null);
 
   let url: string;
@@ -84,6 +85,7 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
       color: userData.color,
     });
     clientRef.current?.send(`/topic/${url}`, header, message);
+    setReset(true);
   };
 
   const connectChatHandler = () => {
@@ -122,6 +124,12 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (reset) {
+      setReset(false);
+    }
+  }, [reset]);
+
   return (
     <WhiteBox mode={isShort ? 'MEDIUM' : 'TALL'} width='32rem'>
       <GrayTitleBox text={text} />
@@ -137,7 +145,12 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
         })}
       </ChatBlock>
       <FlexLayout gap='1rem'>
-        <Input name='chatting' onChange={handleChange} />
+        <Input
+          name='chatting'
+          reset={reset}
+          onChange={handleChange}
+          handleKeyDown={handleClick}
+        />
         <Button label={`전송`} onClick={handleClick} />
       </FlexLayout>
     </WhiteBox>

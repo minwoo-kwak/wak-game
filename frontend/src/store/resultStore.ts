@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ResultTypes } from '../types/GameTypes';
+import { ResultTypes } from '../types/ResultTypes';
 
 interface Store {
   resultData: ResultTypes;
@@ -7,7 +7,15 @@ interface Store {
 }
 
 const useResultStore = create<Store>((set) => ({
-  resultData: { isFinished: true, roundNumber: 0, rank: 0 } as ResultTypes,
+  resultData: {
+    userId: 0,
+    killCount: 0,
+    rank: 0,
+    playTime: 0,
+    aliveTime: 0,
+    victim: '',
+    victimColor: '',
+  } as ResultTypes,
   setResultData: (resultData: ResultTypes) =>
     set(() => ({ resultData: { ...resultData } })),
 }));
