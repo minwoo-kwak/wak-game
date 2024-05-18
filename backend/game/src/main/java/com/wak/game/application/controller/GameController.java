@@ -1,8 +1,7 @@
 package com.wak.game.application.controller;
 
 import com.wak.game.application.facade.PlayerFacade;
-import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.request.ClickRequest;
+import com.wak.game.application.request.socket.ClickRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
@@ -15,6 +14,6 @@ public class GameController {
 
     @MessageMapping("/click/{roomId}")
     public void handleClick(@RequestBody ClickRequest clickRequest) {
-        playerFacade.saveClickLog( clickRequest);
+        playerFacade.saveClickLog(clickRequest);
     }
 }

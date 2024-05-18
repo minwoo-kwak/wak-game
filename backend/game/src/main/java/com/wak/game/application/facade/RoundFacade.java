@@ -1,40 +1,38 @@
 package com.wak.game.application.facade;
 
 import com.wak.game.application.request.GameStartRequest;
-import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
-import com.wak.game.application.response.socket.BattleFeildInGameResponse;
-import com.wak.game.application.response.socket.RankListResponse;
-import com.wak.game.application.response.socket.ResultResponse;
-import com.wak.game.application.response.socket.RoundInfoResponse;
+import com.wak.game.application.response.socket.*;
 import com.wak.game.application.vo.RoomVO;
+import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
+import com.wak.game.domain.playerLog.PlayerLog;
+import com.wak.game.domain.playerLog.PlayerLogService;
 import com.wak.game.domain.rank.dto.RankInfo;
 import com.wak.game.domain.room.dto.RoomInfo;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
-import com.wak.game.domain.round.dto.PlayerCount;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
+import com.wak.game.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -43,10 +41,12 @@ public class RoundFacade {
 
     private final RoundService roundService;
     private final PlayerService playerService;
+    private final PlayerLogService playerLogService;
     private final RoomService roomService;
     private final UserService userService;
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
+    private final TimeUtil timeUtil;
 
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
         User user = userService.findById(userId);
@@ -66,21 +66,18 @@ public class RoundFacade {
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        initializeGameStatuses(room, round);
+        int playerCnt = initializeGameStatuses(room, round);
 
-        roundService.startThread(room.getId(), round.getId());
+        roundService.startThread(room.getId(), round.getId(), playerCnt);
 
         socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId()));
 
         return GameStartResponse.of(round.getId());
     }
 
-    public void initializeGameStatuses(Room room, Round round) {
-
+    public int initializeGameStatuses(Room room, Round round) {
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
 
-        int teamATotal = 0;
-        int teamBTotal = 0;
         List<Player> players = new ArrayList<>();
         List<PlayerInfo> p = new ArrayList<>();
 
@@ -116,50 +113,105 @@ public class RoundFacade {
                     .build();
 
             players.add(player);
-
-            if (roomUser.team().equals("A")) {
-                teamATotal++;
-            } else if (roomUser.team().equals("B")) {
-                teamBTotal++;
-            }
         }
 
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
         socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
-
-        String key = "aliveAndTotalPlayers";
-        PlayerCount count = PlayerCount.builder()
-                .aliveCountA(teamATotal)
-                .totalCountA(teamATotal)
-                .aliveCountB(teamBTotal)
-                .totalCountB(teamBTotal)
-                .build();
-
-        redisUtil.saveData(key, room.getId().toString(), count);
+        return players.size();
     }
 
     public Round startNextRound(Round previousRound) {
         return roundService.startNextRound(previousRound);
     }
 
-    public void endRound(Long roomId) {
-        Round round = roundService.findById(roomId);
+    public void endRound(Long roomId, Long roundId) {
+        Round round = roundService.findById(roundId);
         Room room = roomService.findById(round.getRoom().getId());
-
         roomService.isNotInGame(room);
 
-        redisUtil.deleteKey("roomId:" + roomId + ":users");
-        redisUtil.deleteKey("roomId:" + roomId + ":ranks");
-        // todo: availableClicks에 있는 정보에 기반한 players 로그들 다 저장한다.
-        // todo: 모든 클릭 로그들을 player_logs에 저장한다.
+        Map<String, clickVO> attacks = redisUtil.getData("roomId:" + roomId + ":availableClicks", clickVO.class);
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
 
-        if ((room.getMode().toString().equals("SOLO") && round.getRoundNumber() == 3)
-                || room.getMode().toString().equals("TEAM")) {
-            endGame(room);
+        Long startTime = timeUtil.toNanoOfEpoch(round.getCreatedAt());
+
+        for (clickVO attack : attacks.values()) {
+            Long murderId = attack.userId();
+            Long victimId = attack.victimId();
+            Player murderPlayer = playerMap.get(murderId);
+            Player victimPlayer = playerMap.get(victimId);
+
+            if (victimPlayer == null && murderPlayer == null)
+                throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
+
+            Long attackTime = attack.nanoSec();
+            long aliveTime = attackTime - startTime;
+
+            victimPlayer.updateOnAttack(murderPlayer, Long.toString(aliveTime));
+
+            playerService.save(victimPlayer);
         }
 
+        updateRanks(roomId, room, round, playerMap);
+
+        savePlayerLogs(roomId, roundId);
+        clearRedis(roomId);
+
+        checkAndEndGame(room, round);
+    }
+
+    private void savePlayerLogs(Long roomId, Long roundId) {
+        Map<String, clickVO> data = redisUtil.getData("roomId:" + roomId + ":clicks", clickVO.class);
+
+        if (data == null) {
+            throw new BusinessException(ErrorInfo.ClICK_LOG_IS_EMPTY);
+        }
+
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
+
+        List<PlayerLog> logs = data.values().stream()
+                .map(click -> playerLogService.createPlayerLog(click, playerMap))
+                .collect(Collectors.toList());
+
+        playerLogService.saveAll(logs);
+    }
+
+    private void updateRanks(Long roomId, Room room, Round round, Map<Long, Player> playersMap) {
+        Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + room.getId() + ":ranks", RankInfo.class);
+
+        List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
+        sortedRanks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
+
+        int rank = 1;
+        for (RankInfo rankInfo : sortedRanks) {
+            Long userId = rankInfo.getUserId();
+            Player player = playersMap.get(userId);
+
+            if (player == null)
+                throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
+
+            player.updateRankAncKillCnt(rankInfo.getKillCnt(), rank++);
+        }
+    }
+
+    private void clearRedis(Long roomId) {
+        String firstKey = "roomId:" + roomId;
+
+        redisUtil.deleteKey(firstKey + ":users");
+        redisUtil.deleteKey(firstKey + ":ranks");
+        redisUtil.deleteKey(firstKey + ":clicks");
+        redisUtil.deleteKey(firstKey + ":availableClicks");
+    }
+
+    private void checkAndEndGame(Room room, Round round) {
+        boolean isSoloMode = room.getMode().toString().equals("SOLO");
+        boolean isTeamMode = room.getMode().toString().equals("TEAM");
+        boolean isFinalSoloRound = isSoloMode && round.getRoundNumber() == 3;
+
+        if (isFinalSoloRound || isTeamMode) {
+            endGame(room);
+        }
     }
 
     public void endGame(Room room) {
@@ -180,7 +232,7 @@ public class RoundFacade {
         socketUtil.sendMessage("/games/" + roomId + "/dashboard", summaryCount);
     }
 
-    public void sendBattleField(long roomId,  boolean isFinished) {
+    public void sendBattleField(long roomId, boolean isFinished) {
         roomService.findById(roomId);
 
         String key = "roomId:" + roomId + ":users";

@@ -1,4 +1,4 @@
-package com.wak.game.application.request;
+package com.wak.game.application.request.socket;
 
 import lombok.Builder;
 import lombok.Getter;
