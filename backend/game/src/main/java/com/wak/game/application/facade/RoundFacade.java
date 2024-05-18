@@ -66,21 +66,18 @@ public class RoundFacade {
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        initializeGameStatuses(room, round);
+        int playerCnt = initializeGameStatuses(room, round);
 
-        roundService.startThread(room.getId(), round.getId());
+        roundService.startThread(room.getId(), round.getId(), playerCnt);
 
         socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId()));
 
         return GameStartResponse.of(round.getId());
     }
 
-    public void initializeGameStatuses(Room room, Round round) {
-
+    public int initializeGameStatuses(Room room, Round round) {
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
 
-        int teamATotal = 0;
-        int teamBTotal = 0;
         List<Player> players = new ArrayList<>();
         List<PlayerInfo> p = new ArrayList<>();
 
@@ -116,28 +113,13 @@ public class RoundFacade {
                     .build();
 
             players.add(player);
-
-            if (roomUser.team().equals("A")) {
-                teamATotal++;
-            } else if (roomUser.team().equals("B")) {
-                teamBTotal++;
-            }
         }
 
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
         socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
-
-        String key = "aliveAndTotalPlayers";
-        PlayerCount count = PlayerCount.builder()
-                .aliveCountA(teamATotal)
-                .totalCountA(teamATotal)
-                .aliveCountB(teamBTotal)
-                .totalCountB(teamBTotal)
-                .build();
-
-        redisUtil.saveData(key, room.getId().toString(), count);
+        return players.size();
     }
 
     public Round startNextRound(Round previousRound) {

@@ -33,6 +33,8 @@ public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
     private Long roomId;
     private Long roundId;
+    private final int playerCount;
+    private int aliveCount;
     private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
     private ObjectMapper objectMapper;
@@ -42,9 +44,10 @@ public class ClickEventProcessor implements Runnable {
     private final RoundFacade roundFacade;
     private final RankFacade rankFacade;
 
-    public ClickEventProcessor(Long roundId, Long roomId, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade) {
+    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade) {
         this.roundId = roundId;
         this.roomId = roomId;
+        this.playerCount = playerCnt;
         this.redisUtil = redisUtil;
         this.objectMapper = objectMapper;
         this.socketUtil = socketUtil;
@@ -100,11 +103,7 @@ public class ClickEventProcessor implements Runnable {
             roundFacade.sendDashBoard(roomId, round.getRoundNumber());
 
             // 생존자 수 업데이트
-            String countKey = "aliveAndTotalPlayers";
-            Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            PlayerCount playerCount = playerCountMap.get(roomId.toString());
-            playerCount.updateAliveCont();
-            redisUtil.saveData(countKey, roomId.toString(), playerCount);
+            --aliveCount;
 
             saveSuccessfulClick(click);
             socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
@@ -114,10 +113,7 @@ public class ClickEventProcessor implements Runnable {
 
             countDown(60);
 
-            playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            playerCount = playerCountMap.get(roundId.toString());
-
-            if (playerCount.getAliveCountA() > 1)
+            if (aliveCount > 1)
                 return;
 
             if (round.getRoundNumber() == 3) {
