@@ -131,29 +131,24 @@ public class ClickEventProcessor implements Runnable {
     }
 
     private void sendResult(Long nextRoundId) {
-        String key = "roomId:" + roomId + ":users";
         Round round = roundService.findById(roundId);
-
-        Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + roomId + ":ranks", RankInfo.class);
-        Map<String, PlayerInfo> playersMap = redisUtil.getData(key, PlayerInfo.class);
-
-        List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
-        sortedRanks.sort((r1, r2) -> Integer.compare(r2.getKillCnt(), r1.getKillCnt()));
-
         List<ResultResponse> results = new ArrayList<>();
-        int rank = 1;
 
-        for (RankInfo rankInfo : sortedRanks) {
-            Long userId = rankInfo.getUserId();
-            PlayerInfo player = playersMap.get(userId.toString());
-            if (player != null) {
-                ResultResponse result = new ResultResponse(
-                        userId,
-                        rank++,
-                        rankInfo.getKillCnt()
-                );
-                results.add(result);
-            }
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
+
+        for (Player player : playerMap.values()) {
+            Player murderPlayer = player.getMurderPlayer();
+            String murderNickname = (murderPlayer != null) ? murderPlayer.getUser().getNickname() : null;
+            String murderColor = (murderPlayer != null) ? murderPlayer.getUser().getColor().getHexColor() : null;
+
+            results.add(new ResultResponse(
+                    player.getUser().getId(),
+                    player.getRank(),
+                    player.getKillCount(),
+                    player.getAliveTime(),
+                    murderNickname,
+                    murderColor
+            ));
         }
 
         socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results));

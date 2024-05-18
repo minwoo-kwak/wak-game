@@ -4,12 +4,15 @@ import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.Round;
+import com.wak.game.global.error.ErrorInfo;
+import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +59,19 @@ public class PlayerService {
     public void savePlayers(List<Player> players) {
         playerRepository.saveAll(players);
     }
+
+    public List<Player> findByRoundId(Long roundId) {
+        List<Player> allByRoundId = playerRepository.findAllByRoundId(roundId);
+        if(allByRoundId==null)
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
+
+        return allByRoundId;
+    }
+
+    public void save(Player victim) {
+        playerRepository.save(victim);
+    }
+
     public Map<Long, Player> getPlayerMap(Long roundId){
         List<Player> players = findByRoundId(roundId);
         Map<Long, Player> playerMap = new HashMap<>();
