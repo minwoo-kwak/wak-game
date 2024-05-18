@@ -9,6 +9,7 @@ import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
+import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
@@ -90,8 +91,9 @@ public class RoundService {
         PlayerService playerService = applicationContext.getBean(PlayerService.class);
         RoundFacade roundFacade = applicationContext.getBean(RoundFacade.class);
         RankFacade rankFacade = applicationContext.getBean(RankFacade.class);
+        UserService userService = applicationContext.getBean(UserService.class);
 
-        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade);
+        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade, userService);
         Thread thread = new Thread(clickProcessor);
         thread.start();
 
