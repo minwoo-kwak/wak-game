@@ -17,7 +17,6 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 
-import javax.xml.transform.Result;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -182,8 +181,9 @@ public class ClickEventProcessor implements Runnable {
         running = false;
     }
 
-    private void updateRoundId(Long newRoundId) {
+    private void updateNextRound(Long newRoundId) {
         this.roundId = newRoundId;
+        this.aliveCount = playerCount;
     }
 
 }
