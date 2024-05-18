@@ -35,14 +35,14 @@ public class PlayerFacade {
     private final RoomService roomService;
     private final TimeUtil timeUtil;
 
-    public void saveClickLog(Long roomId, ClickRequest request) {
+    public void saveClickLog(ClickRequest request) {
 
-        Room room = roomService.findById(roomId);
+        Room room = roomService.findById(request.getRoomId());
 
         Round round = roundService.findById(request.getRoundId());
         User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
-        String currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
+        Long currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
         clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
 
         playerService.saveClickLog(room.getId(), click);
