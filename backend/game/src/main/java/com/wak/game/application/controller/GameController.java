@@ -25,7 +25,7 @@ public class GameController {
     private final RoundFacade roundFacade;
 
     @MessageMapping("/click/{roomId}")
-    public void handleClick(@PathVariable long roomId, ClickRequest clickRequest) {
+    public void handleClick(@PathVariable Long roomId, ClickRequest clickRequest) {
         playerFacade.saveClickLog(roomId,clickRequest);
     }
 }
