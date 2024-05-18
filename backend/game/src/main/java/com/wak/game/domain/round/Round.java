@@ -38,4 +38,8 @@ public class Round extends BaseEntity {
         this.aggro = aggro;
         this.showNickname = showNickname;
     }
+
+    public void finish() {
+        updateDeleted(true);
+    }
 }
