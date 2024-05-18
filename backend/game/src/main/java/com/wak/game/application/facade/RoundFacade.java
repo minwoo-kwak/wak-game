@@ -1,7 +1,6 @@
 package com.wak.game.application.facade;
 
 import com.wak.game.application.request.GameStartRequest;
-import com.wak.game.application.response.DashBoardResponse;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.response.socket.*;
@@ -18,7 +17,6 @@ import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
-import com.wak.game.domain.round.dto.PlayerCount;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
@@ -233,7 +231,7 @@ public class RoundFacade {
         socketUtil.sendMessage("/games/" + roomId + "/dashboard", summaryCount);
     }
 
-    public void sendBattleField(long roomId,  boolean isFinished) {
+    public void sendBattleField(long roomId, boolean isFinished) {
         roomService.findById(roomId);
 
         String key = "roomId:" + roomId + ":users";

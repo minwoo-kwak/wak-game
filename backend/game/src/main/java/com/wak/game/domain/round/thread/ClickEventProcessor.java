@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
-    private Long roomId;
+    private final Long roomId;
     private Long roundId;
     private final int playerCount;
     private int aliveCount;
@@ -116,9 +116,10 @@ public class ClickEventProcessor implements Runnable {
             if (aliveCount > 1)
                 return;
 
+            roundFacade.endRound(roomId, roundId);
+
             if (round.getRoundNumber() == 3) {
                 sendResult(null);
-                roundFacade.endRound(roomId);
                 stop();
             }
 
@@ -127,6 +128,7 @@ public class ClickEventProcessor implements Runnable {
 
             roundFacade.endRound(roomId);
             updateRoundId(nextRound.getId());
+            roundFacade.endRound(roomId, roundId);
         }
     }
 
