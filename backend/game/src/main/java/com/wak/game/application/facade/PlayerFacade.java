@@ -1,12 +1,12 @@
 package com.wak.game.application.facade;
 
 import com.wak.game.application.request.socket.ClickRequest;
-import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
+import com.wak.game.domain.round.dto.ClickDTO;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.util.TimeUtil;
@@ -32,7 +32,7 @@ public class PlayerFacade {
         User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
         Long currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
-        clickVO click = new clickVO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
+        ClickDTO click = new ClickDTO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
 
         playerService.saveClickLog(room.getId(), click);
     }

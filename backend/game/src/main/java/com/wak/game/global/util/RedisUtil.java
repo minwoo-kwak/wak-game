@@ -31,11 +31,12 @@ public class RedisUtil {
     public <T> void saveToList(String key, T data) {
         try {
             String jsonData = objectMapper.writeValueAsString(data);
-            redisTemplate.opsForList().rightPush(key, jsonData);
+            redisTemplate.opsForList().rightPush(key, jsonData); // JSON 직렬화한 데이터를 리스트에 추가
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error serializing data to Redis", e);
         }
     }
+
 
     public <T> Map<String, T> getData(String key, Class<T> classType) {
         Map<Object, Object> map = redisTemplate.opsForHash().entries(key);
@@ -54,13 +55,18 @@ public class RedisUtil {
         return serializedData.stream()
                 .map(data -> {
                     try {
-                        return objectMapper.readValue(String.valueOf(data), classType);
+                        String json = (String) data; // JSON 문자열로 변환
+                        System.out.println("Deserializing data: " + json); // 디버깅을 위한 로그
+                        return objectMapper.readValue(json, classType);
                     } catch (JsonProcessingException e) {
+                        System.err.println("Error deserializing data: " + data); // 에러 로그
                         throw new RuntimeException("Error deserializing data from Redis", e);
                     }
                 })
                 .collect(Collectors.toList());
     }
+
+
 
 
     public void deleteKey(String key) {
