@@ -5,7 +5,6 @@ import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.response.socket.*;
 import com.wak.game.application.vo.RoomVO;
-import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
@@ -17,6 +16,7 @@ import com.wak.game.domain.room.Room;
 import com.wak.game.domain.room.RoomService;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
+import com.wak.game.domain.round.dto.ClickDTO;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,7 @@ public class RoundFacade {
 
         roomInfo.gameStart();
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+        redisUtil.saveData("mention", String.valueOf(room.getId()), gameStartRequest.getComment());
 
         roomService.gameStart(room);
         return startRound(gameStartRequest, room);
@@ -68,7 +70,10 @@ public class RoundFacade {
         Round round = roundService.startRound(room, gameStartRequest);
         int playerCnt = initializeGameStatuses(room, round);
 
+        System.out.println("playerCnt:" + playerCnt);
+
         roundService.startThread(room.getId(), round.getId(), playerCnt);
+        System.out.println("player");
 
         socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId(), round.getShowNickname()));
 
@@ -104,7 +109,7 @@ public class RoundFacade {
                     .user(user)
                     .round(round)
                     .stamina(1)
-                    .aliveTime("0:00")
+                    .aliveTime("0")
                     .killCount(0)
                     .rank(0)
                     .isPlayer(true)
@@ -132,21 +137,21 @@ public class RoundFacade {
         Room room = roomService.findById(round.getRoom().getId());
         roomService.isNotInGame(room);
 
-        Map<String, clickVO> attacks = redisUtil.getData("roomId:" + roomId + ":availableClicks", clickVO.class);
+        List<ClickDTO> attacks = redisUtil.getListData("roomId:" + roomId + ":availableClicks", ClickDTO.class);
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
 
         Long startTime = timeUtil.toNanoOfEpoch(round.getCreatedAt());
 
-        for (clickVO attack : attacks.values()) {
-            Long murderId = attack.userId();
-            Long victimId = attack.victimId();
+        for (ClickDTO attack : attacks) {
+            Long murderId = attack.getUserId();
+            Long victimId = attack.getVictimId();
             Player murderPlayer = playerMap.get(murderId);
             Player victimPlayer = playerMap.get(victimId);
 
             if (victimPlayer == null && murderPlayer == null)
                 throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
 
-            Long attackTime = attack.nanoSec();
+            Long attackTime = attack.getNanoSec();
             long aliveTime = attackTime - startTime;
 
             victimPlayer.updateOnAttack(murderPlayer, Long.toString(aliveTime));
@@ -158,25 +163,25 @@ public class RoundFacade {
 
         savePlayerLogs(roomId, roundId);
         clearRedis(roomId);
-
         checkAndEndGame(room, round);
     }
 
     private void savePlayerLogs(Long roomId, Long roundId) {
-        Map<String, clickVO> data = redisUtil.getData("roomId:" + roomId + ":clicks", clickVO.class);
+        List<ClickDTO> data = redisUtil.getListData("roomId:" + roomId + ":clicks", ClickDTO.class);
 
-        if (data == null) {
+        if (data == null || data.isEmpty()) {
             throw new BusinessException(ErrorInfo.ClICK_LOG_IS_EMPTY);
         }
 
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
 
-        List<PlayerLog> logs = data.values().stream()
+        List<PlayerLog> logs = data.stream()
                 .map(click -> playerLogService.createPlayerLog(click, playerMap))
                 .collect(Collectors.toList());
 
         playerLogService.saveAll(logs);
     }
+
 
     private void updateRanks(Long roomId, Room room, Round round, Map<Long, Player> playersMap) {
         Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + room.getId() + ":ranks", RankInfo.class);
@@ -246,5 +251,9 @@ public class RoundFacade {
         }
 
         socketUtil.sendMessage("/games/" + roomId + "/battle-field", new BattleFeildInGameResponse(isFinished, players));
+    }
+
+    public void sendMention(Long roomId) {
+
     }
 }

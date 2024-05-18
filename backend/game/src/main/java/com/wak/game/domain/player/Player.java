@@ -77,4 +77,8 @@ public class Player extends BaseEntity {
         this.killCount = killCnt;
         this.rank = i;
     }
+
+    public void updateWinnerAliveTime(String time) {
+        this.aliveTime = time;
+    }
 }

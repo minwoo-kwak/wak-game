@@ -1,7 +1,7 @@
 package com.wak.game.domain.playerLog;
 
-import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
+import com.wak.game.domain.round.dto.ClickDTO;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ public class PlayerLogService {
         playerLogRepository.saveAll(logs);
     }
 
-    public PlayerLog createPlayerLog(clickVO click, Map<Long, Player> playerMap) {
-        Player player = playerMap.get(click.userId());
+    public PlayerLog createPlayerLog(ClickDTO click, Map<Long, Player> playerMap) {
+        Player player = playerMap.get(click.getUserId());
 
         if (player == null) {
             throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
