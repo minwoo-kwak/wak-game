@@ -46,6 +46,7 @@ public class RoundFacade {
     private final UserService userService;
     private final RedisUtil redisUtil;
     private final SocketUtil socketUtil;
+    private final TimeUtil timeUtil;
 
     public GameStartResponse startGame(GameStartRequest gameStartRequest, Long roomId, Long userId) {
         User user = userService.findById(userId);
