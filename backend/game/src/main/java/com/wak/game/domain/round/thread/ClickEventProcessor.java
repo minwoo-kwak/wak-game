@@ -7,12 +7,12 @@ import com.wak.game.application.response.socket.FinalResultResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
 import com.wak.game.application.response.socket.ResultResponse;
 import com.wak.game.application.response.socket.RoundEndResultResponse;
-import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
+import com.wak.game.domain.round.dto.ClickDTO;
 import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
@@ -20,8 +20,8 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import com.wak.game.global.util.TimeUtil;
+import jakarta.transaction.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -63,16 +63,17 @@ public class ClickEventProcessor implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("스레드 시작");
         //countDown(3);
 
         while (running) {
             try {
-                List<clickVO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", clickVO.class);
+                List<ClickDTO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", ClickDTO.class);
 
                 for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
-                    clickVO click = clickDataList.get(i);
+                    ClickDTO click = clickDataList.get(i);
                     if (click != null) {
-                        System.out.println(click.userId() + "의 공격 처리!");
+                        System.out.println(click.getUserId() + "의 공격 처리!");
                         checkClickedUser(click);
                         lastProcessedIndex++;
                     }
@@ -87,19 +88,19 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-    private void checkClickedUser(clickVO click) {
-        if (!click.roundId().equals(this.roundId))
+    private void checkClickedUser(ClickDTO click) {
+        if (!click.getRoundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
         String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
-        PlayerInfo user = data.get(click.userId().toString());
-        PlayerInfo victim = data.get(click.victimId().toString());
+        PlayerInfo user = data.get(click.getUserId().toString());
+        PlayerInfo victim = data.get(click.getVictimId().toString());
 
 
         if (isAlive(user) && isAlive(victim)) {
-            Round round = roundService.findById(click.roundId());
+            Round round = roundService.findById(click.getRoundId());
 
             victim.updateStamina(-1);
             redisUtil.saveData(key, victim.getUserId().toString(), victim);
@@ -111,7 +112,7 @@ public class ClickEventProcessor implements Runnable {
             --aliveCount;
 
             saveSuccessfulClick(click);
-            socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
+            socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.getRoundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
 
             rankFacade.updateRankings(click, roomId);
             rankFacade.sendRank(roomId);
@@ -121,6 +122,7 @@ public class ClickEventProcessor implements Runnable {
             if (aliveCount > 1)
                 return;
 
+            roundFacade.endRound(roomId, roundId);
             System.out.println("라운드 종료!");
 
             if (round.getRoundNumber() == 3) {
@@ -131,19 +133,20 @@ public class ClickEventProcessor implements Runnable {
             Round nextRound = roundFacade.startNextRound(round);
             sendResult(nextRound.getId());
 
-            roundFacade.endRound(roomId, roundId);
             updateNextRound(nextRound.getId());
         }
     }
 
-    private void sendResult(Long nextRoundId) {
+    @Transactional
+    protected void sendResult(Long nextRoundId) {
         Round round = roundService.findById(roundId);
         int playTime;
 
-        if (round.getRoundNumber() == 1)
-            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 3;
-        else
+        if (round.getRoundNumber() == 1) {
+            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) ;
+        } else {
             playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 60;
+        }
 
         System.out.println("플레이 시간: " + playTime);
         List<ResultResponse> results = new ArrayList<>();
@@ -152,8 +155,17 @@ public class ClickEventProcessor implements Runnable {
 
         for (Player player : playerMap.values()) {
             Player murderPlayer = player.getMurderPlayer();
-            String murderNickname = (murderPlayer != null) ? murderPlayer.getUser().getNickname() : null;
-            String murderColor = (murderPlayer != null) ? murderPlayer.getUser().getColor().getHexColor() : null;
+
+            String murderNickname = null;
+            String murderColor = null;
+            if (murderPlayer != null) {
+                User murderUser = userService.findById(murderPlayer.getUser().getId());
+                murderNickname = murderUser.getNickname();
+                murderColor = murderUser.getColor().getHexColor();
+            }
+
+            User playerUser = userService.findById(player.getUser().getId());
+            String playerNickname = playerUser.getNickname();
 
             results.add(new ResultResponse(
                     player.getUser().getId(),
@@ -165,7 +177,7 @@ public class ClickEventProcessor implements Runnable {
                     murderColor
             ));
 
-            System.out.println(murderNickname + "->" + player.getUser().getNickname());
+            System.out.println(murderNickname + "->" + playerNickname); // player.getUser().getNickname() 대신 playerNickname 사용
         }
 
         if (round.getRoundNumber() < 3) {
@@ -257,14 +269,15 @@ public class ClickEventProcessor implements Runnable {
         return user.getStamina() > 0;
     }
 
-    private void saveSuccessfulClick(clickVO click) {
+    private void saveSuccessfulClick(ClickDTO click) {
         String key = "roomId:" + roomId + ":availableClicks";
 
         try {
             String clickData = objectMapper.writeValueAsString(click);
-            redisUtil.saveToList(key, clickData);
+            System.out.println("Saving click data: " + clickData);  // 저장되는 데이터 로그
+
         } catch (Exception e) {
-            throw new RuntimeException("Error serializing clickVO", e);
+            throw new RuntimeException("Error serializing ClickDTO", e);
         }
     }
 
@@ -287,6 +300,7 @@ public class ClickEventProcessor implements Runnable {
         }
         this.roundId = newRoundId;
         this.aliveCount = playerCount;
+        lastProcessedIndex = 0;
     }
 
 }

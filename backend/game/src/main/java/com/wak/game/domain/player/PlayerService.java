@@ -1,9 +1,9 @@
 package com.wak.game.domain.player;
 
 import com.wak.game.application.response.PlayerInfoResponse;
-import com.wak.game.application.vo.clickVO;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.Round;
+import com.wak.game.domain.round.dto.ClickDTO;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
@@ -50,7 +50,7 @@ public class PlayerService {
         return responseBuilder.build();
     }
 
-    public void saveClickLog(Long roomId, clickVO click) {
+    public void saveClickLog(Long roomId, ClickDTO click) {
         String key = "roomId:" + roomId + ":clicks";
         redisUtil.saveToList(key, click);
     }
