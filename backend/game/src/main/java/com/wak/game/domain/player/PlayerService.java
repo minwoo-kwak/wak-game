@@ -56,6 +56,14 @@ public class PlayerService {
     public void savePlayers(List<Player> players) {
         playerRepository.saveAll(players);
     }
+    public Map<Long, Player> getPlayerMap(Long roundId){
+        List<Player> players = findByRoundId(roundId);
+        Map<Long, Player> playerMap = new HashMap<>();
+        for (Player player : players) {
+            playerMap.put(player.getUser().getId(), player);
+        }
+        return playerMap;
+    }
 }
 
 

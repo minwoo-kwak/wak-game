@@ -31,6 +31,8 @@ public enum ErrorInfo {
 
     /* CHAT */
     /* PLAYER */
+    PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYER IS NOT FOUND"),
+
     /* PLAYER LOG*/
     /* ROOM */
     ROOM_NOT_EXIST(HttpStatus.NOT_FOUND, "ROOM IS NOT FOUND"),

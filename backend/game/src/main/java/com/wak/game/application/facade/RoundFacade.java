@@ -154,6 +154,21 @@ public class RoundFacade {
         redisUtil.deleteKey("roomId:" + roomId + ":ranks");
         // todo: availableClicks에 있는 정보에 기반한 players 로그들 다 저장한다.
         // todo: 모든 클릭 로그들을 player_logs에 저장한다.
+    private void savePlayerLogs(Long roomId, Long roundId) {
+        Map<String, clickVO> data = redisUtil.getData("roomId:" + roomId + ":clicks", clickVO.class);
+
+        if (data == null) {
+            throw new BusinessException(ErrorInfo.ClICK_LOG_IS_EMPTY);
+        }
+
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
+
+        List<PlayerLog> logs = data.values().stream()
+                .map(click -> playerLogService.createPlayerLog(click, playerMap))
+                .collect(Collectors.toList());
+
+        playerLogService.saveAll(logs);
+    }
 
         if ((room.getMode().toString().equals("SOLO") && round.getRoundNumber() == 3)
                 || room.getMode().toString().equals("TEAM")) {
