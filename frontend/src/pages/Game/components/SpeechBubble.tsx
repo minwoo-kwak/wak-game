@@ -1,4 +1,4 @@
-import useGameStore from '../../../store/gameStore';
+import { useState } from 'react';
 
 import styled from 'styled-components';
 import { FlexLayout } from '../../../styles/layout';
@@ -22,19 +22,24 @@ const Text = styled.div`
   line-height: 1.2;
 `;
 
-type SpeechBubbleProps = {
-  isWaiting?: boolean;
-};
+// type SpeechBubbleProps = {};
 
-export default function SpeechBubble({ isWaiting }: SpeechBubbleProps) {
-  const { hostName, comment } = useGameStore().gameData;
+export default function SpeechBubble() {
+  const [mention, setMention] = useState({
+    sender: '',
+    content: '',
+  });
 
   return (
     <SpeechBubbleBlock $isCol gap='1rem'>
-      <SmallText color='black'>{`방장의 한마디!`}</SmallText>
+      <SmallText color='black'>{`도발 멘트!`}</SmallText>
       <FlexLayout>
-        <Text color='#725bff'>{isWaiting ? hostName : `김라쿤`}</Text>
-        <Text color='black'>{isWaiting ? comment : `: 바보들아 ~`}</Text>
+        <Text color='#725bff'>{mention.sender}</Text>
+        <Text color='black'>
+          {mention.content === ''
+            ? `(멘트를 입력하지 않았습니다)`
+            : mention.content}
+        </Text>
       </FlexLayout>
     </SpeechBubbleBlock>
   );
