@@ -47,7 +47,7 @@ public class PlayerService {
         return responseBuilder.build();
     }
 
-    public void saveClickLog(long roomId, clickVO click) {
+    public void saveClickLog(Long roomId, clickVO click) {
         String key = "roomId:" + roomId + ":clicks";
         redisUtil.saveToList(key, click);
     }

@@ -33,10 +33,9 @@ public class PlayerFacade {
     private final RoundService roundService;
     private final UserService userService;
     private final RoomService roomService;
-
     private final TimeUtil timeUtil;
 
-    public void saveClickLog(long roomId, ClickRequest request) {
+    public void saveClickLog(Long roomId, ClickRequest request) {
 
         Room room = roomService.findById(roomId);
 

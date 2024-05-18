@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class ClickEventProcessor implements Runnable {
     private volatile boolean running = true;
-    private long roomId;
+    private Long roomId;
     private Long roundId;
     private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
@@ -87,14 +87,14 @@ public class ClickEventProcessor implements Runnable {
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
         PlayerInfo user = data.get(click.userId().toString());
-        PlayerInfo victim = data.get(Long.toString(click.victimId()));
+        PlayerInfo victim = data.get(click.victimId().toString());
 
 
         if (isAlive(user) && isAlive(victim)) {
             Round round = roundService.findById(click.roundId());
 
             victim.updateStamina(-1);
-            redisUtil.saveData(key, Long.toString(victim.getUserId()), victim);
+            redisUtil.saveData(key, victim.getUserId().toString(), victim);
 
             roundFacade.sendBattleField(roomId, false);
             roundFacade.sendDashBoard(roomId, round.getRoundNumber());
@@ -102,9 +102,9 @@ public class ClickEventProcessor implements Runnable {
             // 생존자 수 업데이트
             String countKey = "aliveAndTotalPlayers";
             Map<String, PlayerCount> playerCountMap = redisUtil.getData(countKey, PlayerCount.class);
-            PlayerCount playerCount = playerCountMap.get(Long.toString(roomId));
+            PlayerCount playerCount = playerCountMap.get(roomId.toString());
             playerCount.updateAliveCont();
-            redisUtil.saveData(countKey, Long.toString(roomId), playerCount);
+            redisUtil.saveData(countKey, roomId.toString(), playerCount);
 
             saveSuccessfulClick(click);
             socketUtil.sendMessage("/games/" + roomId + "/kill-log", new KillLogResponse(click.roundId(), user.getNickname(), user.getColor(), victim.getNickname(), victim.getColor()));
@@ -134,7 +134,7 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-    private void sendResult(long nextRoundId) {
+    private void sendResult(Long nextRoundId) {
         String key = "roomId:" + roomId + ":users";
         Round round = roundService.findById(roundId);
 
@@ -148,8 +148,8 @@ public class ClickEventProcessor implements Runnable {
         int rank = 1;
 
         for (RankInfo rankInfo : sortedRanks) {
-            long userId = rankInfo.getUserId();
-            PlayerInfo player = playersMap.get(Long.toString(userId));
+            Long userId = rankInfo.getUserId();
+            PlayerInfo player = playersMap.get(userId.toString());
             if (player != null) {
                 ResultResponse result = new ResultResponse(
                         userId,
