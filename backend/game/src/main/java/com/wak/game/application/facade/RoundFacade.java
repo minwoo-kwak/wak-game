@@ -70,7 +70,7 @@ public class RoundFacade {
 
         roundService.startThread(room.getId(), round.getId(), playerCnt);
 
-        socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId()));
+        socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId(), round.getShowNickname()));
 
         return GameStartResponse.of(round.getId());
     }
@@ -128,6 +128,7 @@ public class RoundFacade {
 
     public void endRound(Long roomId, Long roundId) {
         Round round = roundService.findById(roundId);
+        round.finish();
         Room room = roomService.findById(round.getRoom().getId());
         roomService.isNotInGame(room);
 

@@ -10,7 +10,7 @@ public class FinalResultResponse {
     private int totalTime;
     private double totalAliveTime;
     private int totalKillCount;
-    private int rank;
+    private int finalRank;
     private String winnerNickname;
     private String winnerColor;
 
@@ -27,6 +27,6 @@ public class FinalResultResponse {
     }
 
     public void updateRank(int rank) {
-        this.rank = rank;
+        this.finalRank = rank;
     }
 }
