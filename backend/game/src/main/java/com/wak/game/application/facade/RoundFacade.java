@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -133,9 +134,12 @@ public class RoundFacade {
         return roundService.startNextRound(previousRound);
     }
 
+    @Transactional
     public void endRound(Long roomId, Long roundId) {
         Round round = roundService.findById(roundId);
         round.finish();
+        roundService.save(round);
+
         Room room = roomService.findById(round.getRoom().getId());
         roomService.isNotInGame(room);
 
@@ -143,6 +147,10 @@ public class RoundFacade {
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
 
         Long startTime = timeUtil.toNanoOfEpoch(round.getCreatedAt());
+
+        if (round.getRoundNumber() != 1) {
+            startTime -= 30 * 1_000_000_000L;
+        }
 
         for (ClickDTO attack : attacks) {
             Long murderId = attack.getUserId();
@@ -152,9 +160,13 @@ public class RoundFacade {
 
             if (victimPlayer == null && murderPlayer == null)
                 throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
-
             Long attackTime = attack.getNanoSec();
+
+            System.out.println(attackTime.getClass()+"/ 공격시간(스레드): " + attackTime);
+            System.out.println(startTime.getClass() +"/ 시작시간: " + startTime);
+
             long aliveTime = attackTime - startTime;
+            System.out.println("생존시간: "+aliveTime);
 
             victimPlayer.updateOnAttack(murderPlayer, Long.toString(aliveTime));
 
@@ -166,6 +178,122 @@ public class RoundFacade {
         savePlayerLogs(roomId, roundId);
         clearRedis(roomId);
         checkAndEndGame(room, round);
+    }
+
+    @Transactional
+    public void sendResult(Long roomId, Long roundId, Long nextRoundId, Long round1Id, Long round2Id, Long round3Id) { // 변경된 부분
+        Round round = roundService.findById(roundId);
+        int playTime;
+
+        if (round.getRoundNumber() == 1) {
+            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt());
+        } else {
+            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 30;
+        }
+        playTime = Math.abs(playTime);
+
+        System.out.println("플레이 시간: " + playTime);
+        List<ResultResponse> results = new ArrayList<>();
+
+        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
+
+        for (Player player : playerMap.values()) {
+            Player murderPlayer = player.getMurderPlayer();
+
+            String murderNickname = null;
+            String murderColor = null;
+            if (murderPlayer != null) {
+                User murderUser = userService.findById(murderPlayer.getUser().getId());
+                murderNickname = murderUser.getNickname();
+                murderColor = murderUser.getColor().getHexColor();
+            }
+
+            User playerUser = userService.findById(player.getUser().getId());
+            String playerNickname = playerUser.getNickname();
+
+            results.add(new ResultResponse(
+                    player.getUser().getId(),
+                    player.getRank(),
+                    player.getKillCount(),
+                    playTime,
+                    timeUtil.nanoToDouble(Long.parseLong(player.getAliveTime())),
+                    murderNickname,
+                    murderColor
+            ));
+
+            System.out.println(murderNickname + "->" + playerNickname);
+        }
+
+        if (round.getRoundNumber() < 3) {
+            System.out.println("3라운드 미만 / 최종결과 미포함");
+            socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, null));
+            return;
+        }
+
+        System.out.println("3라운드 미만 / 최종결과 포함");
+        List<FinalResultResponse> finals = getFinalResult(round1Id, round2Id, round3Id);
+        finals.sort(Comparator.comparingInt(FinalResultResponse::getFinalRank).reversed());
+
+        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, finals));
+    }
+
+    private List<FinalResultResponse> getFinalResult(Long round1Id, Long round2Id, Long round3Id) {
+
+        List<FinalResultResponse> finalResults = new ArrayList<>();
+
+        Map<Long, Player> playerR1Map = playerService.getPlayerMap(round1Id);//이거를 기준으로 한바퀴 돌면서
+        Map<Long, Player> playerR2Map = playerService.getPlayerMap(round2Id);
+        Map<Long, Player> playerR3Map = playerService.getPlayerMap(round3Id);
+
+        Round round1 = roundService.findById(round1Id);
+        Round round2 = roundService.findById(round2Id);
+        Round round3 = roundService.findById(round3Id);
+
+        int r1Time = (int) ChronoUnit.SECONDS.between(round1.getCreatedAt(), round1.getUpdatedAt());
+        int r2Time = (int) ChronoUnit.SECONDS.between(round2.getCreatedAt(), round2.getUpdatedAt()) - 30;
+        int r3Time = (int) ChronoUnit.SECONDS.between(round3.getCreatedAt(), round3.getUpdatedAt()) - 30;
+
+        int totalGameTime = r1Time + r2Time + r3Time;
+
+        for (Player playerR1 : playerR1Map.values()) {
+            Long userId = playerR1.getUser().getId();
+
+            Player playerR2 = playerR2Map.get(userId);
+            Player playerR3 = playerR3Map.get(userId);
+
+            int totalKillCount = playerR1.getKillCount() + (playerR2 != null ? playerR2.getKillCount() : 0) + (playerR3 != null ? playerR3.getKillCount() : 0);
+
+            long totalAliveNanoTime = parseNanoTime(playerR1.getAliveTime())
+                    + (playerR2 != null ? parseNanoTime(playerR2.getAliveTime()) : 0)
+                    + (playerR3 != null ? parseNanoTime(playerR3.getAliveTime()) : 0);
+
+            double totalAliveTime = timeUtil.nanoToDouble(totalAliveNanoTime);
+
+            finalResults.add(new FinalResultResponse(userId, totalGameTime, totalAliveTime, totalKillCount));
+        }
+
+        finalResults.sort(Comparator.comparing(FinalResultResponse::getTotalKillCount).reversed()
+                .thenComparing(FinalResultResponse::getTotalAliveTime));
+
+        String winnerName = null;
+        String winnerColor = null;
+        for (int i = 0; i < finalResults.size(); i++) {
+            if (i == 0) {
+                winnerName = userService.findById(finalResults.get(i).getUserId()).toString();
+                winnerColor = userService.findById(finalResults.get(i).getUserId()).getColor().getHexColor();
+            }
+            finalResults.get(i).updateRank(i + 1);
+            finalResults.get(i).updateWinner(winnerName, winnerColor);
+        }
+
+        return finalResults;
+    }
+
+    private long parseNanoTime(String nanoTime) {
+        String[] parts = nanoTime.split(":");
+        long minutes = Long.parseLong(parts[0]);
+        long seconds = Long.parseLong(parts[1]);
+        return minutes * 60 * 1_000_000_000L + seconds * 1_000_000_000L;
     }
 
     private void savePlayerLogs(Long roomId, Long roundId) {
