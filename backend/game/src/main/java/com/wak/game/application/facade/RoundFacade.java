@@ -291,10 +291,11 @@ public class RoundFacade {
     }
 
     private long parseNanoTime(String nanoTime) {
-        String[] parts = nanoTime.split(":");
-        long minutes = Long.parseLong(parts[0]);
-        long seconds = Long.parseLong(parts[1]);
-        return minutes * 60 * 1_000_000_000L + seconds * 1_000_000_000L;
+        try {
+            return Long.parseLong(nanoTime) * 1_000_000_000L;
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorInfo.THREAD_FORMAT_NOT_MATCHED);
+        }
     }
 
     private void savePlayerLogs(Long roomId, Long roundId) {
