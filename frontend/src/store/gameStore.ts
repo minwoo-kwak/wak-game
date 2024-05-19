@@ -4,7 +4,7 @@ import { GameTypes } from '../types/GameTypes';
 
 interface Store {
   gameData: GameTypes;
-  setGameData: (userData: GameTypes) => void;
+  setGameData: (gameData: GameTypes) => void;
 }
 
 const useGameStore = create(

@@ -55,7 +55,7 @@ export default function ButtonGroup({
         });
       } catch (error: any) {
         console.error('게임 시작 에러', error);
-        navigate(`/error`);
+        navigate('/error', { replace: true });
       }
     } else {
       openDialog.startCheck();
@@ -67,7 +67,7 @@ export default function ButtonGroup({
       id && (await exitRoom(parseInt(id)));
     } catch (error: any) {
       console.error('방 나가기 에러', error);
-      navigate(`/error`);
+      navigate('/error', { replace: true });
     }
 
     navigate(`/lobby`, { replace: true });

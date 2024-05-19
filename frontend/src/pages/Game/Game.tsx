@@ -136,7 +136,7 @@ export default function GamePage() {
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
+      // event.returnValue = '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {

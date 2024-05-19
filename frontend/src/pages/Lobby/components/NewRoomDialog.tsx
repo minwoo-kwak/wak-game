@@ -105,7 +105,7 @@ export default function NewRoomDialog({ closeDialog }: NewRoomDialogProps) {
         navigate(`/room/${fetchedData.data.roomId}`);
       } catch (error: any) {
         console.error('방 만들기 에러', error);
-        navigate(`/error`);
+        navigate('/error', { replace: true });
       }
     }
   };
