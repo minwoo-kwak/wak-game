@@ -13,8 +13,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/api/socket")
-			.setAllowedOriginPatterns("*")
-			.withSockJS(); // apic test 시 주석 처리 필요
+			.setAllowedOriginPatterns("*");
+			//.withSockJS(); // apic test 시 주석 처리 필요
 	}
 
 	@Override
