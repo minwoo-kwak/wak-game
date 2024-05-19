@@ -18,6 +18,8 @@ public class GameController {
 
     @MessageMapping("/click/{roomId}")
     public void handleClick(@RequestBody ClickRequest clickRequest) {
+        System.out.println("클릭 저장 요청@@@");
+
         playerFacade.saveClickLog(clickRequest);
     }
 

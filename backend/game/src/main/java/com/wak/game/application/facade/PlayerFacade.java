@@ -32,6 +32,8 @@ public class PlayerFacade {
         User user = userService.findById(request.getUserId());
         User victimUser = userService.findById(request.getVictimId());
         Long currentTimeInNanos = timeUtil.getCurrentTimeInNanos();
+
+        System.out.println("공격 들어온 시간: " + currentTimeInNanos);
         ClickDTO click = new ClickDTO(user.getId(), victimUser.getId(), round.getId(), request.getClickTime(), currentTimeInNanos);
 
         playerService.saveClickLog(room.getId(), click);
