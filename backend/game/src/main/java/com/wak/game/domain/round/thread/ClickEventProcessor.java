@@ -10,6 +10,7 @@ import com.wak.game.application.response.socket.RoundEndResultResponse;
 import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
+import com.wak.game.domain.room.Room;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.ClickDTO;
@@ -106,9 +107,12 @@ public class ClickEventProcessor implements Runnable {
         PlayerInfo victim = data.get(click.getVictimId().toString());
         if (user == null) {
             System.out.println("공격자 정보 없음");
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
         }
-        if (victim == null)
+        if (victim == null) {
             System.out.println("피해자 정보 없음");
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
+        }
 
         if (isAlive(user) && isAlive(victim)) {
             Round round = roundService.findById(click.getRoundId());
@@ -141,8 +145,16 @@ public class ClickEventProcessor implements Runnable {
                 stop();
             }
 
+
             Round nextRound = roundFacade.startNextRound(round);
             roundFacade.sendResult(roomId, roundId, nextRound.getId(), round1Id, round2Id, round3Id);
+
+            try{
+                Thread.sleep(30000);
+            }catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            roundFacade.initializeGameStatuses(roomId, round);
             updateNextRound(nextRound.getId());
         }
     }

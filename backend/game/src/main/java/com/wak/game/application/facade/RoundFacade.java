@@ -71,7 +71,7 @@ public class RoundFacade {
 
     public GameStartResponse startRound(GameStartRequest gameStartRequest, Room room) {
         Round round = roundService.startRound(room, gameStartRequest);
-        int playerCnt = initializeGameStatuses(room, round);
+        int playerCnt = initializeGameStatuses(room.getId(), round);
 
         System.out.println("playerCnt:" + playerCnt);
 
@@ -83,7 +83,8 @@ public class RoundFacade {
         return GameStartResponse.of(round.getId());
     }
 
-    public int initializeGameStatuses(Room room, Round round) {
+    public int initializeGameStatuses(Long roomId, Round round) {
+        Room room = roomService.findById(roomId);
         Map<String, RoomVO> map = redisUtil.getRoomUsersInfo(room.getId());
 
         List<Player> players = new ArrayList<>();
