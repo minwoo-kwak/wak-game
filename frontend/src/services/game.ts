@@ -28,3 +28,12 @@ export const getBattleField = async (roomId: number) => {
   });
   return response.data;
 };
+
+export const getMention = async (roomId: number) => {
+  const response = await axiosInstance.get(`/games/${roomId}/mention`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.data;
+};

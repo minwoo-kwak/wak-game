@@ -51,7 +51,6 @@ export default function RoomPage() {
             navigate(`/lobby`);
           } else if ('roundId' in JSON.parse(message.body)) {
             setGameInfo(JSON.parse(message.body));
-            console.log(JSON.parse(message.body));
           } else {
             setPlayInfo(JSON.parse(message.body));
           }

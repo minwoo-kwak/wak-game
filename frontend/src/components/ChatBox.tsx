@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import SockJS from 'sockjs-client';
 import { CompatClient, Stomp } from '@stomp/stompjs';
 
@@ -13,7 +14,6 @@ import WhiteBox from './WhiteBox';
 import GrayTitleBox from './GrayTitleBox';
 import Input from './Input';
 import Button from './Button';
-import { useParams } from 'react-router-dom';
 
 const ChatBlock = styled.div<{ height: string }>`
   width: 32rem;
@@ -58,7 +58,7 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
   const clientRef = useRef<CompatClient | null>(null);
 
   let url: string;
-  const {id} = useParams();
+  const { id } = useParams();
   const changeMode = () => {
     if (storage.getItem('mode') !== mode) {
       storage.removeItem('chattingData');

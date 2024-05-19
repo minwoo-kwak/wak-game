@@ -59,7 +59,7 @@ export default function BattleField({ client, players }: BattleFieldProps) {
   useEffect(() => {
     showBattleField();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameData.roundNumber]);
+  }, [id]);
 
   useEffect(() => {
     const generatedDots: DotPosition[] = [];
