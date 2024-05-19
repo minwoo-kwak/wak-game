@@ -3,7 +3,7 @@ import { FinalResultTypes } from '../types/ResultTypes';
 
 interface Store {
   finalResultData: FinalResultTypes;
-  setFinalResultData: (userData: FinalResultTypes) => void;
+  setFinalResultData: (finalResultData: FinalResultTypes) => void;
 }
 
 const useFinalResultStore = create<Store>((set) => ({

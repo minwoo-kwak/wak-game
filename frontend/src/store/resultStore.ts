@@ -3,7 +3,7 @@ import { ResultTypes } from '../types/ResultTypes';
 
 interface Store {
   resultData: ResultTypes;
-  setResultData: (userData: ResultTypes) => void;
+  setResultData: (resultData: ResultTypes) => void;
 }
 
 const useResultStore = create<Store>((set) => ({

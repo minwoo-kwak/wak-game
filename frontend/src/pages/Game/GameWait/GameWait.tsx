@@ -8,14 +8,19 @@ import BattleFieldWait from './BattleFieldWait';
 type GameWaitProps = {
   countdown: number;
   logs: KillLogPlayersTypes[];
+  comment: {
+    sender: string;
+    color: string;
+    mention: string;
+  };
 };
 
-export default function GameWait({ countdown, logs }: GameWaitProps) {
+export default function GameWait({ countdown, logs, comment }: GameWaitProps) {
   return (
     <FlexLayout $isCol gap='1rem'>
       <FlexLayout gap='2rem'>
         <KillLog isWaiting logs={logs} />
-        <SpeechBubble />
+        <SpeechBubble comment={comment} />
       </FlexLayout>
       <BattleFieldWait countdown={countdown} />
     </FlexLayout>
