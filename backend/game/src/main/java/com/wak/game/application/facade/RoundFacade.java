@@ -358,6 +358,7 @@ public class RoundFacade {
         roomInfo.gameEnd();
         roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+        //todo 로비 vs 게임대기실
         socketUtil.sendRoomList();
     }
 
