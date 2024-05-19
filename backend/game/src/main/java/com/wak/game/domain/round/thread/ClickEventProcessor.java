@@ -131,7 +131,7 @@ public class ClickEventProcessor implements Runnable {
             roundFacade.sendResult(roomId, roundId, nextRound.getId(), round1Id, round2Id, round3Id);
 
             try {
-                Thread.sleep(30000);
+                Thread.sleep(3000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

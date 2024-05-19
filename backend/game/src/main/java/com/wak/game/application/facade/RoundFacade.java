@@ -363,9 +363,7 @@ public class RoundFacade {
     }
 
     public void sendDashBoard(long roomId, int roundNumber) {
-
         SummaryCountResponse summaryCount = roundService.getSummaryCount(roomId, roundNumber);
-
         socketUtil.sendMessage("/games/" + roomId + "/dashboard", summaryCount);
     }
 
