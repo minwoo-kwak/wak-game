@@ -55,8 +55,13 @@ public enum ErrorInfo {
     /* ROOM LOG*/
     /* ROUND */
     ROUND_NOT_EXIST(HttpStatus.NOT_FOUND, "ROUND IS NOT FOUND"),
-    THREAD_ID_IS_DIFFERENT(HttpStatus.NOT_FOUND, "현재 동작하는 스레드와 처리하려는 데이터의 roundId가 다릅니다."),/*나중에 지울겠습니다*/
+    ROUND_NOT_MATCHED(HttpStatus.CONFLICT, "ROUND IS NOT MATCHED"),
 
+    /* THREAD */
+    THREAD_ID_IS_DIFFERENT(HttpStatus.NOT_FOUND, "현재 동작하는 스레드와 처리하려는 데이터의 roundId가 다릅니다."),/*나중에 지울겠습니다*/
+    THREAD_DESERIALIZING_DATA(HttpStatus.BAD_REQUEST, "DATA DESERIALIZING FAIL"),
+    THREAD_SERIALIZING_DATA(HttpStatus.BAD_REQUEST, "DATA SERIALIZING FAIL"),
+    THREAD_FORMAT_NOT_MATCHED(HttpStatus.BAD_REQUEST, "DATA FORMAT IS NOT MATCHED")
     /**/;
 
     ErrorInfo(HttpStatus httpStatus, String message) {
