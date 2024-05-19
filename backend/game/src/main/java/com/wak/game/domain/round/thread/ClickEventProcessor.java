@@ -70,6 +70,10 @@ public class ClickEventProcessor implements Runnable {
             try {
                 List<ClickDTO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", ClickDTO.class);
 
+                System.out.println("클릭 사이즈");
+                System.out.println(clickDataList.size());
+                System.out.println("마지막 인덱스: " + lastProcessedIndex);
+
                 for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
                     ClickDTO click = clickDataList.get(i);
                     if (click != null) {
@@ -77,6 +81,8 @@ public class ClickEventProcessor implements Runnable {
                         checkClickedUser(click);
                         lastProcessedIndex++;
                     }
+
+                    lastProcessedIndex++;
                 }
 
                 Thread.sleep(1000); // 10밀리초 대기
@@ -93,11 +99,16 @@ public class ClickEventProcessor implements Runnable {
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
         String key = "roomId:" + roomId + ":users";
+        System.out.println("(nullpointer)key: " + key);
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
         PlayerInfo user = data.get(click.getUserId().toString());
         PlayerInfo victim = data.get(click.getVictimId().toString());
-
+        if (user == null) {
+            System.out.println("공격자 정보 없음");
+        }
+        if (victim == null)
+            System.out.println("피해자 정보 없음");
 
         if (isAlive(user) && isAlive(victim)) {
             Round round = roundService.findById(click.getRoundId());
@@ -126,121 +137,14 @@ public class ClickEventProcessor implements Runnable {
             System.out.println("라운드 종료!");
 
             if (round.getRoundNumber() == 3) {
-                sendResult(null);
+                roundFacade.sendResult(roomId, roundId, null, round1Id, round2Id, round3Id);
                 stop();
             }
 
             Round nextRound = roundFacade.startNextRound(round);
-            sendResult(nextRound.getId());
-
+            roundFacade.sendResult(roomId, roundId, nextRound.getId(), round1Id, round2Id, round3Id);
             updateNextRound(nextRound.getId());
         }
-    }
-
-    @Transactional
-    protected void sendResult(Long nextRoundId) {
-        Round round = roundService.findById(roundId);
-        int playTime;
-
-        if (round.getRoundNumber() == 1) {
-            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) ;
-        } else {
-            playTime = (int) ChronoUnit.SECONDS.between(round.getUpdatedAt(), round.getCreatedAt()) - 60;
-        }
-
-        System.out.println("플레이 시간: " + playTime);
-        List<ResultResponse> results = new ArrayList<>();
-
-        Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
-
-        for (Player player : playerMap.values()) {
-            Player murderPlayer = player.getMurderPlayer();
-
-            String murderNickname = null;
-            String murderColor = null;
-            if (murderPlayer != null) {
-                User murderUser = userService.findById(murderPlayer.getUser().getId());
-                murderNickname = murderUser.getNickname();
-                murderColor = murderUser.getColor().getHexColor();
-            }
-
-            User playerUser = userService.findById(player.getUser().getId());
-            String playerNickname = playerUser.getNickname();
-
-            results.add(new ResultResponse(
-                    player.getUser().getId(),
-                    player.getRank(),
-                    player.getKillCount(),
-                    playTime,
-                    timeUtil.nanoToDouble(Long.parseLong(player.getAliveTime())),
-                    murderNickname,
-                    murderColor
-            ));
-
-            System.out.println(murderNickname + "->" + playerNickname); // player.getUser().getNickname() 대신 playerNickname 사용
-        }
-
-        if (round.getRoundNumber() < 3) {
-            System.out.println("3라운드 미만 / 최종결과 미포함");
-            socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, null));
-            return;
-        }
-
-        System.out.println("3라운드 미만 / 최종결과 포함");
-        List<FinalResultResponse> finals = getFinalResult();
-        socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, finals));
-    }
-
-    private List<FinalResultResponse> getFinalResult() {
-
-        List<FinalResultResponse> finalResults = new ArrayList<>();
-
-        Map<Long, Player> playerR1Map = playerService.getPlayerMap(round1Id);//이거를 기준으로 한바퀴 돌면서
-        Map<Long, Player> playerR2Map = playerService.getPlayerMap(round2Id);
-        Map<Long, Player> playerR3Map = playerService.getPlayerMap(round3Id);
-
-        Round round1 = roundService.findById(round1Id);
-        Round round2 = roundService.findById(round2Id);
-        Round round3 = roundService.findById(round3Id);
-
-        int r1Time = (int) ChronoUnit.SECONDS.between(round1.getCreatedAt(), round1.getUpdatedAt());
-        int r2Time = (int) ChronoUnit.SECONDS.between(round2.getCreatedAt(), round2.getUpdatedAt()) - 30;
-        int r3Time = (int) ChronoUnit.SECONDS.between(round3.getCreatedAt(), round3.getUpdatedAt()) - 30;
-
-        int totalGameTime = r1Time + r2Time + r3Time;
-
-        for (Player playerR1 : playerR1Map.values()) {
-            Long userId = playerR1.getUser().getId();
-
-            Player playerR2 = playerR2Map.get(userId);
-            Player playerR3 = playerR3Map.get(userId);
-
-            int totalKillCount = playerR1.getKillCount() + (playerR2 != null ? playerR2.getKillCount() : 0) + (playerR3 != null ? playerR3.getKillCount() : 0);
-
-            long totalAliveNanoTime = parseNanoTime(playerR1.getAliveTime())
-                    + (playerR2 != null ? parseNanoTime(playerR2.getAliveTime()) : 0)
-                    + (playerR3 != null ? parseNanoTime(playerR3.getAliveTime()) : 0);
-
-            double totalAliveTime = timeUtil.nanoToDouble(totalAliveNanoTime);
-
-            finalResults.add(new FinalResultResponse(userId, totalGameTime, totalAliveTime, totalKillCount));
-        }
-
-        finalResults.sort(Comparator.comparing(FinalResultResponse::getTotalKillCount).reversed()
-                .thenComparing(FinalResultResponse::getTotalAliveTime));
-
-        String winnerName = null;
-        String winnerColor = null;
-        for (int i = 0; i < finalResults.size(); i++) {
-            if (i == 0) {
-                winnerName = userService.findById(finalResults.get(i).getUserId()).toString();
-                winnerColor = userService.findById(finalResults.get(i).getUserId()).getColor().getHexColor();
-            }
-            finalResults.get(i).updateRank(i + 1);
-            finalResults.get(i).updateWinner(winnerName, winnerColor);
-        }
-
-        return finalResults;
     }
 
     private long parseNanoTime(String nanoTime) {
@@ -271,14 +175,7 @@ public class ClickEventProcessor implements Runnable {
 
     private void saveSuccessfulClick(ClickDTO click) {
         String key = "roomId:" + roomId + ":availableClicks";
-
-        try {
-            String clickData = objectMapper.writeValueAsString(click);
-            System.out.println("Saving click data: " + clickData);  // 저장되는 데이터 로그
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error serializing ClickDTO", e);
-        }
+        redisUtil.saveToList(key, click);
     }
 
     public void stop() {

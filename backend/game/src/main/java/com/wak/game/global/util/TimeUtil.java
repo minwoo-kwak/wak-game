@@ -13,7 +13,8 @@ import java.time.ZoneOffset;
 @Component
 public class TimeUtil {
     public Long getCurrentTimeInNanos() {
-        return System.nanoTime();
+        Instant now = Instant.now();
+        return now.getEpochSecond() * 1_000_000_000L + now.getNano();
     }
     public Long toNanoOfEpoch(LocalDateTime dateTime) {
         Instant instant = dateTime.toInstant(ZoneOffset.UTC);
