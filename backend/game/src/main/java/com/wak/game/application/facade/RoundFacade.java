@@ -164,11 +164,11 @@ public class RoundFacade {
                 throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
             Long attackTime = attack.getNanoSec();
 
-            System.out.println(attackTime.getClass()+"/ 공격시간(스레드): " + attackTime);
-            System.out.println(startTime.getClass() +"/ 시작시간: " + startTime);
+            System.out.println(attackTime.getClass() + "/ 공격시간(스레드): " + attackTime);
+            System.out.println(startTime.getClass() + "/ 시작시간: " + startTime);
 
             long aliveTime = attackTime - startTime;
-            System.out.println("생존시간: "+aliveTime);
+            System.out.println("생존시간: " + aliveTime);
 
             victimPlayer.updateOnAttack(murderPlayer, Long.toString(aliveTime));
 
@@ -396,17 +396,18 @@ public class RoundFacade {
 
     @Transactional
     public void saveMention(Long userId, MentionRequest mentionRequest) {
-        Round round = roundService.findById(mentionRequest.roundId());
+        //Round preRound = roundService.findById(mentionRequest.roundId());
         User user = userService.findById(userId);
 
-        Player player = playerService.findByUserAndRound(user, round);
+        /*Player player = playerService.findByUserAndRound(user, preRound);
 
         if (player.getRank() != 1)
-            throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);*/
 
         socketUtil.sendMessage("/games/" + mentionRequest.roomId() + "/mention", new MentionResponse(mentionRequest.mention(), user.getNickname(), user.getColor().getHexColor()));
 
-        round.updateAggro(mentionRequest.mention());
-        roundService.save(round);
+        Round nextRound = roundService.findById(mentionRequest.nextRoundId());
+        nextRound.updateAggro(mentionRequest.mention());
+        roundService.save(nextRound);
     }
 }
