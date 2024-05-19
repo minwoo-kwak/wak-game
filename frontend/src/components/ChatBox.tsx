@@ -115,6 +115,7 @@ export default function ChatBox({ mode, isShort, text }: ChatBoxProps) {
   }, [userChatting]);
 
   useEffect(() => {
+    setUserChatting([]);
     connectChatHandler();
     return () => {
       clientRef.current?.disconnect(() => {
