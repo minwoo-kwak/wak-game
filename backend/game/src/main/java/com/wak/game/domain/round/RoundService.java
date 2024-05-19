@@ -80,7 +80,6 @@ public class RoundService {
     }
 
     public void startThread(Long roomId, Long roundId, int playerCnt) {
-        System.out.println("스레드 실행 함수 ");
 
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
         SocketUtil socketUtil = applicationContext.getBean(SocketUtil.class);

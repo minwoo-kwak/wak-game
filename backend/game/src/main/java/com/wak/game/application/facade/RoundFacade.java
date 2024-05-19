@@ -73,10 +73,7 @@ public class RoundFacade {
         Round round = roundService.startRound(room, gameStartRequest);
         int playerCnt = initializeGameStatuses(room.getId(), round);
 
-        System.out.println("playerCnt:" + playerCnt);
-
         roundService.startThread(room.getId(), round.getId(), playerCnt);
-        System.out.println("player");
 
         socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId(), round.getShowNickname()));
 
@@ -127,7 +124,6 @@ public class RoundFacade {
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
-        System.out.println("init어쩌구 호출 그리고 리턴");
         socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
         return players.size();
     }
@@ -162,20 +158,16 @@ public class RoundFacade {
 
             if (victimPlayer == null && murderPlayer == null)
                 throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
+
             Long attackTime = attack.getNanoSec();
 
-            System.out.println(attackTime.getClass() + "/ 공격시간(스레드): " + attackTime);
-            System.out.println(startTime.getClass() + "/ 시작시간: " + startTime);
-
             long aliveTime = attackTime - startTime;
-            System.out.println("생존시간: " + aliveTime);
 
             victimPlayer.updateOnAttack(murderPlayer, Long.toString(aliveTime));
-
             playerService.save(victimPlayer);
         }
 
-        updateRanks(roomId, room, round, playerMap);
+        updateRanks(room, playerMap);
 
         savePlayerLogs(roomId, roundId);
         clearRedis(roomId);
@@ -194,7 +186,6 @@ public class RoundFacade {
         }
         playTime = Math.abs(playTime);
 
-        System.out.println("플레이 시간: " + playTime);
         List<ResultResponse> results = new ArrayList<>();
 
         Map<Long, Player> playerMap = playerService.getPlayerMap(roundId);
@@ -202,13 +193,22 @@ public class RoundFacade {
         for (Player player : playerMap.values()) {
             Player murderPlayer = player.getMurderPlayer();
 
-            String murderNickname = null;
-            String murderColor = null;
-            if (murderPlayer != null) {
-                User murderUser = userService.findById(murderPlayer.getUser().getId());
-                murderNickname = murderUser.getNickname();
-                murderColor = murderUser.getColor().getHexColor();
+            if (murderPlayer == null) {
+                results.add(new ResultResponse(
+                        player.getUser().getId(),
+                        player.getRank(),
+                        player.getKillCount(),
+                        playTime,
+                        timeUtil.nanoToDouble(Long.parseLong(player.getAliveTime())),
+                        "",
+                        ""
+                ));
+                continue;
             }
+
+            User murderUser = userService.findById(murderPlayer.getUser().getId());
+            String murderNickname = murderUser.getNickname();
+            String murderColor = murderUser.getColor().getHexColor();
 
             User playerUser = userService.findById(player.getUser().getId());
             String playerNickname = playerUser.getNickname();
@@ -223,16 +223,14 @@ public class RoundFacade {
                     murderColor
             ));
 
-            System.out.println(murderNickname + "->" + playerNickname);
         }
 
         if (round.getRoundNumber() < 3) {
-            System.out.println("3라운드 미만 / 최종결과 미포함");
             socketUtil.sendMessage("/games/" + roomId + "/battle-field", new RoundEndResultResponse(true, round.getRoundNumber(), nextRoundId, results, null));
             return;
         }
 
-        System.out.println("3라운드 / 최종결과 포함");
+
         List<FinalResultResponse> finals = getFinalResult(round1Id, round2Id, round3Id);
         finals.sort(Comparator.comparingInt(FinalResultResponse::getFinalRank).reversed());
 
@@ -316,7 +314,8 @@ public class RoundFacade {
     }
 
 
-    private void updateRanks(Long roomId, Room room, Round round, Map<Long, Player> playersMap) {
+    @Transactional
+    protected void updateRanks(Room room, Map<Long, Player> playersMap) {
         Map<String, RankInfo> ranks = redisUtil.getData("roomId:" + room.getId() + ":ranks", RankInfo.class);
 
         List<RankInfo> sortedRanks = new ArrayList<>(ranks.values());
@@ -331,6 +330,7 @@ public class RoundFacade {
                 throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
 
             player.updateRankAncKillCnt(rankInfo.getKillCnt(), rank++);
+            playerService.save(player);
         }
     }
 

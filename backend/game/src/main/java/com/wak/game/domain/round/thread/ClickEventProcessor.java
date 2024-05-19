@@ -11,6 +11,7 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
+import jakarta.transaction.Transactional;
 
 import java.util.*;
 
@@ -55,18 +56,18 @@ public class ClickEventProcessor implements Runnable {
                     continue;
                 }
 
-                for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
+                for (int i = 0; i < clickDataList.size(); i++) {
                     ClickDTO click = clickDataList.get(i);
                     if (click == null)
                         continue;
 
                     lastProcessedIndex++;
                     checkClickedUser(click);
-                    if(!running)
+                    if (!running)
                         break;
                 }
 
-                Thread.sleep(1000); // 10밀리초 대기
+                Thread.sleep(1); // 10밀리초 대기
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -75,9 +76,15 @@ public class ClickEventProcessor implements Runnable {
         }
     }
 
-    private void checkClickedUser(ClickDTO click) {
+    @Transactional
+    protected void checkClickedUser(ClickDTO click) {
+        Round round = roundService.findById(click.getRoundId());
+
         if (!click.getRoundId().equals(this.roundId))
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
+
+        if (!round.getId().equals(roundId))
+            throw new BusinessException(ErrorInfo.ROUND_NOT_MATCHED);
 
         String key = "roomId:" + roomId + ":users";
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
@@ -91,13 +98,12 @@ public class ClickEventProcessor implements Runnable {
             throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
         }
 
-        if (isAlive(user) && isAlive(victim)) {
-            Round round = roundService.findById(click.getRoundId());
-            if(!round.getId().equals(roundId))
-                throw new BusinessException(ErrorInfo.ROUND_NOT_MATCHED);
 
+        if (isAlive(user) && isAlive(victim)) {
             victim.updateStamina(-1);
             redisUtil.saveData(key, victim.getUserId().toString(), victim);
+
+            saveSuccessfulClick(click);
 
             roundFacade.sendBattleField(roomId, false);
             roundFacade.sendDashBoard(roomId, round.getRoundNumber());
@@ -111,7 +117,6 @@ public class ClickEventProcessor implements Runnable {
             rankFacade.sendRank(roomId);
 
             //countDown(60);
-
 
             if (aliveCount > 1)
                 return;
