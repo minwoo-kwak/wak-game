@@ -3,27 +3,19 @@ package com.wak.game.domain.round.thread;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.response.socket.FinalResultResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
-import com.wak.game.application.response.socket.ResultResponse;
-import com.wak.game.application.response.socket.RoundEndResultResponse;
-import com.wak.game.domain.player.Player;
 import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.room.Room;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.ClickDTO;
-import com.wak.game.domain.user.User;
 import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import com.wak.game.global.util.TimeUtil;
-import jakarta.transaction.Transactional;
 
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class ClickEventProcessor implements Runnable {
@@ -142,6 +134,8 @@ public class ClickEventProcessor implements Runnable {
 
             if (round.getRoundNumber() == 3) {
                 roundFacade.sendResult(roomId, roundId, null, round1Id, round2Id, round3Id);
+
+                roundFacade.endGame(roomId);
                 stop();
             }
 

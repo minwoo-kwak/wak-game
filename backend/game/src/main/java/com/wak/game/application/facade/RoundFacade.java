@@ -347,19 +347,18 @@ public class RoundFacade {
         boolean isFinalSoloRound = isSoloMode && round.getRoundNumber() == 3;
 
         if (isFinalSoloRound || isTeamMode) {
-            endGame(room);
+            endGame(room.getId());
         }
     }
 
-    public void endGame(Room room) {
+    public void endGame(Long roomId) {
+        Room room = roomService.findById(roomId);
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
 
         roomInfo.gameEnd();
         roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
         socketUtil.sendRoomList();
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
     }
 
     public void sendDashBoard(long roomId, int roundNumber) {
