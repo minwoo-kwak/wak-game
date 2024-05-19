@@ -2,8 +2,10 @@ package com.wak.game.domain.player;
 
 import com.wak.game.application.response.PlayerInfoResponse;
 import com.wak.game.domain.player.dto.PlayerInfo;
+import com.wak.game.domain.room.Room;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.dto.ClickDTO;
+import com.wak.game.domain.user.User;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
@@ -79,6 +81,10 @@ public class PlayerService {
             playerMap.put(player.getUser().getId(), player);
         }
         return playerMap;
+    }
+
+    public Player findByUserAndRound(User user, Round round) {
+        return playerRepository.findByUserAndRound(user, round).orElseThrow(() -> new BusinessException(ErrorInfo.PLAYER_NOT_FOUND));
     }
 }
 

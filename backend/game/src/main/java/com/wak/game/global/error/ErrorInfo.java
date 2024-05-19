@@ -32,6 +32,7 @@ public enum ErrorInfo {
 
     /* PLAYER */
     PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYER IS NOT FOUND"),
+    PLAYER_NOT_WINNER(HttpStatus.FORBIDDEN, "PLAYER IS NOT WINNER"),
 
     /* PLAYER LOG*/
     ClICK_LOG_IS_EMPTY(HttpStatus.NOT_FOUND, "CLICK LOG IS EMPTY"),
