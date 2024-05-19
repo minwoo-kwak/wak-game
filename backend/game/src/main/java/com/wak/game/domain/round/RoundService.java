@@ -126,6 +126,10 @@ public class RoundService {
     public void deleteRound(Long id) {
         roundRepository.deleteRound(id);
     }
+
+    public void save(Round round) {
+        roundRepository.save(round);
+    }
 }
 
 
