@@ -50,7 +50,7 @@ export default function EnterCheckDialog({
         setMessage('ALREADY_START');
       } else {
         console.error('방 입장하기 에러', error);
-        navigate('/error');
+        navigate('/error', { replace: true });
       }
     }
   };

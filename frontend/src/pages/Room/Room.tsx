@@ -69,7 +69,7 @@ export default function RoomPage() {
       setUserData({ ...userData, userId: fetchedData.data.userId });
     } catch (error: any) {
       console.error('방 정보 가져오기 에러', error);
-      navigate(`/error`);
+      navigate('/error', { replace: true });
     }
   };
 

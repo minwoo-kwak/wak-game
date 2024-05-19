@@ -52,7 +52,7 @@ export default function BattleField({ client, players }: BattleFieldProps) {
       id && (await getBattleField(parseInt(id)));
     } catch (error: any) {
       console.error('배틀필드 요청 에러', error);
-      navigate(`/error`);
+      navigate('/error', { replace: true });
     }
   };
 

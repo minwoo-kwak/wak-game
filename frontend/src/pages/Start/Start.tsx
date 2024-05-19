@@ -7,6 +7,7 @@ import Background from '../../components/Background';
 import StartTitle from './components/StartTitle';
 import NameForm from './components/NameForm';
 import StartFooter from './components/StartFooter';
+import BackgroundButton from './components/BackgroundButton';
 
 export default function StartPage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function StartPage() {
 
   useEffect(() => {
     if (token) {
-      navigate(`/lobby`);
+      navigate('/lobby', { replace: true });
     }
   }, [token, navigate]);
 
@@ -25,6 +26,7 @@ export default function StartPage() {
         <NameForm />
       </FlexLayout>
       <StartFooter />
+      <BackgroundButton />
     </Background>
   );
 }

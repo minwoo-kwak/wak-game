@@ -69,7 +69,7 @@ export default function NicknameForm() {
           setMessage('DUPLICATED');
         } else {
           console.error('로그인 에러', error);
-          navigate(`/error`);
+          navigate('/error', { replace: true });
         }
       }
     }
