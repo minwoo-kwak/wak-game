@@ -73,10 +73,7 @@ public class RoundFacade {
         Round round = roundService.startRound(room, gameStartRequest);
         int playerCnt = initializeGameStatuses(room.getId(), round);
 
-        System.out.println("playerCnt:" + playerCnt);
-
         roundService.startThread(room.getId(), round.getId(), playerCnt);
-        System.out.println("player");
 
         socketUtil.sendMessage("/rooms/" + room.getId().toString(), new RoundInfoResponse(round.getId(), round.getShowNickname()));
 
@@ -127,7 +124,6 @@ public class RoundFacade {
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
-        System.out.println("init어쩌구 호출 그리고 리턴");
         socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
         return players.size();
     }
@@ -198,7 +194,6 @@ public class RoundFacade {
             Player murderPlayer = player.getMurderPlayer();
 
             if (murderPlayer == null) {
-                System.out.println(player.getUser().getNickname() + "는 위너");
                 results.add(new ResultResponse(
                         player.getUser().getId(),
                         player.getRank(),
@@ -228,7 +223,6 @@ public class RoundFacade {
                     murderColor
             ));
 
-            System.out.println(murderNickname + "->" + playerNickname);
         }
 
         if (round.getRoundNumber() < 3) {
