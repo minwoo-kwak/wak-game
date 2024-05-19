@@ -40,11 +40,11 @@ public class ClickEventProcessor implements Runnable {
         this.roundService = roundService;
         this.roundFacade = roundFacade;
         this.rankFacade = rankFacade;
+        this.aliveCount = playerCount;
     }
 
     @Override
     public void run() {
-        System.out.println("스레드 시작");
         //countDown(3);
 
         while (running) {
@@ -60,9 +60,10 @@ public class ClickEventProcessor implements Runnable {
                     if (click == null)
                         continue;
 
-                    System.out.println(click.getUserId() + "의 공격 처리!");
                     lastProcessedIndex++;
                     checkClickedUser(click);
+                    if(!running)
+                        break;
                 }
 
                 Thread.sleep(1000); // 10밀리초 대기
@@ -111,6 +112,7 @@ public class ClickEventProcessor implements Runnable {
 
             //countDown(60);
 
+
             if (aliveCount > 1)
                 return;
 
@@ -120,7 +122,7 @@ public class ClickEventProcessor implements Runnable {
                 roundFacade.sendResult(roomId, roundId, null, round1Id, round2Id, round3Id);
                 //todo 룸상태를대기실로 바꿔야 함.
 
-                roundFacade.endGame(roomId);
+                //roundFacade.endGame(roomId);
                 stop();
             }
 
@@ -184,5 +186,4 @@ public class ClickEventProcessor implements Runnable {
         this.aliveCount = playerCount;
         lastProcessedIndex = 0;
     }
-
 }

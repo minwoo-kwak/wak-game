@@ -127,6 +127,7 @@ public class RoundFacade {
         BattleFeildInGameResponse battleFeildInGameResponse = new BattleFeildInGameResponse(false, p);
 
         playerService.savePlayers(players);
+        System.out.println("init어쩌구 호출 그리고 리턴");
         socketUtil.sendMessage("/games/" + room.getId().toString() + "/battle-field", battleFeildInGameResponse);
         return players.size();
     }
@@ -231,7 +232,7 @@ public class RoundFacade {
             return;
         }
 
-        System.out.println("3라운드 미만 / 최종결과 포함");
+        System.out.println("3라운드 / 최종결과 포함");
         List<FinalResultResponse> finals = getFinalResult(round1Id, round2Id, round3Id);
         finals.sort(Comparator.comparingInt(FinalResultResponse::getFinalRank).reversed());
 
@@ -242,7 +243,7 @@ public class RoundFacade {
 
         List<FinalResultResponse> finalResults = new ArrayList<>();
 
-        Map<Long, Player> playerR1Map = playerService.getPlayerMap(round1Id);//이거를 기준으로 한바퀴 돌면서
+        Map<Long, Player> playerR1Map = playerService.getPlayerMap(round1Id);
         Map<Long, Player> playerR2Map = playerService.getPlayerMap(round2Id);
         Map<Long, Player> playerR3Map = playerService.getPlayerMap(round3Id);
 
@@ -359,6 +360,8 @@ public class RoundFacade {
         roomInfo.gameEnd();
         roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+
+        roundService.endThread(roomId);
         //todo 로비 vs 게임대기실
         socketUtil.sendRoomList();
     }
