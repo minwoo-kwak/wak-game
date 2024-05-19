@@ -396,13 +396,13 @@ public class RoundFacade {
 
     @Transactional
     public void saveMention(Long userId, MentionRequest mentionRequest) {
-        Round preRound = roundService.findById(mentionRequest.roundId());
+        //Round preRound = roundService.findById(mentionRequest.roundId());
         User user = userService.findById(userId);
 
-        Player player = playerService.findByUserAndRound(user, preRound);
+        /*Player player = playerService.findByUserAndRound(user, preRound);
 
         if (player.getRank() != 1)
-            throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);*/
 
         socketUtil.sendMessage("/games/" + mentionRequest.roomId() + "/mention", new MentionResponse(mentionRequest.mention(), user.getNickname(), user.getColor().getHexColor()));
 
