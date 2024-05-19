@@ -1,29 +1,17 @@
 package com.wak.game.domain.round.thread;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
-import com.wak.game.application.response.socket.FinalResultResponse;
 import com.wak.game.application.response.socket.KillLogResponse;
-import com.wak.game.application.response.socket.ResultResponse;
-import com.wak.game.application.response.socket.RoundEndResultResponse;
-import com.wak.game.domain.player.Player;
-import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
-import com.wak.game.domain.room.Room;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.ClickDTO;
-import com.wak.game.domain.user.User;
-import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
-import com.wak.game.global.util.TimeUtil;
-import jakarta.transaction.Transactional;
 
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class ClickEventProcessor implements Runnable {
@@ -37,29 +25,21 @@ public class ClickEventProcessor implements Runnable {
     private int aliveCount;
     private int lastProcessedIndex = 0;
     private RedisUtil redisUtil;
-    private ObjectMapper objectMapper;
     private final SocketUtil socketUtil;
     private final RoundService roundService;
-    private final PlayerService playerService;
-    private final UserService userService;
     private final RoundFacade roundFacade;
     private final RankFacade rankFacade;
-    private final TimeUtil timeUtil;
 
-    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, ObjectMapper objectMapper, SocketUtil socketUtil, RoundService roundService, PlayerService playerService, RoundFacade roundFacade, RankFacade rankFacade, UserService userService, TimeUtil timeUtil) {
+    public ClickEventProcessor(Long roundId, Long roomId, int playerCnt, RedisUtil redisUtil, SocketUtil socketUtil, RoundService roundService, RoundFacade roundFacade, RankFacade rankFacade) {
         this.roundId = roundId;
         this.round1Id = roundId;
         this.roomId = roomId;
         this.playerCount = playerCnt;
         this.redisUtil = redisUtil;
-        this.objectMapper = objectMapper;
         this.socketUtil = socketUtil;
         this.roundService = roundService;
-        this.playerService = playerService;
         this.roundFacade = roundFacade;
         this.rankFacade = rankFacade;
-        this.userService = userService;
-        this.timeUtil = timeUtil;
     }
 
     @Override
@@ -142,9 +122,11 @@ public class ClickEventProcessor implements Runnable {
 
             if (round.getRoundNumber() == 3) {
                 roundFacade.sendResult(roomId, roundId, null, round1Id, round2Id, round3Id);
+                //todo 룸상태를대기실로 바꿔야 함.
+
+                roundFacade.endGame(roomId);
                 stop();
             }
-
 
             Round nextRound = roundFacade.startNextRound(round);
             roundFacade.sendResult(roomId, roundId, nextRound.getId(), round1Id, round2Id, round3Id);
@@ -159,13 +141,6 @@ public class ClickEventProcessor implements Runnable {
             rankFacade.sendRank(roomId);
             updateNextRound(nextRound.getId());
         }
-    }
-
-    private long parseNanoTime(String nanoTime) {
-        String[] parts = nanoTime.split(":");
-        long minutes = Long.parseLong(parts[0]);
-        long seconds = Long.parseLong(parts[1]);
-        return minutes * 60 * 1_000_000_000L + seconds * 1_000_000_000L;
     }
 
     private void countDown(int sec) {

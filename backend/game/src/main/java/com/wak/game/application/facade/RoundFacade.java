@@ -178,7 +178,7 @@ public class RoundFacade {
 
         savePlayerLogs(roomId, roundId);
         clearRedis(roomId);
-        checkAndEndGame(room, round);
+        //checkAndEndGame(room, round);
     }
 
     @Transactional
@@ -347,19 +347,19 @@ public class RoundFacade {
         boolean isFinalSoloRound = isSoloMode && round.getRoundNumber() == 3;
 
         if (isFinalSoloRound || isTeamMode) {
-            endGame(room);
+            endGame(room.getId());
         }
     }
 
-    public void endGame(Room room) {
+    public void endGame(Long roomId) {
+        Room room = roomService.findById(roomId);
         RoomInfo roomInfo = redisUtil.getLobbyRoomInfo(room.getId());
 
         roomInfo.gameEnd();
         roomService.gameEnd(room);
         redisUtil.saveData("roomInfo", String.valueOf(room.getId()), roomInfo);
+        //todo 로비 vs 게임대기실
         socketUtil.sendRoomList();
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "ROUND END");
-        socketUtil.sendMessage("/rooms", room.getId().toString(), "GAME END");
     }
 
     public void sendDashBoard(long roomId, int roundNumber) {
@@ -387,7 +387,9 @@ public class RoundFacade {
     public void sendMention(Long roomId) {
         Map<String, String> mentions = redisUtil.getData("mention", String.class);
         String mention = mentions.get(roomId.toString());
-        socketUtil.sendMessage("/games/" + roomId + "/mention", new MentionResponse(mention));
+        Room room = roomService.findById(roomId);
+        User host = room.getUser();
+        socketUtil.sendMessage("/games/" + roomId + "/mention", new MentionResponse(mention, host.getNickname(), host.getColor().getHexColor()));
     }
 
     @Transactional
@@ -400,7 +402,7 @@ public class RoundFacade {
         if (player.getRank() != 1)
             throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);
 
-        socketUtil.sendMessage("/games/" + mentionRequest.roomId() + "/mention", new MentionResponse(mentionRequest.mention()));
+        socketUtil.sendMessage("/games/" + mentionRequest.roomId() + "/mention", new MentionResponse(mentionRequest.mention(), user.getNickname(), user.getColor().getHexColor()));
 
         round.updateAggro(mentionRequest.mention());
         roundService.save(round);
