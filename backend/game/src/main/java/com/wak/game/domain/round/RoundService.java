@@ -1,20 +1,16 @@
 package com.wak.game.domain.round;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.request.GameStartRequest;
 import com.wak.game.application.response.SummaryCountResponse;
-import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.thread.ClickEventProcessor;
 import com.wak.game.domain.room.Room;
-import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
-import com.wak.game.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -87,16 +83,12 @@ public class RoundService {
         System.out.println("스레드 실행 함수 ");
 
         RedisUtil redisUtil = applicationContext.getBean(RedisUtil.class);
-        ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         SocketUtil socketUtil = applicationContext.getBean(SocketUtil.class);
         RoundService roundService = applicationContext.getBean(RoundService.class);
-        PlayerService playerService = applicationContext.getBean(PlayerService.class);
         RoundFacade roundFacade = applicationContext.getBean(RoundFacade.class);
         RankFacade rankFacade = applicationContext.getBean(RankFacade.class);
-        UserService userService = applicationContext.getBean(UserService.class);
-        TimeUtil timeUtil = applicationContext.getBean(TimeUtil.class);
 
-        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, objectMapper, socketUtil, roundService, playerService, roundFacade, rankFacade, userService, timeUtil);
+        ClickEventProcessor clickProcessor = new ClickEventProcessor(roundId, roomId, playerCnt, redisUtil, socketUtil, roundService, roundFacade, rankFacade);
         Thread thread = new Thread(clickProcessor);
         thread.start();
 
