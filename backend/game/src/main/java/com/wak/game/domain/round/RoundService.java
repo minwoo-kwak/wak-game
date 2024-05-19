@@ -95,14 +95,8 @@ public class RoundService {
         gameThreads.put(roomId, thread);
     }
 
-    /**
-     * 클릭 유효성 처리하는 스레드 종료 및 제거
-     * + round가 끝날때마다 스레드 제거하고 재생성 VS round3까지 유지
-     *
-     * @param id
-     */
-    public void endThread(Long id) {
-        Thread thread = gameThreads.remove(id);
+    public void endThread(Long roomId) {
+        Thread thread = gameThreads.remove(roomId);
 
         if (thread != null) {
             thread.interrupt();
