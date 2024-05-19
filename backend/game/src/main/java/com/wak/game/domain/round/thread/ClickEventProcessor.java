@@ -103,7 +103,6 @@ public class ClickEventProcessor implements Runnable {
             roundFacade.sendBattleField(roomId, false);
             roundFacade.sendDashBoard(roomId, round.getRoundNumber());
 
-            // 생존자 수 업데이트
             --aliveCount;
 
             saveSuccessfulClick(click);
@@ -137,7 +136,7 @@ public class ClickEventProcessor implements Runnable {
                 Thread.currentThread().interrupt();
             }
             roundFacade.initializeGameStatuses(roomId, round);
-            roundFacade.sendDashBoard(roomId, round.getRoundNumber());
+            roundFacade.sendDashBoard(roomId, nextRound.getRoundNumber());
             rankFacade.sendRank(roomId);
             updateNextRound(nextRound.getId());
         }
