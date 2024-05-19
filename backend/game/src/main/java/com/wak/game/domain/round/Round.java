@@ -42,4 +42,8 @@ public class Round extends BaseEntity {
     public void finish() {
         updateDeleted(true);
     }
+
+    public void updateAggro(String mention) {
+        this.aggro = mention;
+    }
 }

@@ -1,6 +1,7 @@
 package com.wak.game.application.facade;
 
 import com.wak.game.application.request.GameStartRequest;
+import com.wak.game.application.request.socket.MentionRequest;
 import com.wak.game.application.response.GameStartResponse;
 import com.wak.game.application.response.SummaryCountResponse;
 import com.wak.game.application.response.socket.*;
@@ -24,6 +25,7 @@ import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
 import com.wak.game.global.util.TimeUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -254,6 +256,24 @@ public class RoundFacade {
     }
 
     public void sendMention(Long roomId) {
+        Map<String, String> mentions = redisUtil.getData("mention", String.class);
+        String mention = mentions.get(roomId.toString());
+        socketUtil.sendMessage("/games/" + roomId + "/mention", new MentionResponse(mention));
+    }
 
+    @Transactional
+    public void saveMention(Long userId, MentionRequest mentionRequest) {
+        Round round = roundService.findById(mentionRequest.roundId());
+        User user = userService.findById(userId);
+
+        Player player = playerService.findByUserAndRound(user, round);
+
+        if (player.getRank() != 1)
+            throw new BusinessException(ErrorInfo.PLAYER_NOT_WINNER);
+
+        socketUtil.sendMessage("/games/" + mentionRequest.roomId() + "/mention", new MentionResponse(mentionRequest.mention()));
+
+        round.updateAggro(mentionRequest.mention());
+        roundService.save(round);
     }
 }
