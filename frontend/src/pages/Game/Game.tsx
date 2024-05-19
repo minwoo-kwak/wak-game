@@ -174,6 +174,11 @@ export default function GamePage() {
   }, [id]);
 
   useEffect(() => {
+    setLogs([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameData.roundNumber]);
+
+  useEffect(() => {
     if (countdown === 0) {
       setState('PLAY');
     } else {
