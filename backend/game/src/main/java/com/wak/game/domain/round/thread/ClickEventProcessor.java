@@ -1,20 +1,16 @@
 package com.wak.game.domain.round.thread;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.application.facade.RankFacade;
 import com.wak.game.application.facade.RoundFacade;
 import com.wak.game.application.response.socket.KillLogResponse;
-import com.wak.game.domain.player.PlayerService;
 import com.wak.game.domain.player.dto.PlayerInfo;
 import com.wak.game.domain.round.Round;
 import com.wak.game.domain.round.RoundService;
 import com.wak.game.domain.round.dto.ClickDTO;
-import com.wak.game.domain.user.UserService;
 import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import com.wak.game.global.util.RedisUtil;
 import com.wak.game.global.util.SocketUtil;
-import com.wak.game.global.util.TimeUtil;
 
 import java.util.*;
 
