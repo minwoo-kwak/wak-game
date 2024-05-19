@@ -85,6 +85,7 @@ public class RoundController {
     @GetMapping("/{roomId}/battle-field")
     public ResponseEntity<ApiResult<Void>> publishBattleField(@PathVariable Long roomId) {
         roundFacade.sendBattleField(roomId, false);
+        roundFacade.sendDashBoard(roomId,1);
         return ResponseEntity.ok(ApiUtils.success(null));
     }
 
