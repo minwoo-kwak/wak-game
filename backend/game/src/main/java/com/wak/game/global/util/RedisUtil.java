@@ -1,7 +1,6 @@
 package com.wak.game.global.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wak.game.domain.room.dto.RoomInfo;
 import com.wak.game.application.vo.RoomVO;
@@ -10,7 +9,6 @@ import com.wak.game.global.error.ErrorInfo;
 import com.wak.game.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -31,9 +29,9 @@ public class RedisUtil {
     public <T> void saveToList(String key, T data) {
         try {
             String jsonData = objectMapper.writeValueAsString(data);
-            redisTemplate.opsForList().rightPush(key, jsonData); // JSON 직렬화한 데이터를 리스트에 추가
+            redisTemplate.opsForList().rightPush(key, jsonData);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error serializing data to Redis", e);
+            throw new BusinessException(ErrorInfo.THREAD_SERIALIZING_DATA);
         }
     }
 
@@ -55,18 +53,32 @@ public class RedisUtil {
         return serializedData.stream()
                 .map(data -> {
                     try {
-                        String json = (String) data; // JSON 문자열로 변환
-                        System.out.println("Deserializing data: " + json); // 디버깅을 위한 로그
+                        String json = (String) data;
                         return objectMapper.readValue(json, classType);
                     } catch (JsonProcessingException e) {
-                        System.err.println("Error deserializing data: " + data); // 에러 로그
-                        throw new RuntimeException("Error deserializing data from Redis", e);
+                        throw new BusinessException(ErrorInfo.THREAD_DESERIALIZING_DATA);
                     }
                 })
                 .collect(Collectors.toList());
     }
 
-
+    public <T> List<T> getListData(String key, Class<T> classType, int start) {
+        List<Object> serializedData = redisTemplate.opsForList().range(key, start, -1);
+        if (serializedData == null || serializedData.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return serializedData.stream()
+                .map(data -> {
+                    try {
+                        String json = (String) data;
+                        return objectMapper.readValue(json, classType);
+                    } catch (JsonProcessingException e) {
+                        System.err.println("Error deserializing data: " + data);
+                        throw new BusinessException(ErrorInfo.THREAD_DESERIALIZING_DATA);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 
 
     public void deleteKey(String key) {

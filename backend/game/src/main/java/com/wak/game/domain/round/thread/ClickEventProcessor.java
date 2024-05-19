@@ -49,21 +49,20 @@ public class ClickEventProcessor implements Runnable {
 
         while (running) {
             try {
-                List<ClickDTO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", ClickDTO.class);
+                List<ClickDTO> clickDataList = redisUtil.getListData("roomId:" + roomId + ":clicks", ClickDTO.class, lastProcessedIndex);
 
-                System.out.println("클릭 사이즈");
-                System.out.println(clickDataList.size());
-                System.out.println("마지막 인덱스: " + lastProcessedIndex);
+                if (clickDataList.isEmpty()) {
+                    continue;
+                }
 
                 for (int i = lastProcessedIndex; i < clickDataList.size(); i++) {
                     ClickDTO click = clickDataList.get(i);
-                    if (click != null) {
-                        System.out.println(click.getUserId() + "의 공격 처리!");
-                        checkClickedUser(click);
-                        lastProcessedIndex++;
-                    }
+                    if (click == null)
+                        continue;
 
+                    System.out.println(click.getUserId() + "의 공격 처리!");
                     lastProcessedIndex++;
+                    checkClickedUser(click);
                 }
 
                 Thread.sleep(1000); // 10밀리초 대기
@@ -80,22 +79,21 @@ public class ClickEventProcessor implements Runnable {
             throw new BusinessException(ErrorInfo.THREAD_ID_IS_DIFFERENT);
 
         String key = "roomId:" + roomId + ":users";
-        System.out.println("(nullpointer)key: " + key);
         Map<String, PlayerInfo> data = redisUtil.getData(key, PlayerInfo.class);
 
         PlayerInfo user = data.get(click.getUserId().toString());
         PlayerInfo victim = data.get(click.getVictimId().toString());
         if (user == null) {
-            System.out.println("공격자 정보 없음");
             throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
         }
         if (victim == null) {
-            System.out.println("피해자 정보 없음");
             throw new BusinessException(ErrorInfo.PLAYER_NOT_FOUND);
         }
 
         if (isAlive(user) && isAlive(victim)) {
             Round round = roundService.findById(click.getRoundId());
+            if(!round.getId().equals(roundId))
+                throw new BusinessException(ErrorInfo.ROUND_NOT_MATCHED);
 
             victim.updateStamina(-1);
             redisUtil.saveData(key, victim.getUserId().toString(), victim);
@@ -117,7 +115,6 @@ public class ClickEventProcessor implements Runnable {
                 return;
 
             roundFacade.endRound(roomId, roundId);
-            System.out.println("라운드 종료!");
 
             if (round.getRoundNumber() == 3) {
                 roundFacade.sendResult(roomId, roundId, null, round1Id, round2Id, round3Id);
@@ -135,7 +132,7 @@ public class ClickEventProcessor implements Runnable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            roundFacade.initializeGameStatuses(roomId, round);
+            roundFacade.initializeGameStatuses(roomId, nextRound);
             roundFacade.sendDashBoard(roomId, nextRound.getRoundNumber());
             rankFacade.sendRank(roomId);
             updateNextRound(nextRound.getId());
