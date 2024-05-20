@@ -8,7 +8,7 @@
     <tr>
         <td align="center">
             <a href="https://github.com/ryuu9505">
-            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="60px"/>
+            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="100px"/>
                 <br/>
                 <b>조형준</b>
             </a>
@@ -17,7 +17,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/olnuyh">
-            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="60px"/>
+            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="100px"/>
                 <br/>
                 <b>김이현</b>
             </a>
@@ -53,7 +53,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/minwoo-kwak">
-            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="60px"/>
+            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="100px"/>
                 <br/>
                 <b>곽민우</b>
             </a>
@@ -63,6 +63,19 @@
     </tr>
   </tbody>
 </table>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 #### 📃 목차
 
