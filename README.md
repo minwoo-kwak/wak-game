@@ -22,8 +22,8 @@
             <sub>BE</sub>
         </td>
         <td align="center">
-            <a href="https://github.com/">
-            <img src="#" width="100px"/>
+            <a href="https://github.com/fkdusrh">
+            <img src="https://avatars.githubusercontent.com/u/84490586?v=4" width="100px"/>
                 <br/>
                 <b>김라연</b>
             </a>
@@ -31,8 +31,8 @@
             <sub>BE</sub>
         </td>
         <td align="center">
-            <a href="https://github.com/">
-            <img src="#" width="100px"/>
+            <a href="https://github.com/slcloe">
+            <img src="https://avatars.githubusercontent.com/u/67732600?v=4" width="100px"/>
                 <br/>
                 <b>김한슬</b>
             </a>
