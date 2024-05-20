@@ -1,10 +1,74 @@
 ![logo](asset/banner.png)
 
+
+# 👨‍👩‍👧‍👦 팀 소개 
+
+<table>
+  <tbody>
+    <tr>
+        <td align="center">
+            <a href="https://github.com/ryuu9505">
+            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="60px"/>
+                <br/>
+                <b>조형준</b>
+            </a>
+            <br/>
+            <sub>BE</sub>
+        </td>
+        <td align="center">
+            <a href="https://github.com/olnuyh">
+            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="60px"/>
+                <br/>
+                <b>김이현</b>
+            </a>
+            <br/>
+            <sub>BE</sub>
+        </td>
+        <td align="center">
+            <a href="https://github.com/">
+            <img src="#" width="100px"/>
+                <br/>
+                <b>김라연</b>
+            </a>
+            <br/>
+            <sub>BE</sub>
+        </td>
+        <td align="center">
+            <a href="https://github.com/">
+            <img src="#" width="100px"/>
+                <br/>
+                <b>김한슬</b>
+            </a>
+            <br/>
+            <sub>BE</sub>
+        </td>
+        <td align="center">
+            <a href="https://github.com/annyoon">
+            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="60px"/>
+                <br/>
+                <b>윤서안</b>
+            </a>
+            <br/>
+            <sub>FE</sub>
+        </td>
+        <td align="center">
+            <a href="https://github.com/minwoo-kwak">
+            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="60px"/>
+                <br/>
+                <b>곽민우</b>
+            </a>
+            <br/>
+            <sub>Infra</sub>
+        </td>
+    </tr>
+  </tbody>
+</table>
+
 #### 📃 목차
 
 1. [프로젝트 소개](#-프로젝트-소개)   
 2. [서비스 소개](#-주요-기능)  
-3. [팀 소개](#-팀-소개)  
+<!-- 3. [팀 소개](#-팀-소개)   -->
 
 <br>
 <br>
@@ -101,79 +165,3 @@
 ### 🕊 실행방법
 
 exec 폴더 내 포팅 메뉴얼 참조
-
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-
-# 👨‍👩‍👧‍👦 팀 소개 
-
-<table>
-  <tbody>
-    <tr>
-        <td align="center">
-            <a href="https://github.com/ryuu9505">
-            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="60px"/>
-                <br/>
-                <b>조형준</b>
-            </a>
-            <br/>
-            <sub>BE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/olnuyh">
-            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="60px"/>
-                <br/>
-                <b>김이현</b>
-            </a>
-            <br/>
-            <sub>BE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/">
-            <img src="#" width="100px"/>
-                <br/>
-                <b>김라연</b>
-            </a>
-            <br/>
-            <sub>BE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/">
-            <img src="#" width="100px"/>
-                <br/>
-                <b>김한슬</b>
-            </a>
-            <br/>
-            <sub>BE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/annyoon">
-            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="100px"/>
-                <br/>
-                <b>윤서안</b>
-            </a>
-            <br/>
-            <sub>FE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/minwoo-kwak">
-            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="60px"/>
-                <br/>
-                <b>곽민우</b>
-            </a>
-            <br/>
-            <sub>Infra</sub>
-        </td>
-    </tr>
-  </tbody>
-</table>
