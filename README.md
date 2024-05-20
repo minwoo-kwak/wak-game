@@ -5,7 +5,7 @@
     <tr>
         <td align="center">
             <a href="https://github.com/ryuu9505">
-            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/66634707?v=4" width="256px"/>
                 <br/>
                 <b>조형준</b>
             </a>
@@ -14,7 +14,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/olnuyh">
-            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/49039762?v=4" width="256px"/>
                 <br/>
                 <b>김이현</b>
             </a>
@@ -23,7 +23,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/fkdusrh">
-            <img src="https://avatars.githubusercontent.com/u/84490586?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/84490586?v=4" width="256px"/>
                 <br/>
                 <b>김라연</b>
             </a>
@@ -32,7 +32,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/slcloe">
-            <img src="https://avatars.githubusercontent.com/u/67732600?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/67732600?v=4" width="256px"/>
                 <br/>
                 <b>김한슬</b>
             </a>
@@ -41,7 +41,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/annyoon">
-            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="256px"/>
                 <br/>
                 <b>윤서안</b>
             </a>
@@ -50,7 +50,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/minwoo-kwak">
-            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="100px"/>
+            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="256px"/>
                 <br/>
                 <b>곽민우</b>
             </a>
