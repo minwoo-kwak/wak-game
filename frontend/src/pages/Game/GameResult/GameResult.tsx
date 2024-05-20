@@ -61,7 +61,7 @@ export default function GameResult({ client, changeState }: GameResultProps) {
       roomId: id && parseInt(id),
       mention: mention,
     });
-    client.send(`app/mention/${id}`, header, message);
+    client.send(`/app/mention/${id}`, header, message);
     console.log(message);
   };
 
