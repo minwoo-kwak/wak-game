@@ -1,8 +1,5 @@
 ![logo](asset/banner.png)
 
-
-# 👨‍👩‍👧‍👦 팀 소개 
-
 <table>
   <tbody>
     <tr>
