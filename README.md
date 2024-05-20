@@ -44,7 +44,7 @@
         </td>
         <td align="center">
             <a href="https://github.com/annyoon">
-            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="60px"/>
+            <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="100px"/>
                 <br/>
                 <b>윤서안</b>
             </a>
