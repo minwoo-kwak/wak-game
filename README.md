@@ -40,6 +40,15 @@
             <sub>BE</sub>
         </td>
         <td align="center">
+            <a href="https://github.com/minwoo-kwak">
+            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="256px"/>
+                <br/>
+                <b>곽민우</b>
+            </a>
+            <br/>
+            <sub>BE</sub>
+        </td>
+        <td align="center">
             <a href="https://github.com/annyoon">
             <img src="https://avatars.githubusercontent.com/u/79207743?v=4" width="256px"/>
                 <br/>
@@ -47,15 +56,6 @@
             </a>
             <br/>
             <sub>FE</sub>
-        </td>
-        <td align="center">
-            <a href="https://github.com/minwoo-kwak">
-            <img src="https://avatars.githubusercontent.com/u/117497001?v=4" width="256px"/>
-                <br/>
-                <b>곽민우</b>
-            </a>
-            <br/>
-            <sub>Infra</sub>
         </td>
     </tr>
   </tbody>
